@@ -1,0 +1,95 @@
+.RightMain {
+    position: relative;
+    width: calc(100vw - 250px);
+    height: 100vh;
+    overflow: hidden;
+    background: rgba(0, 0, 0, .8);
+
+
+    .RightMain-main {
+        width: 100%;
+        height: calc(100vh - 150px);
+        overflow: auto;
+
+        .RightMain-chatli {
+            width: 100%;
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .RightMain-aichat {
+            justify-content: start;
+
+            .RightMain-aichat-head {
+                width: 50px;
+                height: 50px;
+            }
+
+            .RightMain-aichat-content {
+                padding: 10px;
+                border-radius: 10px;
+                font-family: sans-serif;
+                max-width: 40%;
+                background: white;
+                overflow-wrap: wrap;
+                word-break: break-all;
+            }
+        }
+
+        .RightMain-peoplechat {
+
+            justify-content: end;
+
+            .RightMain-peoplechat-head {
+                width: 50px;
+                height: 50px;
+            }
+
+            .RightMain-peoplechat-content {
+                padding: 10px;
+                border-radius: 10px;
+                font-family: sans-serif;
+                max-width: 40%;
+                background: white;
+                word-break: break-all;
+
+            }
+        }
+
+
+    }
+
+    .RightMain-main::-webkit-scrollbar {
+        width: 0;
+    }
+
+    .RightMain-bottom {
+        position: absolute;
+        display: flex;
+        justify-content: center;
+
+        bottom: 0;
+        width: 100%;
+        height: 150px;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+
+        .input {
+            align-self: center;
+
+            input {
+                height: 50px;
+                border-radius: 5px;
+                width: 600px;
+                font-size: 16px;
+                transition: all .3s;
+                padding-left: 20px;
+                padding-right: 50px;
+            }
+
+        }
+
+        input:hover {
+            box-shadow: 1px 4px 4px 4px rgba(0, 0, 0, .2);
+        }
+    }
+}
