@@ -1,5 +1,5 @@
 .LeftSidebar {
-    width: 250px;
+    width: 300px;
     height: 100vh;
     background: rgb(32, 33, 35);
 
@@ -23,7 +23,7 @@
             margin-top: 2px;
             margin-left: 1px;
             padding-left: 20px;
-            width: 248px;
+            width: 295px;
             height: 50px;
             display: flex;
             align-items: center;
@@ -40,9 +40,34 @@
         }
 
         .LeftSidebar-chats {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+
             li {
                 height: 50px;
-                padding-left: 30px;
+                width: 98%;
+                padding-right: 30px;
+                border-radius: 5px;
+                display: flex;
+                flex-wrap: nowrap;
+                align-items: center;
+                padding-left: 10px;
+                transition: all .3s;
+
+                .LeftSidebar-chats-name {
+                    width: 90%;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    overflow: hidden;
+                }
+            }
+
+            li:hover {
+                background: rgb(81, 81, 89);
+                cursor: pointer;
             }
         }
     }
@@ -54,6 +79,25 @@
     .LeftSidebar-bottom {
         overflow: auto;
         height: 50vh;
+        padding-left: 10px;
+
+        .ant-select-selection-placeholder {
+            color: white !important;
+        }
+
+        .LeftSidebar-bottom-TreeSelect {
+            width: 98%;
+            margin-top: 10px;
+
+            .ant-select-selector {
+                background: rgba(0, 0, 0, 0) !important;
+                color: white !important;
+            }
+
+            .ant-select-arrow {
+                color: white !important;
+            }
+        }
 
         .LeftSidebar-trees {
             li {

@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import LeftSidebar from './components/LeftSidebar';
-import RightMain from './components/RightMain';
+
+import { useRoutes } from 'react-router-dom'
+import routes from './routes'
 import './App.scss'
 import './base.css'
 function App() {
+  const element = useRoutes(routes);
   return (
     <div className='App'>
-      <LeftSidebar/>
-      <RightMain/>
+            {element}
     </div>
   );
 }

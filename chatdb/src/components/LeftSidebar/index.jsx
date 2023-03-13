@@ -1,10 +1,40 @@
 import React, { useEffect, useState, useRef } from 'react'
+import { CommentOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { TreeSelect } from 'antd';
+import axios from 'axios'
 import './index.scss'
 export default function LeftSidebar() {
     const [chat, setChat] = useState([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
     const [heightChange, setHeightChange] = useState(0)
+    const [treeData, setTreeData] = useState([])
+    const [listvalue, setListValue] = useState();
+    const token = sessionStorage.getItem('token')
     const line = useRef()
+    const onChange = (newValue) => {
+        setListValue(newValue);
+    };
+    const getDBTreeData = () => {
+        axios({
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": token
+            },
+            method: 'GET',
+            url: `http://8.134.100.212:8081/api/db/list`,
+        }).then(res => {
+            let treeData = []
+            let i = 0
+            for (i in res.data) {
+                treeData.push({
+                    value: res.data[i],
+                    title: res.data[i],
+                })
+            }
+
+        })
+    }
     const init = () => {
+        //监听鼠标拖动
         if (line) {
             // 鼠标被按下
             let getlineoffsetTop = document.querySelector('.LeftSidebar-line')
@@ -39,6 +69,9 @@ export default function LeftSidebar() {
                 }
             }
         }
+        //获取dbtree
+        getDBTreeData()
+
     }
     useEffect(() => {
         init()
@@ -49,17 +82,32 @@ export default function LeftSidebar() {
                 <div className='LeftSidebar-addNewChat'>+ &nbsp;&nbsp;New chat</div>
                 <ul className='LeftSidebar-chats'>
                     {chat.map((v, i) => {
-                        return (<li key={i}>the New Chat</li>)
+                        return (<li key={i}><CommentOutlined />&nbsp;&nbsp;&nbsp;&nbsp;<div onClick={() => console.log(2)} className='LeftSidebar-chats-name'> SQL code for selectinSQL code for selectin</div>&nbsp;&nbsp;&nbsp;&nbsp;<EditOutlined onClick={() => console.log(1)} />&nbsp;&nbsp;&nbsp;&nbsp;<DeleteOutlined onClick={() => console.log(3)} /></li>)
                     })}
                 </ul>
             </div>
             <div ref={line} className='LeftSidebar-line'></div>
             <div className='LeftSidebar-bottom' style={{ height: `calc(50vh - ${heightChange}px)` }}>
-                <ul className='LeftSidebar-trees'>
-                    {chat.map((v, i) => {
-                        return (<li key={i}>the New Chat</li>)
-                    })}
-                </ul>
+                <TreeSelect className='LeftSidebar-bottom-TreeSelect'
+                    showSearch
+                    treeLine='true'
+                    size='large'
+                    style={{
+                        width: '95%',
+                        color: 'white!important'
+                    }}
+                    value={listvalue}
+                    dropdownStyle={{
+                        maxHeight: 400,
+                        overflow: 'auto',
+                    }}
+                    placeholder="Please select"
+                    allowClear
+                    treeDefaultExpandAll
+                    onChange={onChange}
+                    treeData={treeData}
+
+                />
             </div>
         </div>
     )
