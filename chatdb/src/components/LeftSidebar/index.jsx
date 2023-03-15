@@ -209,7 +209,7 @@ export default function LeftSidebar({ setCurrent, setDeleteNumber, list, setList
                     onSelect={(value, node, extra) => handleSelect(value, node, extra)}
                     treeData={treeData}
                 />
-                <div className='LeftSidebar-introduction'>You can choose dbtree to get some message</div>
+                <div className='LeftSidebar-introduction'>You can choose db to get some correspondingly message</div>
             </div>
         </div>
     )

@@ -3,7 +3,7 @@
     width: calc(100vw - 300px);
     height: 100vh;
     overflow: hidden;
-    background: rgba(0, 0, 0, .8);
+    background: rgba(0, 0, 0, 0);
 
     iframe {
         border-radius: 20px;
@@ -27,13 +27,15 @@
             .RightMain-aichat-head {
                 width: 50px;
                 height: 50px;
+                border-radius: 50px;
+                margin-right: 15px;
             }
 
             .RightMain-aichat-content {
                 padding: 20px;
                 border-radius: 10px;
                 font-family: sans-serif;
-                max-width: 60%;
+                max-width: 80%;
                 background: white;
                 overflow-wrap: wrap;
                 word-break: break-all;
@@ -59,8 +61,12 @@
             justify-content: end;
 
             .RightMain-peoplechat-head {
+                margin-left: 15px;
                 width: 50px;
                 height: 50px;
+                border-radius: 25px;
+                background: gray;
+                font-size: 26px;
             }
 
             .RightMain-peoplechat-content {
@@ -86,7 +92,7 @@
         position: absolute;
         display: flex;
         justify-content: center;
-        background: rgba(0, 0, 0, .8);
+        background: rgba(0, 0, 0, .6);
         bottom: 0;
         width: 100%;
         height: 150px;

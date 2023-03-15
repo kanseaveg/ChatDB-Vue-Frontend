@@ -1,42 +1,22 @@
 import React, { useEffect, useState, useRef } from 'react'
 import './index.scss'
 import temp from '../../logo.svg'
-import { SendOutlined } from '@ant-design/icons';
+import { SendOutlined, UserOutlined } from '@ant-design/icons';
 import axios from 'axios'
 import { copyArr } from '../../utils/func'
 import { message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { Space, Table, Tag } from 'antd';
+import head1 from '../../assests/images/head1.png'
+import head2 from '../../assests/images/head2.png'
+
 const columns = [
-    {
-        title: 'Name',
-        dataIndex: 'name',
-        key: 'name',
-        render: (text) => <a>{text}</a>,
-    },
-    {
-        title: 'Age',
-        dataIndex: 'age',
-        key: 'age',
-    },
     {
         title: 'Address',
         dataIndex: 'address',
         key: 'address',
     },
 ]; const data = [
-    {
-        key: '1',
-        name: 'John Brown',
-        age: 32,
-        address: 'New York No. 1 Lake Park',
-    },
-    {
-        key: '2',
-        name: 'Jim Green',
-        age: 42,
-        address: 'London No. 1 Lake Park',
-    },
     {
         key: '3',
         name: 'Joe Black',
@@ -54,6 +34,25 @@ export default function RightMain({ current, deleteNumber, list, addText, setCur
     const token = sessionStorage.getItem('token')
     const userId = sessionStorage.getItem('userId')
 
+    //打字机
+    const [jsonData, setJsonData] = useState("Ok,here's an example SQL statement to create a basic table in a relational database:");
+    const [text, setText] = useState([]);
+    useEffect(() => {
+        if (text && text.length !== 0) {
+            const intervalId = setInterval(() => {
+                const char = jsonData.charAt(text[text.length - 1].length);
+                if (char) {
+                    let tempText = copyArr(text)
+                    tempText[tempText.length - 1] += char
+                    console.log(tempText);
+                    setText(tempText);
+                }
+            }, 100);
+            return () => clearInterval(intervalId);
+        }
+    }, [text, jsonData]);
+
+
     const addPeoplechat = () => {
         let value = peopleInput.current.value || ''
         if (value) {
@@ -62,6 +61,12 @@ export default function RightMain({ current, deleteNumber, list, addText, setCur
                 setCurrent(0)
                 setAddFirstChat(value)
                 peopleInput.current.value = ''
+                let newChats = copyArr(chats)
+                newChats[current].push({ who: 'ai' })
+                let Text = copyArr(text)
+                Text.push('')
+                setText(Text)
+                setChats(newChats)
                 axios({
                     headers: {
                         'Content-Type': 'application/json',
@@ -78,9 +83,13 @@ export default function RightMain({ current, deleteNumber, list, addText, setCur
                     url: `http://8.134.100.212:8081/api/chat/query`,
                 }).then(res => {
                     if (res.data.code === 200) {
-                        let newChats = copyArr(chats)
-                        newChats[current].push({ who: 'ai', content: res.data.data.answers, conversationId: res.data.data.conversationId, parentId: res.data.data.parentId || '' })
-                        setChats(newChats)
+                        let newChats2 = copyArr(newChats)
+                        let length = newChats2.length
+                        newChats2[current][length].conversationId = res.data.data.conversationId || ''
+                        newChats2[current][length].parentId = res.data.data.parentId || ''
+                        newChats2[current][length].content = res.data.data.answers || ''
+                        console.log(newChats2, 'newChats2', res.data.data.answers, 'answers');
+                        setChats(newChats2)
                         axios({
                             headers: {
                                 'Content-Type': 'application/json',
@@ -96,6 +105,7 @@ export default function RightMain({ current, deleteNumber, list, addText, setCur
                             if (res.data.code === 200) {
                                 let columns = []
                                 let data = []
+
                                 res.data.data.columns.map((v, i) => {
                                     columns.push({ title: v.name, dataIndex: v.name, key: v.name })
                                 })
@@ -103,10 +113,10 @@ export default function RightMain({ current, deleteNumber, list, addText, setCur
                                     v.key = i
                                 })
                                 data = res.data.data.rows
-                                let newChats2 = copyArr(newChats)
-                                let length = newChats2[current].length
-                                newChats2[current][length - 1].table = [columns, data]
-                                setChats(newChats2)
+                                let newChats3 = copyArr(newChats2)
+                                let length = newChats3[current].length
+                                newChats3[current][length - 1].table = [columns, data]
+                                setChats(newChats3)
                             } else {
                                 message.warning(res.data.msg)
                             }
@@ -114,16 +124,22 @@ export default function RightMain({ current, deleteNumber, list, addText, setCur
                     } else {
                         message.warning(res.data.msg)
                     }
-
-                }).catch(e => { message.warning('please login again!'); navigate('/login') })
-
+                }).catch(e => { message.warning('something wrong') })
+                // ; navigate('/login') 
             } else {
                 let newChats = copyArr(chats)
                 newChats[current].push({ who: 'people', content: value })
                 setChats(newChats)
                 peopleInput.current.value = ''
-                let conversationId = newChats[current][newChats[current].length - 2].conversationId || ''
-                let parentId = newChats[current][newChats[current].length - 2].parentId || ''
+                let newChats1 = copyArr(newChats)
+                newChats1[current].push({ who: 'ai' })
+                let Text = copyArr(text)
+                Text.push('')
+                setText(Text)
+                setChats(newChats1)
+                let length = newChats[current].length
+                let conversationId = newChats[current][length - 2] ? newChats[current][length - 2].conversationId : ''
+                let parentId = newChats[current][length - 2] ? newChats[current][length - 2].parentId : ''
                 axios({
                     headers: {
                         'Content-Type': 'application/json',
@@ -140,8 +156,10 @@ export default function RightMain({ current, deleteNumber, list, addText, setCur
                     url: `http://8.134.100.212:8081/api/chat/query`,
                 }).then(res => {
                     if (res.data.code === 200) {
-                        newChats[current].push({ who: 'ai', content: res.data.data.answers, conversationId: res.data.data.conversationId })
-                        let newChats2 = copyArr(newChats)
+                        let newChats2 = copyArr(newChats1)
+                        newChats2[current].content = res.data.data.answers
+                        newChats2[current].conversationId = res.data.data.conversationId || ''
+                        newChats2[current].parentId = res.data.data.parentId || ''
                         setChats(newChats2)
                         axios({
                             headers: {
@@ -165,10 +183,10 @@ export default function RightMain({ current, deleteNumber, list, addText, setCur
                                     v.key = i
                                 })
                                 data = res.data.data.rows
-                                let newChats2 = copyArr(newChats)
-                                let length = newChats2[current].length
-                                newChats2[current][length - 1].table = [columns, data]
-                                setChats(newChats2)
+                                let newChats3 = copyArr(newChats2)
+                                let length = newChats3[current].length
+                                newChats3[current][length - 1].table = [columns, data]
+                                setChats(newChats3)
                             } else {
                                 message.warning(res.data.msg)
                             }
@@ -177,14 +195,15 @@ export default function RightMain({ current, deleteNumber, list, addText, setCur
                         message.warning(res.data.msg)
                     }
 
-                }).catch(e => { message.warning('please login again!'); navigate('/login') })
+                }).catch(e => { message.warning(e.response.data.error) })
+                // navigate('/login')
 
             }
         }
     }
     const addNewChat = () => {
         let newChats = copyArr(chats)
-        newChats.push([{ who: 'ai', content: 'Hello~' }])
+        newChats.push([])
         setChats(newChats)
     }
     const DeleteChat = (index) => {
@@ -234,12 +253,12 @@ export default function RightMain({ current, deleteNumber, list, addText, setCur
             <div ref={main} className='RightMain-main'>
                 <ul>
                     {chats[myCurrent]?.map((v, i) => {
-                        return (v.who === 'ai' ? <li key={i} className='RightMain-chatli RightMain-aichat'><img className='RightMain-aichat-head' src={temp} alt="" /><div className='RightMain-aichat-content'>
-                            <div className='RightMain-aichat-content-start'>Ok,here's an example SQL statement to create a basic table in a relational database:</div>
+                        return (v.who === 'ai' ? <li key={i} className='RightMain-chatli RightMain-aichat'><img className='RightMain-aichat-head' src={head2} alt="" /><div className='RightMain-aichat-content'>
+                            <div className='RightMain-aichat-content-start'>{text ? text[(i - 1) / 2] : ''}</div>
                             <div className='RightMain-aichat-content-content'>{v.content}</div>
                             {v.table && v.table[0] ? <Table columns={v.table[0]} dataSource={v.table[1]} /> : ''}
                         </div></li> :
-                            <li key={i} className='RightMain-chatli RightMain-peoplechat'><div className='RightMain-peoplechat-content'>{v.content}</div><img className='RightMain-peoplechat-head' src={temp} alt="" /></li>)
+                            <li key={i} className='RightMain-chatli RightMain-peoplechat'><div className='RightMain-peoplechat-content'>{v.content}</div><img src={head1} alt="" className='RightMain-peoplechat-head' /></li>)
 
                     })}
                 </ul>
