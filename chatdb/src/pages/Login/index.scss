@@ -22,8 +22,10 @@
     align-items: center;
 
     .Login-form {
+        background: white;
+
         width: 400px;
-        height: 340px;
+        height: 300px;
         border-radius: 20px;
         box-shadow: 0px 0px 20px 13px rgb(0 0 0 / 10%);
         padding: 89px 20px;
@@ -34,6 +36,14 @@
 
         i:hover {
             cursor: pointer;
+        }
+
+        .Login-form-title {
+            font-family: 'Courier New', Courier, monospace;
+            text-align: center;
+            margin-top: -60px;
+            font-size: 34px;
+            margin-bottom: 20px;
         }
     }
 }

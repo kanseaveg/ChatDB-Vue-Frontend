@@ -1,18 +1,108 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { CommentOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+
 import { TreeSelect } from 'antd';
+import { message } from 'antd';
 import axios from 'axios'
 import './index.scss'
-export default function LeftSidebar() {
-    const [chat, setChat] = useState([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+import { copyArr } from '../../utils/func'
+
+export default function LeftSidebar({ setCurrent, setDeleteNumber, list, setList, setAddText, addFirstChat, setDataSourceId }) {
+    const [chat, setChat] = useState([])
+    const navigate = useNavigate();
     const [heightChange, setHeightChange] = useState(0)
+    const [hide, setHide] = useState(true)
+    const [repair, setRepair] = useState([])
     const [treeData, setTreeData] = useState([])
+    const [temp, setTemp] = useState(0)
     const [listvalue, setListValue] = useState();
     const token = sessionStorage.getItem('token')
     const line = useRef()
-    const onChange = (newValue) => {
-        setListValue(newValue);
-    };
+    useEffect(() => {
+        if (temp > 0) {
+            axios({
+                headers: {
+                    'Content-Type': 'application/json',
+                    "Authorization": token
+                },
+                method: 'GET',
+                url: `http://8.134.100.212:8081/api/db/schema/${temp}`,
+            }).then(res => {
+                let children = []
+                res.data.map((v, i) => {
+                    children.push({
+                        value: v.tableName + Math.random() * 10000,
+                        title: v.tableName,
+                        db: temp,
+                        children: v.tableColumns?.map((value, index) => {
+                            return ({
+                                value: value + + Math.random() * 10000,
+                                title: value,
+                                db: temp
+                            })
+                        })
+                    })
+                })
+                let newTreeData = copyArr(treeData)
+                if (newTreeData[temp - 1]) {
+                    newTreeData[temp - 1].children = children
+                    setTreeData(newTreeData)
+                    if (temp < newTreeData.length) {
+                        setTemp(temp + 1)
+                    }
+
+                }
+
+            }).catch(e => { message.warning('please login again!'); navigate('/login') })
+        }
+    }, [temp])
+    const addNewChat = () => {
+        setHide(false)
+        setList(list + 1)
+    }
+    const handleConfirmName = (e) => {
+        if (e.keyCode === 13) {
+            setHide(true)
+            let chats = copyArr(chat)
+            chats.push(e.target.value)
+            e.target.value = ''
+            setChat(chats)
+        }
+    }
+    const changeReapir = (i) => {
+        let repairs = copyArr(repair)
+        repairs[i] = true
+        setRepair(repairs)
+    }
+    const handleRepair = (e, i) => {
+        if (e.keyCode === 13) {
+            let repairs = copyArr(repair)
+            repairs[i] = false
+            setRepair(repairs)
+            let chats = copyArr(chat)
+            chats[i] = e.target.value
+            setChat(chats)
+        }
+    }
+    const deleteChat = (j) => {
+        let chats = []
+        let i = 0;
+        for (i; i < chat.length; i++) {
+            if (i !== j) {
+                chats.push(chat[i])
+            }
+        }
+        setChat(chats)
+        setDeleteNumber(j)
+        setList(list - 1)
+    }
+    const handleSelect = (value, node, extra) => {
+        if (node) {
+            setAddText(node.title)
+            setDataSourceId(node.db)
+        }
+    }
     const getDBTreeData = () => {
         axios({
             headers: {
@@ -26,12 +116,14 @@ export default function LeftSidebar() {
             let i = 0
             for (i in res.data) {
                 treeData.push({
-                    value: res.data[i],
                     title: res.data[i],
+                    value: res.data[i],
+                    db: i
                 })
             }
-
-        })
+            setTreeData(treeData)
+            setTemp(1)
+        }).catch(e => { message.warning('please login again!'); navigate('/login') })
     }
     const init = () => {
         //监听鼠标拖动
@@ -76,15 +168,27 @@ export default function LeftSidebar() {
     useEffect(() => {
         init()
     }, [])
+    useEffect(() => {
+        if (addFirstChat) {
+            setHide(true)
+            setList(list + 1)
+            let chats = copyArr(chat)
+            chats.push(addFirstChat)
+            setChat(chats)
+        }
+    }, [addFirstChat])
+
     return (
         <div className='LeftSidebar'>
             <div className='LeftSidebar-top' style={{ height: `calc(50vh + ${heightChange}px)` }}>
-                <div className='LeftSidebar-addNewChat'>+ &nbsp;&nbsp;New chat</div>
+                <div onClick={addNewChat} className='LeftSidebar-addNewChat'>+ &nbsp;&nbsp;New chat</div>
                 <ul className='LeftSidebar-chats'>
                     {chat.map((v, i) => {
-                        return (<li key={i}><CommentOutlined />&nbsp;&nbsp;&nbsp;&nbsp;<div onClick={() => console.log(2)} className='LeftSidebar-chats-name'> SQL code for selectinSQL code for selectin</div>&nbsp;&nbsp;&nbsp;&nbsp;<EditOutlined onClick={() => console.log(1)} />&nbsp;&nbsp;&nbsp;&nbsp;<DeleteOutlined onClick={() => console.log(3)} /></li>)
+                        return (<li key={i}><CommentOutlined />&nbsp;&nbsp;&nbsp;&nbsp;{repair[i] ? <input type="text" onKeyDown={(e) => handleRepair(e, i)} style={{ margin: '0' }} className='newChatInput' /> : <div onClick={() => setCurrent(i)} className='LeftSidebar-chats-name'> {v}</div>}&nbsp;&nbsp;&nbsp;&nbsp;<EditOutlined onClick={() => changeReapir(i)} />&nbsp;&nbsp;&nbsp;&nbsp;<DeleteOutlined onClick={() => deleteChat(i)} /></li>)
                     })}
                 </ul>
+                {chat.length === 0 && hide ? <div className='LeftSidebar-introduction'>Welcome you to use chatDb,Now you can have a try to add new chat. </div> : ''}
+                <div className={hide ? 'hidden' : 'newChatInputDiv'}><input onKeyDown={handleConfirmName} type="text" className='newChatInput' placeholder='title of chat' /></div>
             </div>
             <div ref={line} className='LeftSidebar-line'></div>
             <div className='LeftSidebar-bottom' style={{ height: `calc(50vh - ${heightChange}px)` }}>
@@ -101,13 +205,11 @@ export default function LeftSidebar() {
                         maxHeight: 400,
                         overflow: 'auto',
                     }}
-                    placeholder="Please select"
-                    allowClear
-                    treeDefaultExpandAll
-                    onChange={onChange}
+                    placeholder="activity"
+                    onSelect={(value, node, extra) => handleSelect(value, node, extra)}
                     treeData={treeData}
-
                 />
+                <div className='LeftSidebar-introduction'>You can choose dbtree to get some message</div>
             </div>
         </div>
     )

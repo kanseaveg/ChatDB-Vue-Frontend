@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react'
 import './index.scss'
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-
 import axios from 'axios'
 import { Button, Checkbox, Form, Input, message, Modal, Select } from 'antd';
 const { Option } = Select;
+
 export default function Login() {
     const [open, setOpen] = useState(false);
     const [confirmLoading, setConfirmLoading] = useState(false);
@@ -39,7 +39,6 @@ export default function Login() {
         axios({
             headers: {
                 'Content-Type': 'application/json',
-                // "Authorization": 'Key 9RrbbCONolmN8qW5caluiu8HMpMZwzM3tDuLv0OO'
             },
             method: 'POST',
             data: {
@@ -53,6 +52,7 @@ export default function Login() {
             } else {
                 message.success(res.data.msg)
                 sessionStorage.setItem('token', res.data.data.token)
+                sessionStorage.setItem('userId', res.data.data.userId)
                 navigate('/chatdb')
             }
         })
@@ -62,7 +62,6 @@ export default function Login() {
         axios({
             headers: {
                 'Content-Type': 'application/json',
-                // "Authorization": 'Key 9RrbbCONolmN8qW5caluiu8HMpMZwzM3tDuLv0OO'
             },
             method: 'GET',
             url: `http://8.134.100.212:8081/api/user/isExists?username=${username}`,
@@ -73,7 +72,6 @@ export default function Login() {
                 axios({
                     headers: {
                         'Content-Type': 'application/json',
-                        // "Authorization": 'Key 9RrbbCONolmN8qW5caluiu8HMpMZwzM3tDuLv0OO'
                     },
                     method: 'POST',
                     data: {
@@ -190,7 +188,9 @@ export default function Login() {
                     </Form.Item>
                 </Form>
             </Modal>
-            <div className='Login-form'>
+            <div className='Login-form'>.
+                <div className='Login-form-title'>ChatDB</div>
+
                 <Form
                     name="normal_login"
                     className="login-form"

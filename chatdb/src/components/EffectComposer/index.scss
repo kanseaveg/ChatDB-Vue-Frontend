@@ -1,0 +1,13 @@
+.EffectComposer {
+    position: absolute;
+    z-index: -1;
+    top: 0;
+
+}
+
+.Bird {
+    position: absolute;
+    top: 0;
+    z-index: 3;
+    pointer-events: none;
+}
