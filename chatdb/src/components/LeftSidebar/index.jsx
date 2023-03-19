@@ -1,62 +1,235 @@
-import React, { useEffect, useState, useRef } from 'react'
-import { CommentOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import React, { useEffect, useState, useRef, useMemo } from 'react'
+import { SolutionOutlined, CommentOutlined, EditOutlined, DeleteOutlined, TableOutlined, SettingOutlined, LogoutOutlined, BulbOutlined, DatabaseOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import userHead from '../../assests/images/head1.png'
+import { TreeSelect, Input, Tree, message, Modal, Form, Button, Select } from 'antd';
 
-import { TreeSelect } from 'antd';
-import { message } from 'antd';
 import axios from 'axios'
 import './index.scss'
 import { copyArr } from '../../utils/func'
+const { Search } = Input;
 
-export default function LeftSidebar({ setCurrent, setDeleteNumber, list, setList, setAddText, addFirstChat, setDataSourceId }) {
+const { Option } = Select;
+
+
+const getParentKey = (key, tree) => {
+    let parentKey;
+    for (let i = 0; i < tree.length; i++) {
+        const node = tree[i];
+        if (node.children) {
+            if (node.children.some((item) => item.key === key)) {
+                parentKey = node.key;
+            } else if (getParentKey(key, node.children)) {
+                parentKey = getParentKey(key, node.children);
+            }
+        }
+    }
+    return parentKey;
+};
+export default function LeftSidebar({ setCurrent, setDeleteNumber, list, setList, setAddText, addFirstChat, setDataSourceId, setRefresh }) {
     const [chat, setChat] = useState([])
     const navigate = useNavigate();
     const [heightChange, setHeightChange] = useState(0)
     const [hide, setHide] = useState(true)
     const [repair, setRepair] = useState([])
     const [treeData, setTreeData] = useState([])
-    const [temp, setTemp] = useState(0)
     const [listvalue, setListValue] = useState();
     const token = sessionStorage.getItem('token')
     const line = useRef()
+    const [defaultData, setDefaultData] = useState([]);
+    const [dataList, setDataList] = useState([]);
+    const [theme, setTheme] = useState('light')
+    const [resetPassword, setResetPassword] = useState(false)
+    const [canSendCode, setCanSendCode] = useState([true, 30])
+
+    //选择
+    const handleSelete = (i) => {
+        setCurrent(i)
+        let lis = document.querySelectorAll('.LeftSidebar-chats-Li')
+        for (let i = 0; i < lis.length; i++) {
+            lis[i].className = 'LeftSidebar-chats-Li'
+        }
+
+        let li = lis[i]
+        li.className += ' LeftSidebar-chats-seletedLi'
+    }
+    //历史记录
     useEffect(() => {
-        if (temp > 0) {
+        let chat = JSON.parse(localStorage.getItem('chat'))
+        if (chat && chat.length !== 0) {
+            setChat(chat)
+            setTheme(localStorage.getItem('theme'))
+        }
+        //获取个人信息
+        axios({
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": token
+            },
+            method: 'GET',
+            url: `http://10.21.76.236:8081/api/userinfo/details?userId=${sessionStorage.getItem('userId')}`,
+        }).then(res => {
+            if (res.data.code === 200) {
+                let username = res.data.data.username
+                let email = res.data.data.email
+                let phone = res.data.data.phone
+                let userInfo = [username, email, phone]
+                setUserInfo(userInfo)
+            } else {
+                message.warning(res.data.msg)
+            }
+        }).catch(e => { message.warning('Error'); })
+    }, [])
+    useEffect(() => {
+        localStorage.setItem('chat', JSON.stringify(chat))
+        localStorage.setItem('theme', theme)
+    }, [chat, theme])
+    //Model1 删除全部
+    const [isModalOpen1, setIsModalOpen1] = useState(false);
+    const showModal1 = () => {
+        setIsModalOpen1(true);
+    };
+
+    const handleOk1 = () => {
+        let newChat = []
+        setChat(newChat)
+        setRefresh(true)
+        setIsModalOpen1(false);
+    };
+    const handleCancel1 = () => {
+        setIsModalOpen1(false);
+    };
+    //Model2 用户信息修改
+    const [isModalOpen2, setIsModalOpen2] = useState(false);
+    const [userInfo, setUserInfo] = useState([])
+    const showModal2 = () => {
+        setIsModalOpen2(true);
+    };
+
+    const handleCancel2 = () => {
+        setIsModalOpen2(false);
+
+    };
+    const onFinishUserInfo = ({ phone, username, email, password, emailCode }) => {
+        axios({
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": token
+            },
+            method: 'POST',
+            data: {
+                userId: sessionStorage.getItem('userId'),
+                username,
+                phone,
+                email: userInfo.email,
+                password, emailCode
+            },
+            url: `http://10.21.76.236:8081/api/userinfo/update`,
+        }).then(res => {
+            if (res.data.code === 200) {
+                message.success('save success!')
+            } else {
+                message.warning(res.data.msg)
+            }
+        }).catch(e => { message.warning('Error'); })
+    }
+    const Chinese = { title: '个人信息', username: '用户名', email: '邮箱*', phone: '手机号码', language: '语言', save: '保存', chinese: '简体中文', english: '英文', choose: '选择语言', password: '密码' }
+    const English = { title: 'UserInformation', username: 'username', email: 'email*', phone: 'phone-number', language: 'language', save: 'save', chinese: 'Chinese', english: 'English', choose: 'choose language', password: 'password' }
+    const [language, setLanguage] = useState(Chinese)
+    const onGenderChange = (value) => {
+        switch (value) {
+            case 'Chinese':
+                setLanguage(Chinese);
+                break;
+            case 'English':
+                setLanguage(English);
+                break;
+            default:
+        }
+    };
+    //重置密码发送验证码
+    useEffect(() => {
+        let timerId
+        if (canSendCode[1] > 0 && !canSendCode[0]) {
+            timerId = setTimeout(() => {
+                let count = canSendCode[1] - 1
+                let temp = [false, count]
+                setCanSendCode(temp);
+            }, 1000);
+
+        } else if (!canSendCode[0]) {
+            setCanSendCode([true, 0])
+        }
+        return () => clearTimeout(timerId);
+
+    }, [canSendCode]);
+    const sendEmail = () => {
+        setCanSendCode([false, 30])
+        if (userInfo.email) {
             axios({
                 headers: {
                     'Content-Type': 'application/json',
-                    "Authorization": token
                 },
-                method: 'GET',
-                url: `http://8.134.100.212:8081/api/db/schema/${temp}`,
+                method: 'POST',
+                data: {
+                    email: userInfo.email,
+                    type: '2'
+                },
+                url: `http://10.21.76.236:8081/api/user/send`,
             }).then(res => {
-                let children = []
-                res.data.map((v, i) => {
-                    children.push({
-                        value: v.tableName + Math.random() * 10000,
-                        title: v.tableName,
-                        db: temp,
-                        children: v.tableColumns?.map((value, index) => {
-                            return ({
-                                value: value + + Math.random() * 10000,
-                                title: value,
-                                db: temp
-                            })
-                        })
-                    })
-                })
-                let newTreeData = copyArr(treeData)
-                if (newTreeData[temp - 1]) {
-                    newTreeData[temp - 1].children = children
-                    setTreeData(newTreeData)
-                    if (temp < newTreeData.length) {
-                        setTemp(temp + 1)
-                    }
-
+                if (res.code === 200) {
+                    message.success(res.data)
+                } else {
+                    message.warning(res.msg)
                 }
-
-            }).catch(e => { message.warning('please login again!'); navigate('/login') })
+            })
         }
-    }, [temp])
+    }
+    const PasswordInput = (e) => {
+        let value = e.target.value.trim()
+        if (value) {
+            setResetPassword(true)
+        } else {
+            setResetPassword(false)
+        }
+    }
+    //修改主题颜色
+    const changeTheme = () => {
+        const root = document.documentElement;
+        if (theme === 'light') {
+            root.style.setProperty(`--primary-color`, 'rgb(24, 24, 28)');
+            root.style.setProperty(`--secondary-color`, '#86CBFA');
+            root.style.setProperty(`--secondary-color1`, 'gray');
+            root.style.setProperty(`--third-color`, 'white');
+            root.style.setProperty(`--third-color1`, 'rgba(255,255,255,.2)');
+            root.style.setProperty(`--third-color2`, 'rgba(255,255,255,.6)');
+            setTheme('dark')
+        } else {
+            root.style.setProperty(`--primary-color`, 'white');
+            root.style.setProperty(`--secondary-color`, '#86CBFA');
+            root.style.setProperty(`--secondary-color1`, 'rgba(134, 203, 250, .2)');
+            root.style.setProperty(`--third-color`, 'rgb(36, 36, 36)');
+            root.style.setProperty(`--third-color1`, 'rgba(36, 36, 36,.2)');
+            root.style.setProperty(`--third-color2`, 'rgba(36, 36, 36,.6)');
+
+            setTheme('light')
+        }
+    }
+    const logout = () => {
+        axios({
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": token
+            },
+            method: 'GET',
+            url: `http://10.21.76.236:8081/api/user/logout`,
+        }).then(res => {
+            console.log(res, '.res');
+        }).catch(e => { })
+        navigate('/login')
+        sessionStorage.clear()
+        localStorage.clear()
+    }
     const addNewChat = () => {
         setHide(false)
         setList(list + 1)
@@ -99,9 +272,45 @@ export default function LeftSidebar({ setCurrent, setDeleteNumber, list, setList
     }
     const handleSelect = (value, node, extra) => {
         if (node) {
-            setAddText(node.title)
-            setDataSourceId(node.db)
+            setDataSourceId(parseInt(node.db))
+            getTableData(parseInt(node.db))
         }
+    }
+    const onSelect = (temp, e) => {
+        let addText = e.node.title.props.children[2] || ''
+        setAddText(addText)
+    }
+    const getTableData = (number) => {
+        axios({
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": token
+            },
+            method: 'GET',
+            url: `http://10.21.76.236:8081/api/db/schema/${number}`,
+        }).then(res => {
+            if (res.status === 200) {
+                let data = res.data
+                let defaultData = []
+                let dataList = []
+                data.map((v, i) => {
+                    let temp = Math.random() * 1000
+                    dataList.push({ key: v.tableName + i + temp, title: v.tableName })
+                    defaultData.push({
+                        title: v.tableName, key: v.tableName + i + temp, value: v.tableName, children: v.tableColumns.map((value, index) => {
+                            let temp = Math.random() * 1000
+                            dataList.push({ key: value + index + temp, title: value, })
+                            return ({ title: value, value, key: value + index + temp })
+                        })
+                    })
+                })
+                setDefaultData(defaultData)
+                setDataList(dataList)
+            } else {
+                message.warning('something wrong')
+            }
+        }).catch(e => { message.warning('please login again!'); navigate('/login') })
+
     }
     const getDBTreeData = () => {
         axios({
@@ -110,7 +319,7 @@ export default function LeftSidebar({ setCurrent, setDeleteNumber, list, setList
                 "Authorization": token
             },
             method: 'GET',
-            url: `http://8.134.100.212:8081/api/db/list`,
+            url: `http://10.21.76.236:8081/api/db/list`,
         }).then(res => {
             let treeData = []
             let i = 0
@@ -122,8 +331,10 @@ export default function LeftSidebar({ setCurrent, setDeleteNumber, list, setList
                 })
             }
             setTreeData(treeData)
-            setTemp(1)
         }).catch(e => { message.warning('please login again!'); navigate('/login') })
+
+        getTableData(1)
+
     }
     const init = () => {
         //监听鼠标拖动
@@ -168,6 +379,59 @@ export default function LeftSidebar({ setCurrent, setDeleteNumber, list, setList
     useEffect(() => {
         init()
     }, [])
+    //树展示
+    const [expandedKeys, setExpandedKeys] = useState([]);
+    const [searchValue, setSearchValue] = useState('');
+    const [autoExpandParent, setAutoExpandParent] = useState(true);
+    const onExpand = (newExpandedKeys) => {
+        setExpandedKeys(newExpandedKeys);
+        setAutoExpandParent(false);
+    };
+    const onChange = (e) => {
+        const { value } = e.target;
+        const newExpandedKeys = dataList
+            .map((item) => {
+                if (item.title.indexOf(value) > -1) {
+                    return getParentKey(item.key, defaultData);
+                }
+                return null;
+            })
+            .filter((item, i, self) => item && self.indexOf(item) === i);
+        setExpandedKeys(newExpandedKeys);
+        setSearchValue(value);
+        setAutoExpandParent(true);
+    };
+    const treeData2 = useMemo(() => {
+        const loop = (data) =>
+            data.map((item) => {
+                const strTitle = item.title;
+                const index = strTitle.indexOf(searchValue);
+                const beforeStr = strTitle.substring(0, index);
+                const afterStr = strTitle.slice(index + searchValue.length);
+                const title =
+                    index > -1 ? (
+                        <span>
+                            {beforeStr}
+                            <span className="site-tree-search-value">{searchValue}</span>
+                            {afterStr}
+                        </span>
+                    ) : (
+                        <span>{strTitle}</span>
+                    );
+                if (item.children) {
+                    return {
+                        title,
+                        key: item.key,
+                        children: loop(item.children),
+                    };
+                }
+                return {
+                    title,
+                    key: item.key,
+                };
+            });
+        return loop(defaultData);
+    }, [searchValue, defaultData]);
     useEffect(() => {
         if (addFirstChat) {
             setHide(true)
@@ -180,36 +444,174 @@ export default function LeftSidebar({ setCurrent, setDeleteNumber, list, setList
 
     return (
         <div className='LeftSidebar'>
-            <div className='LeftSidebar-top' style={{ height: `calc(50vh + ${heightChange}px)` }}>
+            <Modal title="清空所有对话" open={isModalOpen1} onOk={handleOk1} onCancel={handleCancel1}>
+                <p>是否清空所有对话？</p>
+            </Modal>
+            <Modal footer={null} title={<div className='model2-userInfo'><SolutionOutlined />&nbsp; {language.title}</div>} open={isModalOpen2} onCancel={handleCancel2}>
+                <Form
+                    name="basic"
+                    labelCol={{
+                        span: 6,
+                    }}
+                    wrapperCol={{
+                        span: 16,
+                    }}
+                    style={{
+                        maxWidth: 600,
+                    }}
+                    initialValues={{
+                        remember: true,
+                    }}
+                    onFinish={onFinishUserInfo}
+                    autoComplete="on"
+                >
+                    <Form.Item
+                        label={language.username}
+                        name="username"
+                        rules={[
+                            {
+                                pattern: "^[\\u4e00-\\u9fa5a-zA-Z0-9]{4,12}$",
+                                message: '用户名必须为4-12位字母/数字/中文'
+                            }
+                        ]}
+                    >
+                        <Input placeholder={userInfo[0]} />
+                    </Form.Item>
+                    <Form.Item
+                        label={language.password}
+                        name="password"
+                        rules={[
+                            {
+                                pattern: "^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$",
+                                message: '密码必须包含6-20个大小写字母、数字'
+
+                            }
+                        ]}
+                    >
+                        <Input onChange={PasswordInput} />
+                    </Form.Item>
+                    {resetPassword ? <Form.Item
+                        name="emailCode"
+                        label="邮箱验证码"
+                        rules={[
+                            {
+                                required: true,
+                                message: '请填写邮箱验证码',
+                            },
+                        ]}
+                    ><div>
+                            <Input style={{ width: '100px' }} /><Button disabled={!canSendCode[0]} onClick={sendEmail}>{canSendCode[0] ? '发送邮箱验证码' : canSendCode[1]}</Button>
+                        </div>
+                    </Form.Item> : ''}
+                    <Form.Item
+                        name="email"
+                        label={language.email}
+                    >
+                        <Input disabled placeholder={userInfo[1]} />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="phone"
+                        label={language.phone}
+                        rules={[
+                            {
+                                pattern: "^((13[0-9])|(14[0|5|6|7|9])|(15[0-3])|(15[5-9])|(16[6|7])|(17[2|3|5|6|7|8])|(18[0-9])|(19[1|8|9]))\\d{8}$",
+                                message: '手机号应为11位数字'
+                            }
+                        ]}
+                    >
+                        <Input
+                            placeholder={userInfo[2]}
+                            style={{
+                                width: '100%',
+                            }}
+                        />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="language"
+                        label={language.language}
+                    >
+                        <Select
+                            placeholder={language.choose}
+                            onChange={onGenderChange}
+                            allowClear
+                        >
+                            <Option value="Chinese">{language.chinese}</Option>
+                            <Option value="English">{language.english}</Option>
+                        </Select>
+                    </Form.Item>
+                    <Form.Item
+                        wrapperCol={{
+                            offset: 10,
+                            span: 2,
+                        }}
+                    >
+                        <Button type="primary" htmlType="submit">
+                            {language.save}
+                        </Button>
+                    </Form.Item>
+                </Form>
+            </Modal>
+            <div className='LeftSidebar-top' style={{ height: `calc(40vh + ${heightChange}px)` }}>
                 <div onClick={addNewChat} className='LeftSidebar-addNewChat'>+ &nbsp;&nbsp;New chat</div>
                 <ul className='LeftSidebar-chats'>
-                    {chat.map((v, i) => {
-                        return (<li key={i}><CommentOutlined />&nbsp;&nbsp;&nbsp;&nbsp;{repair[i] ? <input type="text" onKeyDown={(e) => handleRepair(e, i)} style={{ margin: '0' }} className='newChatInput' /> : <div onClick={() => setCurrent(i)} className='LeftSidebar-chats-name'> {v}</div>}&nbsp;&nbsp;&nbsp;&nbsp;<EditOutlined onClick={() => changeReapir(i)} />&nbsp;&nbsp;&nbsp;&nbsp;<DeleteOutlined onClick={() => deleteChat(i)} /></li>)
-                    })}
+                    {chat.length !== 0 ? chat.map((v, i) => {
+                        return (<li className='LeftSidebar-chats-Li' key={i}><CommentOutlined />&nbsp;&nbsp;&nbsp;&nbsp;{repair[i] ? <input type="text" onKeyDown={(e) => handleRepair(e, i)} style={{ margin: '0' }} className='newChatInput' /> : <div onClick={() => handleSelete(i)} className='LeftSidebar-chats-name'> {v}</div>}&nbsp;&nbsp;&nbsp;&nbsp;<EditOutlined onClick={() => changeReapir(i)} />&nbsp;&nbsp;&nbsp;&nbsp;<DeleteOutlined onClick={() => deleteChat(i)} /></li>)
+                    }) : ''}
                 </ul>
-                {chat.length === 0 && hide ? <div className='LeftSidebar-introduction'>Welcome you to use chatDb,Now you can have a try to add new chat. </div> : ''}
                 <div className={hide ? 'hidden' : 'newChatInputDiv'}><input onKeyDown={handleConfirmName} type="text" className='newChatInput' placeholder='title of chat' /></div>
+                {chat.length === 0 && hide ? '' : <div onClick={showModal1} className='LeftSidebar-top-deteleAll'><DeleteOutlined />&nbsp;&nbsp; Clear conversations</div>}
+                {/* <div className='LeftSidebar-introduction'>Welcome you to use chatDb,Now you can have a try to add new chat. </div> */}
             </div>
             <div ref={line} className='LeftSidebar-line'></div>
-            <div className='LeftSidebar-bottom' style={{ height: `calc(50vh - ${heightChange}px)` }}>
-                <TreeSelect className='LeftSidebar-bottom-TreeSelect'
-                    showSearch
-                    treeLine='true'
-                    size='large'
-                    style={{
-                        width: '95%',
-                        color: 'white!important'
-                    }}
-                    value={listvalue}
-                    dropdownStyle={{
-                        maxHeight: 400,
-                        overflow: 'auto',
-                    }}
-                    placeholder="activity"
-                    onSelect={(value, node, extra) => handleSelect(value, node, extra)}
-                    treeData={treeData}
-                />
-                <div className='LeftSidebar-introduction'>You can choose db to get some correspondingly message</div>
+            <div className='LeftSidebar-bottom' style={{ height: `calc(58vh - ${heightChange}px)` }}>
+                <div className='LeftSidebar-bottom-top'>
+                    <TreeSelect className='LeftSidebar-bottom-TreeSelect'
+                        showSearch
+                        size='middle'
+                        style={{
+                            width: '98%',
+                            color: 'white!important'
+                        }}
+                        value={listvalue}
+                        dropdownStyle={{
+                            maxHeight: 400,
+                            overflow: 'auto',
+                        }}
+                        placeholder="activity"
+                        onSelect={(value, node, extra) => handleSelect(value, node, extra)}
+                        treeData={treeData}
+                    />
+                    <div >
+                        <Search
+                            style={{
+                                marginTop: '10px',
+                                width: '98%',
+                                marginBottom: 8,
+                            }}
+                            placeholder="Search"
+                            onChange={onChange}
+                        />
+                        <Tree
+                            onExpand={onExpand}
+                            switcherIcon={<TableOutlined />}
+                            expandedKeys={expandedKeys}
+                            autoExpandParent={autoExpandParent}
+                            treeData={treeData2}
+                            onSelect={onSelect}
+                        />
+                    </div>
+                    {/* <div className='LeftSidebar-introduction'>You can choose db to get some correspondingly message</div> */}
+                </div>
+                <div className='LeftSidebar-bottom-userInfo'>
+                    <img className='LeftSidebar-bottom-head' src={userHead} alt="" />
+                    <h1 className='LeftSidebar-bottom-name'>{userInfo[0]}</h1>
+                    <SettingOutlined onClick={showModal2}  ></SettingOutlined>
+                    <LogoutOutlined onClick={logout} />
+                    <BulbOutlined onClick={changeTheme} />
+                </div>
+
             </div>
         </div>
     )

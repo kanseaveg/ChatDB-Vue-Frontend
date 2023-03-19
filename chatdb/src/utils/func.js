@@ -9,3 +9,14 @@ export const copyArr = (obj) => {
     }
     return out;
 }
+export function debounce(func, delay) {
+    let timerId;
+    return function (...args) {
+        for (let i = 0; i < 100; i++) {
+            clearTimeout(i)
+        }
+        timerId = setTimeout(() => {
+            func.apply(this, args);
+        }, delay);
+    }();
+}
