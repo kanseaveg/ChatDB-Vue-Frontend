@@ -428,6 +428,7 @@ export default function LeftSidebar({ setCurrent, setDeleteNumber, list, setList
                 return {
                     title,
                     key: item.key,
+                    isLeaf: true,
                 };
             });
         return loop(defaultData);
@@ -500,7 +501,7 @@ export default function LeftSidebar({ setCurrent, setDeleteNumber, list, setList
                             },
                         ]}
                     ><div>
-                            <Input style={{ width: '100px' }} /><Button disabled={!canSendCode[0]} onClick={sendEmail}>{canSendCode[0] ? '发送邮箱验证码' : canSendCode[1]}</Button>
+                            <Input style={{ width: '100px' }} /><Button disabled={!canSendCode[0]} onClick={sendEmail}>{canSendCode[0] ? '发送邮箱验证码' : canSendCode[1] + 's后重新发送'}</Button>
                         </div>
                     </Form.Item> : ''}
                     <Form.Item

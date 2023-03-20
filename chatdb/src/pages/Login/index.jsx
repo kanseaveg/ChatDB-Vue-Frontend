@@ -45,26 +45,51 @@ export default function Login() {
 
     }, [canSendCode]);
     const sendEmail = () => {
-        setCanSendCode([false, 30])
-        if (Email.current.input.value) {
+        const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        let email = Email.current.input.value
+        if (email && regex.test(email)) {
+            //判断邮箱是否注册
             axios({
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                method: 'POST',
-                data: {
-                    email: Email.current.input.value,
-                    type: '1'
-                },
-                url: `http://10.21.76.236:8081/api/user/send`,
+                method: 'GET',
+                url: `http://10.21.76.236:8081/api/user/isExists?email=${email}`,
             }).then(res => {
-                if (res.data.code === 200) {
-                    message.success(res.data.data)
+                if (res.data.code !== 200) {
+                    message.warning(res.data.data)
                 } else {
-                    message.warning(res.data.msg)
+                    setCanSendCode([false, 30])
+                    if (Email.current.input.value) {
+                        axios({
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            method: 'POST',
+                            data: {
+                                email,
+                                type: '1'
+                            },
+                            url: `http://10.21.76.236:8081/api/user/send`,
+                        }).then(res => {
+                            if (res.data.code === 200) {
+                                message.success(res.data.data)
+                            } else {
+                                message.warning(res.data.msg)
+                            }
+                        })
+                    }
                 }
             })
+
+
+
+
+
+        } else {
+            message.warning('请输入有效邮箱地址！')
         }
+
     }
 
     const sendCaptcha = (i) => {
@@ -108,42 +133,31 @@ export default function Login() {
             } else {
                 message.success(res.data.msg)
                 console.log(res, 'reslogin');
-                sessionStorage.setItem('token', res.data.data.token)
-                sessionStorage.setItem('userId', res.data.data.userId)
+                sessionStorage.setItem('token', res.headers.authorization)
+                sessionStorage.setItem('userId', res.headers.userid)
                 navigate('/chatdb')
             }
         })
     };
     const onFinishRegister = (values) => {
         const { username, password, email, phone, captchaCode, emailCode } = values
+
         axios({
             headers: {
                 'Content-Type': 'application/json',
             },
-            method: 'GET',
-            url: `http://10.21.76.236:8081/api/user/isExists?email=${Email.current.input.value}`,
+            method: 'POST',
+            data: {
+                username,
+                password, email, phone, emailCode, captchaCode, captchaKey: captcha[2]
+            },
+            url: `http://10.21.76.236:8081/api/user/register`,
         }).then(res => {
             if (res.data.code !== 200) {
                 message.warning(res.data.data)
             } else {
-                axios({
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    method: 'POST',
-                    data: {
-                        username,
-                        password, email, phone, emailCode, captchaCode, captchaKey: captcha[2]
-                    },
-                    url: `http://10.21.76.236:8081/api/user/register`,
-                }).then(res => {
-                    if (res.data.code !== 200) {
-                        message.warning(res.data.data)
-                    } else {
-                        message.success(res.data.data)
-                        handleCancel()
-                    }
-                })
+                message.success(res.data.data)
+                handleCancel()
             }
         })
 
@@ -232,7 +246,7 @@ export default function Login() {
                             },
                         ]}
                     >
-                        <div style={{ display: 'flex' }}><Input ref={Email} /> <Button disabled={!canSendCode[0]} onClick={sendEmail}>{canSendCode[0] ? '发送邮箱验证码' : canSendCode[1] + '后重新发送'}</Button></div>
+                        <div style={{ display: 'flex' }}><Input ref={Email} /> <Button disabled={!canSendCode[0]} onClick={sendEmail}>{canSendCode[0] ? '发送邮箱验证码' : canSendCode[1] + 's后重新发送'}</Button></div>
 
                     </Form.Item>
                     <Form.Item
