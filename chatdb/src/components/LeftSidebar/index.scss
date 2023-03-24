@@ -4,6 +4,10 @@
     display: none;
 }
 
+.ant-modal-body {
+    color: var(--third-color);
+}
+
 input::placeholder {
     color: var(--third-color) !important;
     /* 设置placeholder字体颜色为灰色 */
@@ -37,7 +41,7 @@ input::placeholder {
 
 .LeftSidebar {
     width: 250px;
-    height: 98vh;
+    height: calc(98vh + 1.5px);
     background: var(--primary-color);
     border-right: 1px solid var(--third-color1);
     color: var(--third-color);
@@ -87,6 +91,14 @@ input::placeholder {
             cursor: pointer;
         }
 
+        .newChatInput {
+            width: 110px;
+            padding-left: 10px;
+            background: rgba(0, 0, 0, 0);
+            border-bottom: 1px solid var(--third-color);
+            color: var(--third-color);
+        }
+
         .newChatInputDiv {
             margin: 0 auto;
             height: 40px;
@@ -98,13 +110,7 @@ input::placeholder {
             justify-content: center;
             align-items: center;
 
-            .newChatInput {
-                width: 200px;
-                padding-left: 10px;
-                background: rgba(0, 0, 0, 0);
-                border-bottom: 1px solid var(--third-color);
-                color: var(--third-color);
-            }
+
         }
 
 
@@ -263,7 +269,7 @@ input::placeholder {
                 display: block;
                 font-size: 16px;
                 font-weight: 700;
-                margin-left: -20px;
+                margin-left: -10px;
             }
         }
 

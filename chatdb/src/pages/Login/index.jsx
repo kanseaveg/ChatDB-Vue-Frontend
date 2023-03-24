@@ -12,26 +12,73 @@ const { Option } = Select;
 export default function Login() {
 
     const [open, setOpen] = useState(false);
+    const [open1, setOpen1] = useState(false);
+
     const [confirmLoading, setConfirmLoading] = useState(false);
     const [captcha, setCaptcha] = useState([])
     const navigate = useNavigate();
     const [canSendCode, setCanSendCode] = useState([true, 30])
-    const Email = useRef()
+    const [canSendCode1, setCanSendCode1] = useState([true, 30])
 
+    const Email = useRef()
+    const Email1 = useRef()
+
+    const resetPassword = (values) => {
+        const { password, email, emailCode } = values
+        axios({
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            method: 'POST',
+            data: {
+                email,
+                password, emailCode
+            },
+            url: `http://10.21.76.236:8081/api/user/reset`,
+        }).then(res => {
+            console.log(res, 'resetpassword');
+            if (res.data.code === 200) {
+                message.success(res.data.data)
+                handleCancel1()
+            } else {
+                message.warning(res.data.data || res.data.msg || '重置密码失败')
+            }
+        })
+    }
     const showModal = () => {
         setOpen(true);
+    };
+    const showModal1 = () => {
+        setOpen1(true);
     };
 
     const handleCancel = () => {
         setOpen(false);
     };
+    const handleCancel1 = () => {
+        setOpen1(false);
+    };
     const register = () => {
         showModal()
     }
-
     useEffect(() => {
         let timerId
-        if (canSendCode[1] > 0) {
+        if (canSendCode1[1] > 0 && !canSendCode1[0]) {
+            timerId = setTimeout(() => {
+                let count = canSendCode1[1] - 1
+                let temp = [false, count]
+                setCanSendCode1(temp);
+            }, 1000);
+
+        } else if (!canSendCode1[0]) {
+            setCanSendCode1([true, 0])
+        }
+        return () => clearTimeout(timerId);
+
+    }, [canSendCode1]);
+    useEffect(() => {
+        let timerId
+        if (canSendCode[1] > 0 && !canSendCode[0]) {
             timerId = setTimeout(() => {
                 let count = canSendCode[1] - 1
                 let temp = [false, count]
@@ -44,9 +91,9 @@ export default function Login() {
         return () => clearTimeout(timerId);
 
     }, [canSendCode]);
-    const sendEmail = () => {
+    const sendEmail = (i) => {
         const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        let email = Email.current.input.value
+        let email = i === '1' ? Email.current.input.value : Email1.current.input.value
         if (email && regex.test(email)) {
             //判断邮箱是否注册
             axios({
@@ -56,11 +103,11 @@ export default function Login() {
                 method: 'GET',
                 url: `http://10.21.76.236:8081/api/user/isExists?email=${email}`,
             }).then(res => {
+                i === '1' ? setCanSendCode([false, 30]) : setCanSendCode1([false, 30])
                 if (res.data.code !== 200) {
-                    message.warning(res.data.data)
-                } else {
-                    setCanSendCode([false, 30])
-                    if (Email.current.input.value) {
+                    if (i === '1') {
+                        message.warning(res.data.data)
+                    } else {
                         axios({
                             headers: {
                                 'Content-Type': 'application/json',
@@ -68,7 +115,7 @@ export default function Login() {
                             method: 'POST',
                             data: {
                                 email,
-                                type: '1'
+                                type: i
                             },
                             url: `http://10.21.76.236:8081/api/user/send`,
                         }).then(res => {
@@ -79,6 +126,30 @@ export default function Login() {
                             }
                         })
                     }
+
+                } else {
+                    if (i === '1') {
+                        axios({
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            method: 'POST',
+                            data: {
+                                email,
+                                type: i
+                            },
+                            url: `http://10.21.76.236:8081/api/user/send`,
+                        }).then(res => {
+                            if (res.data.code === 200) {
+                                message.success(res.data.data)
+                            } else {
+                                message.warning(res.data.msg)
+                            }
+                        })
+                    } else {
+                        message.warning('该邮箱未被注册')
+                    }
+
                 }
             })
 
@@ -246,7 +317,7 @@ export default function Login() {
                             },
                         ]}
                     >
-                        <div style={{ display: 'flex' }}><Input ref={Email} /> <Button disabled={!canSendCode[0]} onClick={sendEmail}>{canSendCode[0] ? '发送邮箱验证码' : canSendCode[1] + 's后重新发送'}</Button></div>
+                        <div style={{ display: 'flex' }}><Input ref={Email} /> <Button disabled={!canSendCode[0]} onClick={() => sendEmail('1')}>{canSendCode[0] ? '发送邮箱验证码' : canSendCode[1] + 's后重新发送'}</Button></div>
 
                     </Form.Item>
                     <Form.Item
@@ -309,6 +380,87 @@ export default function Login() {
                     </Form.Item>
                 </Form>
             </Modal>
+            <Modal
+                title="忘记密码"
+                open={open1}
+                onCancel={handleCancel1}
+                footer={null}
+            >
+                <Form
+                    name="basic"
+                    labelCol={{
+                        span: 8,
+                    }}
+                    wrapperCol={{
+                        span: 16,
+                    }}
+                    style={{
+                        maxWidth: 600,
+                    }}
+                    initialValues={{
+                        remember: true,
+                    }}
+                    onFinish={resetPassword}
+                    autoComplete="on"
+                >
+                    <Form.Item
+                        name="email"
+                        label="邮箱"
+                        rules={[
+                            {
+                                type: 'email',
+                                message: '邮箱格式错误!',
+                            },
+                            {
+                                required: true,
+                                message: '请输入您的邮箱!',
+                            },
+                        ]}
+                    >
+                        <div style={{ display: 'flex' }}><Input ref={Email1} /> <Button disabled={!canSendCode1[0]} onClick={() => sendEmail('2')}>{canSendCode1[0] ? '发送邮箱验证码' : canSendCode1[1] + 's后重新发送'}</Button></div>
+
+                    </Form.Item>
+                    <Form.Item
+                        name="emailCode"
+                        label="请填写邮箱验证码"
+                        rules={[
+                            {
+                                required: true,
+                                message: '请填写邮箱验证码',
+                            },
+                        ]}
+                    >
+                        <Input />
+                    </Form.Item>
+                    <Form.Item
+                        label="密码"
+                        name="password"
+                        rules={[
+                            {
+                                required: true,
+                                message: '请输入密码',
+                            },
+                            {
+                                pattern: "^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$",
+                                message: '密码必须包含6-20个大小写字母、数字'
+
+                            }
+                        ]}
+                    >
+                        <Input.Password />
+                    </Form.Item>
+                    <Form.Item
+                        wrapperCol={{
+                            offset: 10,
+                            span: 2,
+                        }}
+                    >
+                        <Button type="primary" htmlType="submit">
+                            重置密码
+                        </Button>
+                    </Form.Item>
+                </Form>
+            </Modal>
             <div className='Login-form'>.
                 <div className='Login-form-title'><img style={{ width: '50px', height: '50px', marginTop: '-5px' }} src={Logo} alt="" /> ChatDB</div>
 
@@ -367,7 +519,10 @@ export default function Login() {
                             }
                         ]}
                     >
-                        <Input.Password />
+                        <div>
+                            <Input.Password />
+                            <i onClick={showModal1}>忘记密码</i>
+                        </div>
                     </Form.Item>
                     <Form.Item
                         name="captchaCode"
@@ -397,3 +552,9 @@ export default function Login() {
         </div>
     )
 }
+
+
+
+
+
+
