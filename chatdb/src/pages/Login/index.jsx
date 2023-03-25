@@ -544,9 +544,9 @@ export default function Login() {
                         <Button style={{ marginLeft: '20px', width: '90%', marginBottom: '20px' }} type="primary" htmlType="submit" className="login-form-button">
                             Log in
                         </Button><br></br>
-                        <Button style={{ marginLeft: '20px', width: '90%', }} type="primary" onClick={register}>
-                            register
-                        </Button>
+                        {/* <Button style={{ marginLeft: '20px', width: '90%', }} type="primary" onClick={register}>
+                            Register
+                        </Button> */}
                     </Form.Item>
                 </Form></div>
         </div>

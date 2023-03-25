@@ -4,12 +4,12 @@ import Login from '../pages/Login'
 import ChatDb from '../pages/ChatDb'
 import ComingSoon from '../pages/CommingSoon'
 const routes = [
-    //登录注册
+    // 登录注册
     {
         path: '/login',
         element: <Login />,
     },
-   //chatdb
+//    chatdb
    {
     path: '/chatdb',
     element: <ChatDb />,

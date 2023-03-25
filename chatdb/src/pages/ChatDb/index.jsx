@@ -11,25 +11,25 @@ export default function ChatDb() {
     const [dataSourceId, setDataSourceId] = useState(1)
     const [refresh, setRefresh] = useState(false)
     const [name, setName] = useState('')
+    const [flag, setFlag] = useState(false)
     useEffect(() => {
         let list = localStorage.getItem('list')
-        if (list !== 0 && list !== '0' && !isNaN(list) && list !== null && list !== undefined) {
-            console.log(list, 'getlist');
+        if (!isNaN(list) && list !== null && list !== undefined) {
             setList(parseInt(list))
-            setCurrent(localStorage.getItem('current'))
+            setCurrent(parseInt(localStorage.getItem('current')))
         }
+        setFlag(true)
     }, [])
     useEffect(() => {
-        if (list !== -1) {
-            console.log(current, 'currentset');
+        if (flag) {
             localStorage.setItem('current', current)
             localStorage.setItem('list', parseInt(list))
         }
     }, [current, list])
     return (
         <div className='ChatDb'>
-            <LeftSidebar name={name} setName={setName} setRefresh={setRefresh} setDataSourceId={setDataSourceId} addFirstChat={addFirstChat} setAddText={setAddText} list={list} setList={setList} setCurrent={setCurrent} current={current} setDeleteNumber={setDeleteNumber}></LeftSidebar>
-            <RightMain setName={setName} setRefresh={setRefresh} refresh={refresh} dataSourceId={dataSourceId} setAddFirstChat={setAddFirstChat} setCurrent={setCurrent} addText={addText} list={list} current={current} deleteNumber={deleteNumber}></RightMain>
+            <LeftSidebar name={name} setName={setName} setRefresh={setRefresh} setDataSourceId={setDataSourceId} addFirstChat={addFirstChat} setAddFirstChat={setAddFirstChat} setAddText={setAddText} list={list} setList={setList} setCurrent={setCurrent} current={current} setDeleteNumber={setDeleteNumber}></LeftSidebar>
+            <RightMain setName={setName} setDeleteNumber={setDeleteNumber} setRefresh={setRefresh} refresh={refresh} dataSourceId={dataSourceId} setAddFirstChat={setAddFirstChat} setCurrent={setCurrent} addText={addText} list={list} current={current} deleteNumber={deleteNumber}></RightMain>
         </div>
     )
 }

@@ -24,8 +24,13 @@ const columns = [
         address: 'Sydney No. 1 Lake Park',
     },
 ];
-
-export default function RightMain({ setName, current, deleteNumber, list, addText, setCurrent, setAddFirstChat, dataSourceId, setRefresh, refresh }) {
+// // .env.dev
+// const REACT_APP_API_URL=http://10.21.76.236:8081
+// // .env.test
+// const REACT_APP_API_URL=http://10.21.76.236:8081
+// // .env.prod
+// const REACT_APP_API_URL=http://localhost:8081
+export default function RightMain({ setName, current, setDeleteNumber, deleteNumber, list, addText, setCurrent, setAddFirstChat, dataSourceId, setRefresh, refresh }) {
     // [[{ who: 'ai', content: 'page1你好' }, { who: 'people', content: 'page1你好3' }], [{ who: 'ai', content: 'page2你好' }, { who: 'people', content: 'page2你好3' }]]
     const [chats, setChats] = useState([])
     const navigate = useNavigate();
@@ -44,6 +49,7 @@ export default function RightMain({ setName, current, deleteNumber, list, addTex
     useEffect(() => {
         let Chats = JSON.parse(localStorage.getItem('chats'))
         if (Chats && Chats.length !== 0) {
+            console.log(Chats, 'Chats');
             setChats(Chats)
             setText(JSON.parse(localStorage.getItem('text')))
         }
@@ -223,7 +229,7 @@ export default function RightMain({ setName, current, deleteNumber, list, addTex
                         console.log('Server closed the connection');
                         return;
                     }
-                    let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "")
+                    let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "").replace(/\n/g, "")
                     let newChats3 = copyArr(newChats2)
                     if (text.includes('"')) {
                         console.log('报错了');
@@ -241,31 +247,7 @@ export default function RightMain({ setName, current, deleteNumber, list, addTex
                 });
             })
             .catch(error => console.error('Error occurred:', error));
-        axios({
-            headers: {
-                'Content-Type': 'application/json',
-                "Authorization": token
-            },
-            method: 'POST',
-            data: {
-                prompt: value,
-                dbId: dataSourceId,
-                userId,
-                conversationId: conversationId,
-                parentId
-            },
-            url: `http://10.21.76.236:8081/api/chat/query`,
-        }).then(res => {
-            if (res.data.code === 200) {
-                let newChats2 = copyArr(newChats)
-                newChats2[current][i].content = res.data.data.answers
-                newChats2[current][i].conversationId = res.data.data.conversationId || ''
-                newChats2[current][i].parentId = res.data.data.parentId || ''
-                setChats(newChats2)
-            } else {
-                message.warning(res.data.data || res.data.msg)
-            }
-        }).catch(e => { message.warning(e.response.data.error || "can't find the result") })
+
     }
     //清空一个
     const RefreshOne = () => {
@@ -280,12 +262,13 @@ export default function RightMain({ setName, current, deleteNumber, list, addTex
         setShowStopBtn(true)
         let value = peopleInput.current.value || ''
         if (value) {
-            if (chats.length === 0) {
+            if (chats.length === 0 || current === -1) {
+                console.log('来到这了', chats, current);
                 chats.push([{ who: 'people', content: value }])
-                setAddFirstChat(value)
+                current === -1 ? setAddFirstChat(value) : setName(value)
                 peopleInput.current.value = ''
                 let newChats = copyArr(chats)
-                newChats[0].push({ who: 'ai' })
+                newChats[newChats.length - 1].push({ who: 'ai' })
                 let Text = copyArr(text)
                 Text.push([''])
                 setText(Text)
@@ -310,8 +293,8 @@ export default function RightMain({ setName, current, deleteNumber, list, addTex
                         let newChats2 = copyArr(newChats)
                         let length = newChats2.length
                         console.log(newChats2, current, length);
-                        newChats2[0][length].conversationId = response.headers.conversationid || ''
-                        newChats2[0][length].parentId = response.headers.parentid || ''
+                        newChats2[length - 1][1].conversationId = response.headers.conversationid || ''
+                        newChats2[length - 1][1].parentId = response.headers.parentid || ''
                         setChats(newChats2)
                         const streamReader = response.body.getReader();
                         streamReader.read().then(function processResult(result) {
@@ -320,17 +303,16 @@ export default function RightMain({ setName, current, deleteNumber, list, addTex
                                 setShowStopBtn(false)
                                 return;
                             }
-                            let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "")
+                            let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "").replace(/\n/g, "")
                             let newChats3 = copyArr(newChats2)
-                            let length = newChats3[0].length
                             if (text.includes('"')) {
                                 console.log('报错了');
-                                newChats3[0][length - 1].content = text.split('"data":"')[1].replace(/"/g, "").replace(/}/g, "")
+                                newChats3[newChats3.length - 1][1].content = text.split('"data":"')[1].replace(/"/g, "").replace(/}/g, "")
                             } else {
-                                if (newChats3[0][length - 1].content) {
-                                    newChats3[0][length - 1].content += text
+                                if (newChats3[newChats3.length - 1][1].content) {
+                                    newChats3[newChats3.length - 1][1].content += text
                                 } else {
-                                    newChats3[0][length - 1].content = text
+                                    newChats3[newChats3.length - 1][1].content = text
                                 }
                             }
 
@@ -434,13 +416,14 @@ export default function RightMain({ setName, current, deleteNumber, list, addTex
                                 setShowStopBtn(false)
                                 return;
                             }
-                            let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "")
+                            let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "").replace(/\n/g, "")
                             let newChats3 = copyArr(newChats2)
                             let length = newChats3[current].length
                             if (text.includes('"')) {
                                 console.log('报错了');
                                 newChats3[current][length - 1].content = text.split('"data":"')[1].replace(/"/g, "").replace(/}/g, "")
                             } else {
+                                console.log(text, 'text');
                                 if (newChats3[current][length - 1].content) {
                                     newChats3[current][length - 1].content += text
                                 } else {
@@ -520,6 +503,7 @@ export default function RightMain({ setName, current, deleteNumber, list, addTex
                 newText.push(temp1)
             }
         }
+        console.log(newChats, 'delete');
         setChats(newChats)
         setText(newText)
 
@@ -588,6 +572,7 @@ export default function RightMain({ setName, current, deleteNumber, list, addTex
     useEffect(() => {
         if (deleteNumber >= 0) {
             DeleteChat(deleteNumber)
+            setDeleteNumber(-1)
         }
     }, [deleteNumber])
     useEffect(() => {

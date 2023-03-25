@@ -26,7 +26,7 @@ const getParentKey = (key, tree) => {
     }
     return parentKey;
 };
-export default function LeftSidebar({ current, name, setName, setCurrent, setDeleteNumber, list, setList, setAddText, addFirstChat, setDataSourceId, setRefresh }) {
+export default function LeftSidebar({ setAddFirstChat, current, name, setName, setCurrent, setDeleteNumber, list, setList, setAddText, addFirstChat, setDataSourceId, setRefresh }) {
     const [chat, setChat] = useState([])
     const navigate = useNavigate();
     const [heightChange, setHeightChange] = useState(0)
@@ -45,6 +45,7 @@ export default function LeftSidebar({ current, name, setName, setCurrent, setDel
     //选择
     const handleSelete = (i) => {
         let lis = document.querySelectorAll('.LeftSidebar-chats-Li')
+        console.log(lis, i, '11111');
         for (let i = 0; i < lis.length; i++) {
             lis[i].className = 'LeftSidebar-chats-Li'
         }
@@ -104,7 +105,7 @@ export default function LeftSidebar({ current, name, setName, setCurrent, setDel
         let newChat = []
         setChat(newChat)
         setCurrent(-1)
-        setList(0)
+        setList(-1)
         setRefresh(true)
         setIsModalOpen1(false);
     };
@@ -247,11 +248,16 @@ export default function LeftSidebar({ current, name, setName, setCurrent, setDel
     //新增会话
     const addNewChat = () => {
         // setHide(false)
-        let chats = copyArr(chat)
-        chats.push('New chat')
-        setChat(chats)
-        setList(list + 1)
-        setCurrent(chats.length - 1)
+        if (chat.length <= 19) {
+            let chats = copyArr(chat)
+            chats.push('New chat')
+            setChat(chats)
+            setList(list + 1)
+            setCurrent(chats.length - 1)
+        } else {
+            message.warning('会话个数受到限制')
+        }
+
     }
     useEffect(() => {
         console.log(current, 'current');
@@ -296,8 +302,13 @@ export default function LeftSidebar({ current, name, setName, setCurrent, setDel
                 chats.push(chat[i])
             }
         }
+        if (j === current) {
+            console.log('j===current');
+            setCurrent(current - 1)
+        }
         setChat(chats)
         setDeleteNumber(j)
+        console.log(list - 1, 'list - 1');
         setList(list - 1)
     }
     //根据数据库获取行泪资料
@@ -479,7 +490,8 @@ export default function LeftSidebar({ current, name, setName, setCurrent, setDel
             let chats = copyArr(chat)
             chats.push(addFirstChat)
             setChat(chats)
-            setCurrent(0)
+            setCurrent(chats.length - 1)
+            setAddFirstChat('')
         }
     }, [addFirstChat])
 
