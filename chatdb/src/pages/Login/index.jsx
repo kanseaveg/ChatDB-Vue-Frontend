@@ -211,7 +211,7 @@ export default function Login() {
         })
     };
     const onFinishRegister = (values) => {
-        const { username, password, email, phone, captchaCode, emailCode } = values
+        const { username, password, email, phone, captchaCode, emailCode, inviteCode } = values
 
         axios({
             headers: {
@@ -220,10 +220,11 @@ export default function Login() {
             method: 'POST',
             data: {
                 username,
-                password, email, phone, emailCode, captchaCode, captchaKey: captcha[2]
+                password, email, phone, emailCode, captchaCode, captchaKey: captcha[2], inviteCode
             },
             url: `http://10.21.76.236:8081/api/user/register`,
         }).then(res => {
+            console.log(res, 'res');
             if (res.data.code !== 200) {
                 message.warning(res.data.data)
             } else {
@@ -360,6 +361,22 @@ export default function Login() {
                                 pattern: "^((13[0-9])|(14[0|5|6|7|9])|(15[0-3])|(15[5-9])|(16[6|7])|(17[2|3|5|6|7|8])|(18[0-9])|(19[1|8|9]))\\d{8}$",
                                 message: '手机号应为11位数字'
                             }
+                        ]}
+                    >
+                        <Input
+                            style={{
+                                width: '100%',
+                            }}
+                        />
+                    </Form.Item>
+                    <Form.Item
+                        name="inviteCode"
+                        label="内测邀请码"
+                        rules={[
+                            {
+                                required: true,
+                                message: '请输入内测邀请码!',
+                            },
                         ]}
                     >
                         <Input
@@ -544,9 +561,9 @@ export default function Login() {
                         <Button style={{ marginLeft: '20px', width: '90%', marginBottom: '20px' }} type="primary" htmlType="submit" className="login-form-button">
                             Log in
                         </Button><br></br>
-                        {/* <Button style={{ marginLeft: '20px', width: '90%', }} type="primary" onClick={register}>
+                        <Button style={{ marginLeft: '20px', width: '90%', }} type="primary" onClick={register}>
                             Register
-                        </Button> */}
+                        </Button>
                     </Form.Item>
                 </Form></div>
         </div>

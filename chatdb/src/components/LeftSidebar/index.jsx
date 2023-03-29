@@ -90,7 +90,10 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
             } else {
                 message.warning(res.data.msg)
             }
-        }).catch(e => { message.warning('please login again'); })
+        }).catch(e => {
+            message.warning('please login again', 1);
+            navigate('/login')
+        })
     }, [])
     useEffect(() => {
         localStorage.setItem('chat', JSON.stringify(chat))
@@ -352,7 +355,11 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
             } else {
                 message.warning('something wrong')
             }
-        }).catch(e => { message.warning('please login again!'); })
+        }).catch(e => {
+            message.warning('please login again!', 1)
+            navigate('/login')
+                ;
+        })
 
     }
     //获取数据库数据
@@ -379,7 +386,10 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
             getTableData(firstKey)
             setFirstTreeName(treeData[0].title)
             setDataSourceId(parseInt(firstKey))
-        }).catch(e => { message.warning('please login again!'); })
+        }).catch(e => {
+            message.warning('please login again!', 1);
+            navigate('/login')
+        })
 
 
     }
@@ -618,7 +628,7 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
                 {/* <div className='LeftSidebar-introduction'>Welcome you to use chatDb,Now you can have a try to add new chat. </div> */}
             </div>
             <div ref={line} className='LeftSidebar-line'></div>
-            <div className='LeftSidebar-bottom' style={{ height: `calc(58vh - ${heightChange}px)` }}>
+            <div className='LeftSidebar-bottom' style={{ height: `calc(58vh - 75px - ${heightChange}px)` }}>
                 <div className='LeftSidebar-bottom-top'>
                     <TreeSelect className='LeftSidebar-bottom-TreeSelect'
                         showSearch

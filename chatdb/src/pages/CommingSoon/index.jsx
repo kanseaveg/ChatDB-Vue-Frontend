@@ -92,7 +92,7 @@ function ComingSoon() {
 
             <div className="right">
                 <h1 style={{ fontSize: '38px' }}>Chat2DB</h1>
-                <p style={{ marginTop: "-0px" }}>Ask anything about your Data base!</p>
+                <p style={{ marginTop: "-0px" }}>Ask anything about your Database!</p>
             </div>
         </div>
 

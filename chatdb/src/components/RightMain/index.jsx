@@ -226,6 +226,7 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
                 const streamReader = response.body.getReader();
                 streamReader.read().then(function processResult(result) {
                     if (result.done) {
+                        setShowStopBtn(false)
                         console.log('Server closed the connection');
                         return;
                     }
