@@ -1,14 +1,16 @@
 import React, { useEffect, useState, useRef } from 'react'
 import './index.scss'
 import temp from '../../logo.svg'
-import { PauseCircleOutlined, FileOutlined, SendOutlined, DeleteOutlined, DoubleRightOutlined, RedoOutlined, SmallDashOutlined } from '@ant-design/icons';
+import { UploadOutlined, PauseCircleOutlined, FileOutlined, SendOutlined, DeleteOutlined, DoubleRightOutlined, RedoOutlined, SmallDashOutlined } from '@ant-design/icons';
 import axios from 'axios'
-import { copyArr } from '../../utils/func'
-import { message } from 'antd';
+import { copyArr, Myreplace } from '../../utils/func'
+import { message, Upload } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { Space, Table, Tag, Modal, Tooltip, Button } from 'antd';
 import head1 from '../../assests/images/head1.png'
 import head2 from '../../assests/images/head2.png'
+import { v4 as uuidv4 } from "uuid"
+
 // import bg2 from '../../assests/images/bg2.png'
 const columns = [
     {
@@ -30,6 +32,7 @@ const columns = [
 // const REACT_APP_API_URL=http://10.21.76.236:8081
 // // .env.prod
 // const REACT_APP_API_URL=http://localhost:8081
+
 export default function RightMain({ setName, current, setDeleteNumber, deleteNumber, list, addText, setCurrent, setAddFirstChat, dataSourceId, setRefresh, refresh }) {
     // [[{ who: 'ai', content: 'page1你好' }, { who: 'people', content: 'page1你好3' }], [{ who: 'ai', content: 'page2你好' }, { who: 'people', content: 'page2你好3' }]]
     const [chats, setChats] = useState([])
@@ -39,8 +42,29 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
     const main = useRef()
     const token = sessionStorage.getItem('token')
     const userId = sessionStorage.getItem('userId')
-    const [text, setText] = useState([]);
-
+    const [text1, setText] = useState([]);
+    //上传文件
+    const props = {
+        name: 'file',
+        action: 'http://10.21.76.236:8081/api/db/upload',
+        headers: {
+            Authorization: token
+        },
+        data: {
+            userId
+        },
+        showUploadList: false,
+        accept: '.xlsx,.xls,.csv',
+        onChange(info) {
+            if (info.file.status !== 'uploading') {
+            }
+            if (info.file.status === 'done') {
+                message.success(`${info.file.name} file uploaded successfully`);
+            } else if (info.file.status === 'error') {
+                message.error(`${info.file.name} file upload failed.`);
+            }
+        },
+    };
     //用于终止fetch回答
     const controller = new AbortController();
     const signal = controller.signal;
@@ -49,15 +73,14 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
     useEffect(() => {
         let Chats = JSON.parse(localStorage.getItem('chats'))
         if (Chats && Chats.length !== 0) {
-            console.log(Chats, 'Chats');
             setChats(Chats)
             setText(JSON.parse(localStorage.getItem('text')))
         }
     }, [])
     useEffect(() => {
         localStorage.setItem('chats', JSON.stringify(chats))
-        localStorage.setItem('text', JSON.stringify(text))
-    }, [text, chats])
+        // localStorage.setItem('text', JSON.stringify(text))
+    }, [chats])
     //终止回答
     const stopResponding = () => {
         controller.abort()
@@ -86,40 +109,40 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
         }
     }, [refresh])
     //打字机
-    const jsonData = ["Ok,here's an example SQL statement to create a basic table in a relational database:", 'To create a basic table in a relational database, you could use a SQL statement like this:', 'If you need to set up a basic table in a relational database, the following SQL statement can be used:', 'The following SQL statement is an example of how to create a simple table in a relational database:', 'When it comes to creating a basic table in a relational database, you might use something like the following SQL statement:'];
-    useEffect(() => {
-        if (current < 0) {
-            let current = 0
-            if (text[current] && text[current].length !== 0) {
-                const intervalId = setInterval(() => {
-                    const char = jsonData[text[current].length % 5].charAt(text[current][text[current].length - 1].length);
-                    if (char) {
-                        let tempText = copyArr(text)
-                        tempText[current][tempText[current].length - 1] += char
-                        setText(tempText);
-                    }
-                }, 100);
-                return () => clearInterval(intervalId);
-            }
-        } else {
-            if (text[current] && text[current].length !== 0) {
-                const intervalId = setInterval(() => {
-                    const char = jsonData[text[current].length % 5].charAt(text[current][text[current].length - 1].length);
-                    if (char) {
-                        let tempText = copyArr(text)
-                        tempText[current][tempText[current].length - 1] += char
-                        setText(tempText);
-                    }
-                }, 100);
-                return () => clearInterval(intervalId);
-            }
-        }
+    // const jsonData = ["Ok,here's an example SQL statement to create a basic table in a relational database:", 'To create a basic table in a relational database, you could use a SQL statement like this:', 'If you need to set up a basic table in a relational database, the following SQL statement can be used:', 'The following SQL statement is an example of how to create a simple table in a relational database:', 'When it comes to creating a basic table in a relational database, you might use something like the following SQL statement:'];
+    // useEffect(() => {
+    //     if (current < 0) {
+    //         let current = 0
+    //         if (text[current] && text[current].length !== 0) {
+    //             const intervalId = setInterval(() => {
+    //                 const char = jsonData[text[current].length % 5].charAt(text[current][text[current].length - 1].length);
+    //                 if (char) {
+    //                     let tempText = copyArr(text)
+    //                     tempText[current][tempText[current].length - 1] += char
+    //                     setText(tempText);
+    //                 }
+    //             }, 100);
+    //             return () => clearInterval(intervalId);
+    //         }
+    //     } else {
+    //         if (text[current] && text[current].length !== 0) {
+    //             const intervalId = setInterval(() => {
+    //                 const char = jsonData[text[current].length % 5].charAt(text[current][text[current].length - 1].length);
+    //                 if (char) {
+    //                     let tempText = copyArr(text)
+    //                     tempText[current][tempText[current].length - 1] += char
+    //                     setText(tempText);
+    //                 }
+    //             }, 100);
+    //             return () => clearInterval(intervalId);
+    //         }
+    //     }
 
-    }, [text]);
+    // }, [text]);
     // const [tableData, setTableData] = useState({ columns: [], rows: [] });
     //执行SQL
     const execute = (i, sql) => {
-        sql = sql.replace(/\n/g, "");
+        sql = 'SELECT' + sql.split('SELECT')[1];
         // fetch('http://10.21.76.236:8081/api/db/query', {
         //     method: 'POST',
         //     headers: {
@@ -171,8 +194,9 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
             },
             method: 'POST',
             data: {
-                data_source_id: dataSourceId,
-                query: sql
+                dbname: dataSourceId,
+                query: sql,
+                userId
             },
             url: `http://10.21.76.236:8081/api/db/query`,
         }).then(res => {
@@ -196,138 +220,184 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
     }
     //重新生成SQL
     const reProduct = (i) => {
+        setShowStopBtn(true)
+        const chatId = JSON.parse(localStorage.getItem('chat'))[current].chatId
         let newChats = copyArr(chats)
         newChats[current][i] = { who: 'ai' }
         setChats(newChats)
         let value = newChats[current][i - 1].content
-
-        let conversationId = i - 2 < 0 ? '' : newChats[current][i - 2].conversationId || ''
-        let parentId = i - 2 < 0 ? '' : newChats[current][i - 2].parentId || ''
-        fetch('http://10.21.76.236:8081/api/chat/query', {
-            method: 'POST',
+        // let conversationId = i - 2 < 0 ? '' : newChats[current][i - 2].conversationId || ''
+        // let parentId = i - 2 < 0 ? '' : newChats[current][i - 2].parentId || ''
+        fetch(`http://10.21.76.236:8081/api/chat/query?question=${value}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&`, {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 "Authorization": token
             },
-            body: JSON.stringify({
-                prompt: value,
-                dbId: dataSourceId,
-                userId,
-                conversationId: conversationId,
-                parentId
-            })
         })
             .then(response => {
-                let newChats2 = copyArr(newChats)
-                newChats2[current][i].conversationId = response.headers.conversationId || ''
-                newChats2[current][i].parentId = response.headers.parentId || ''
-                setChats(newChats2)
                 // 使用 ReadableStream API 解析事件流数据并更新 state
                 const streamReader = response.body.getReader();
                 streamReader.read().then(function processResult(result) {
                     if (result.done) {
                         setShowStopBtn(false)
-                        console.log('Server closed the connection');
                         return;
                     }
                     let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "").replace(/\n/g, "")
-                    let newChats3 = copyArr(newChats2)
-                    if (text.includes('"')) {
-                        console.log('报错了');
-                        newChats3[current][i].content = text.split('"data":"')[1].replace(/"/g, "").replace(/}/g, "")
-                    } else {
-                        if (newChats3[current][i].content) {
-                            newChats3[current][i].content += text
-                        } else {
-                            newChats3[current][i].content = text
+                    let newChats3 = copyArr(newChats)
+                    if (text) {
+                        if (text.includes('message') && text.includes('messageType')) {
+                            let count = text.split('}').length
+                            if (count === 2) {
+                                let newText = Myreplace(text.split(',')[0], ['{', '}', '"', ':', ',', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                newText = newText.replace(/\\n/g, ' ')
+                                if (newChats3[current][i].content) {
+                                    newChats3[current][i].content += newText
+                                } else {
+                                    newChats3[current][i].content = newText
+                                }
+                            } else {
+                                for (let a = 0; a < count; a++) {
+                                    let newText = Myreplace(text.split('}')[a].split(',')[0], ['{', '}', '"', ':', ',', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                    newText = newText.replace(/\\n/g, ' ')
+                                    if (newChats3[current][i].content) {
+                                        newChats3[current][i].content += newText
+                                    } else {
+                                        newChats3[current][i].content = newText
+                                    }
+                                }
+                            }
                         }
+                        else {
+                            let newText = text.split('"data":"')[1]
+                            newText = Myreplace(newText, ['{', '}', '"', ':', ',', 'message', 'messageType'])
+                            if (newText.includes('token wrong')) {
+                                message.warning('请重新登陆！')
+                                navigate('/login')
+                            } else {
+                                newChats3[current][i].content = newText
+                            }
+                        }
+                        setChats(newChats3)
                     }
+                    // if (text.includes('"')) {
+                    //     console.log('报错了');
+                    //     newChats3[current][i].content = text.split('"data":"')[1].replace(/"/g, "").replace(/}/g, "")
+                    // } else {
+                    //     if (newChats3[current][i].content) {
+                    //         newChats3[current][i].content += text
+                    //     } else {
+                    //         newChats3[current][i].content = text
+                    //     }
+                    // }
 
-                    setChats(newChats3)
+                    // setChats(newChats3)
                     return streamReader.read().then(processResult);
                 });
             })
-            .catch(error => console.error('Error occurred:', error));
+            .catch(e => {
+                message.warning('please login again!', 1)
+                navigate('/login')
+                    ;
+            }
+            );
 
     }
     //清空一个
     const RefreshOne = () => {
         let newChats = copyArr(chats)
-        let newText = copyArr(text)
+        // let newText = copyArr(text)
         newChats[current] = []
-        newText[current] = []
+        // newText[current] = []
         setChats(newChats)
-        setText(newText)
+        // setText(newText)
     }
     const addPeoplechat = () => {
         setShowStopBtn(true)
         let value = peopleInput.current.value || ''
         if (value) {
             if (chats.length === 0 || current === -1) {
-                console.log('来到这了', chats, current);
+                const chatId = uuidv4()
                 chats.push([{ who: 'people', content: value }])
-                current === -1 ? setAddFirstChat(value) : setName(value)
+                current === -1 ? setAddFirstChat({ value, chatId }) : setName({ value, chatId })
                 peopleInput.current.value = ''
                 let newChats = copyArr(chats)
                 newChats[newChats.length - 1].push({ who: 'ai' })
-                let Text = copyArr(text)
-                Text.push([''])
-                setText(Text)
+                // let Text = copyArr(text)
+                // Text.push([''])
+                // setText(Text)
                 setChats(newChats)
-                fetch('http://10.21.76.236:8081/api/chat/query', {
-                    method: 'POST',
+                fetch(`http://10.21.76.236:8081/api/chat/query?question=${value}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&`, {
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
                         "Authorization": token
                     },
-                    body: JSON.stringify({
-                        prompt: value,
-                        dbId: dataSourceId,
-                        userId,
-                        conversationId: '',
-                        parentId: ''
-                    }),
                     signal: signal
                 })
                     .then(response => {
                         // 使用 ReadableStream API 解析事件流数据并更新 state
                         let newChats2 = copyArr(newChats)
                         let length = newChats2.length
-                        console.log(newChats2, current, length);
-                        newChats2[length - 1][1].conversationId = response.headers.conversationid || ''
-                        newChats2[length - 1][1].parentId = response.headers.parentid || ''
+                        // newChats2[length - 1][1].conversationId = response.headers.conversationid || ''
+                        // newChats2[length - 1][1].parentId = response.headers.parentid || ''
                         setChats(newChats2)
                         const streamReader = response.body.getReader();
                         streamReader.read().then(function processResult(result) {
                             if (result.done) {
-                                console.log('Server closed the connection');
                                 setShowStopBtn(false)
                                 return;
                             }
                             let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "").replace(/\n/g, "")
                             let newChats3 = copyArr(newChats2)
-                            if (text.includes('"')) {
-                                console.log('报错了');
-                                newChats3[newChats3.length - 1][1].content = text.split('"data":"')[1].replace(/"/g, "").replace(/}/g, "")
-                            } else {
-                                if (newChats3[newChats3.length - 1][1].content) {
-                                    newChats3[newChats3.length - 1][1].content += text
+                            if (text) {
+                                if (text.includes('message') && text.includes('messageType')) {
+                                    let count = text.split('}').length
+                                    if (count === 2) {
+                                        let newText = Myreplace(text.split(',')[0], ['{', '}', '"', ':', ',', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                        newText = newText.replace(/\\n/g, ' ')
+                                        if (newChats3[newChats3.length - 1][1].content) {
+                                            newChats3[newChats3.length - 1][1].content += newText
+                                        } else {
+                                            newChats3[newChats3.length - 1][1].content = newText
+                                        }
+                                    } else {
+                                        for (let i = 0; i < count; i++) {
+                                            let newText = Myreplace(text.split('}')[i].split(',')[0], ['{', '}', '"', ':', ',', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                            newText = newText.replace(/\\n/g, ' ')
+                                            if (newChats3[newChats3.length - 1][1].content) {
+                                                newChats3[newChats3.length - 1][1].content += newText
+                                            } else {
+                                                newChats3[newChats3.length - 1][1].content = newText
+                                            }
+                                        }
+                                    }
                                 } else {
-                                    newChats3[newChats3.length - 1][1].content = text
+                                    let newText = text.split('"data":"')[1]
+                                    newText = Myreplace(newText, ['{', '}', '"', ':', ',', 'message', 'messageType'])
+                                    if (newText.includes('token wrong')) {
+                                        message.warning('请重新登陆！')
+                                        navigate('/login')
+                                    } else {
+                                        newChats3[newChats3.length - 1][1].content = newText
+
+                                    }
                                 }
+
+                                setChats(newChats3)
                             }
 
-                            setChats(newChats3)
                             return streamReader.read().then(processResult);
                         });
                     })
                     .catch(error => {
                         if (error.name === 'AbortError') {
-                            console.log('fetch请求已中止');
                         } else {
-                            console.error('Error occurred:', error)
+                            message.warning('please login again!', 1)
+                            navigate('/login')
+                                ;
                         }
-                    });
+                    })
                 // axios({
                 //     headers: {
                 //         'Content-Type': 'application/json',
@@ -368,78 +438,105 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
                 // })
                 // ; navigate('/login') 
             } else {
+                const chatId = JSON.parse(localStorage.getItem('chat'))[current].chatId
                 let newChats = copyArr(chats)
-                console.log(newChats, 'newChats', current);
                 if (newChats[current].length !== 0) {
                     newChats[current].push({ who: 'people', content: value })
                 } else {
                     newChats[current] = [{ who: 'people', content: value }]
-                    setName(value)
+                    setName({ value })
                 }
                 setChats(newChats)
                 peopleInput.current.value = ''
                 let newChats1 = copyArr(newChats)
                 newChats1[current].push({ who: 'ai' })
-                let Text = copyArr(text)
-                Text[current] ? Text[current].push('') : Text[current] = ['']
-                setText(Text)
+                // let Text = copyArr(text)
+                // Text[current] ? Text[current].push('') : Text[current] = ['']
+                // setText(Text)
                 setChats(newChats1)
-                let length = newChats[current].length
-                let conversationId = newChats[current][length - 2] ? newChats[current][length - 2].conversationId || '' : ''
-                let parentId = newChats[current][length - 2] ? newChats[current][length - 2].parentId || '' : ''
-                fetch('http://10.21.76.236:8081/api/chat/query', {
-                    method: 'POST',
+                // let length = newChats[current].length
+                // let conversationId = newChats[current][length - 2] ? newChats[current][length - 2].conversationId || '' : ''
+                // let parentId = newChats[current][length - 2] ? newChats[current][length - 2].parentId || '' : ''
+                fetch(`http://10.21.76.236:8081/api/chat/query?question=${value}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&`, {
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
                         "Authorization": token
                     },
-                    body: JSON.stringify({
-                        prompt: value,
-                        dbId: dataSourceId,
-                        userId,
-                        conversationId: conversationId,
-                        parentId
-                    }),
                     signal: signal
                 })
                     .then(response => {
-                        console.log(response, 'response');
                         // 使用 ReadableStream API 解析事件流数据并更新 state
-                        let newChats2 = copyArr(newChats1)
-                        let length = newChats2[current].length
-                        newChats2[current][length - 1].conversationId = response.headers.conversationid || ''
-                        newChats2[current][length - 1].parentId = response.headers.parentid || ''
-                        setChats(newChats2)
+                        // let newChats2 = copyArr(newChats1)
+                        // let length = newChats2[current].length
+                        // newChats2[current][length - 1].conversationId = response.headers.conversationid || ''
+                        // newChats2[current][length - 1].parentId = response.headers.parentid || ''
+                        // setChats(newChats2)
                         const streamReader = response.body.getReader();
                         streamReader.read().then(function processResult(result) {
                             if (result.done) {
-                                console.log('Server closed the connection');
                                 setShowStopBtn(false)
                                 return;
                             }
                             let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "").replace(/\n/g, "")
-                            let newChats3 = copyArr(newChats2)
+                            let newChats3 = copyArr(newChats1)
                             let length = newChats3[current].length
-                            if (text.includes('"')) {
-                                console.log('报错了');
-                                newChats3[current][length - 1].content = text.split('"data":"')[1].replace(/"/g, "").replace(/}/g, "")
-                            } else {
-                                console.log(text, 'text');
-                                if (newChats3[current][length - 1].content) {
-                                    newChats3[current][length - 1].content += text
+                            if (text) {
+                                if (text.includes('message') && text.includes('messageType')) {
+                                    let count = text.split('}').length
+                                    if (count === 2) {
+                                        let newText = Myreplace(text.split(',')[0], ['{', '}', '"', ':', ',', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                        newText = newText.replace(/\\n/g, ' ')
+                                        if (newChats3[current][length - 1].content) {
+                                            newChats3[current][length - 1].content += newText
+                                        } else {
+                                            newChats3[current][length - 1].content = newText
+                                        }
+                                    } else {
+                                        for (let i = 0; i < count; i++) {
+                                            let newText = Myreplace(text.split('}')[i].split(',')[0], ['{', '}', '"', ':', ',', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                            newText = newText.replace(/\\n/g, ' ')
+                                            if (newChats3[current][length - 1].content) {
+                                                newChats3[current][length - 1].content += newText
+                                            } else {
+                                                newChats3[current][length - 1].content = newText
+                                            }
+                                        }
+                                    }
+
                                 } else {
-                                    newChats3[current][length - 1].content = text
+                                    let newText = text.split('"data":"')[1]
+                                    newText = Myreplace(newText, ['{', '}', '"', ':', ',', 'message', 'messageType'])
+                                    if (newText.includes('token wrong')) {
+                                        message.warning('请重新登陆！')
+                                        navigate('/login')
+                                    } else {
+                                        newChats3[current][length - 1].content = newText
+
+                                    }
                                 }
+                                setChats(newChats3)
                             }
-                            setChats(newChats3)
+                            // if (text.includes('"')) {
+                            //     console.log('报错了');
+                            //     newChats3[current][length - 1].content = text.split('"data":"')[1].replace(/"/g, "").replace(/}/g, "")
+                            // } else {
+                            //     console.log(text, 'text');
+                            //     if (newChats3[current][length - 1].content) {
+                            //         newChats3[current][length - 1].content += text
+                            //     } else {
+                            //         newChats3[current][length - 1].content = text
+                            //     }
+                            // }
+                            // setChats(newChats3)
                             return streamReader.read().then(processResult);
                         });
                     })
                     .catch(error => {
                         if (error.name === 'AbortError') {
-                            console.log('fetch请求已中止');
                         } else {
-                            console.error('Error occurred:', error)
+                            message.warning('please login again!', 1)
+                            navigate('/login')
                         }
                     });
                 // axios({
@@ -485,13 +582,12 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
         }
     }
     const addNewChat = () => {
-        console.log('增加了');
         let newChats = copyArr(chats)
         newChats.push([])
         setChats(newChats)
-        let newText = copyArr(text)
-        newText.push([])
-        setText(newText)
+        // let newText = copyArr(text)
+        // newText.push([])
+        // setText(newText)
     }
     const DeleteChat = (index) => {
         let newChats = []
@@ -500,11 +596,10 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
             if (i !== index) {
                 let temp = copyArr(chats[i])
                 newChats.push(temp)
-                let temp1 = copyArr(text[i])
-                newText.push(temp1)
+                // let temp1 = copyArr(text[i])
+                // newText.push(temp1)
             }
         }
-        console.log(newChats, 'delete');
         setChats(newChats)
         setText(newText)
 
@@ -539,7 +634,6 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
                 }
                 // 生成下载链接
                 const url = URL.createObjectURL(blob);
-                console.log(url);
                 // 创建a标签并设置下载链接和文件名
                 const link = document.createElement('a');
                 link.href = url;
@@ -577,10 +671,7 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
         }
     }, [deleteNumber])
     useEffect(() => {
-        console.log(list, 'list', current)
-
         if (list >= chats.length) {
-            console.log(list, 'list')
             addNewChat()
         }
     }, [list, current])
@@ -599,7 +690,8 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
                     {chats[myCurrent]?.map((v, i) => {
                         return (v.who === 'ai' ? <li key={i} className='RightMain-chatli RightMain-aichat'><img className='RightMain-aichat-head' src={head2} alt="" /><div className='RightMain-aichat-content'>
                             {/* <div className='RightMain-aichat-content-start'>{text[myCurrent] ? text[myCurrent][(i - 1) / 2] : ''}</div> */}
-                            <div className='RightMain-aichat-content-content'>{v.content} <div className='RightMain-aichat-content-tool'><Tooltip placement="rightTop" title={<div >执行SQL</div>}><DoubleRightOutlined onClick={() => execute(i, v.content)} /></Tooltip><Tooltip placement="rightTop" title='重新生成SQL'><RedoOutlined onClick={() => reProduct(i)} /></Tooltip></div></div>
+                            <div className='RightMain-aichat-content-content'>{v.content}
+                                {i === chats[myCurrent].length - 1 ? <div className='RightMain-aichat-content-tool'><Tooltip placement="rightTop" title={<div >执行SQL</div>}><DoubleRightOutlined onClick={() => execute(i, v.content)} /></Tooltip><Tooltip placement="rightTop" title='重新生成SQL'><RedoOutlined onClick={() => reProduct(i)} /></Tooltip></div> : ''}</div>
                             {v.table && v.table[0] ? <><Table columns={v.table[0]} dataSource={v.table[1]} /><Tooltip color='white' title={<ul style={{ color: 'black' }} className='RightMain-aichat-content-download'><li onClick={() => DownloadFile(v.content, 'csv')}><FileOutlined />&nbsp; Download as CSV File</li><li onClick={() => DownloadFile(v.content, 'xlsx')}><FileOutlined />&nbsp; Download as Excel File</li></ul>}><SmallDashOutlined className='RightMain-aichat-content-downloadIcon' /></Tooltip> </> : ''}
                         </div></li> :
                             <li key={i} className='RightMain-chatli RightMain-peoplechat'><div className='RightMain-peoplechat-content'>{v.content}</div><img src={head1} alt="" className='RightMain-peoplechat-head' /></li>)
@@ -631,7 +723,10 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
                     : ''}
 
 
-                <DeleteOutlined onClick={showModal} className='RightMain-bottom-delete' /><div className='input'><input placeholder='Ask anything about your Data base!' disabled={showStopBtn} onKeyDown={handleKeyDown} ref={peopleInput} type="text" /><SendOutlined onClick={addPeoplechat} style={{ marginLeft: "-40px" }} /></div></div>
+                <DeleteOutlined onClick={showModal} className='RightMain-bottom-delete' /> <Upload {...props}>
+                    <Button className='RightMain-bottom-upload' icon={<UploadOutlined />}></Button>
+                </Upload>
+                <div className='input'><input placeholder='Ask anything about your Data base!' disabled={showStopBtn} onKeyDown={handleKeyDown} ref={peopleInput} type="text" /><SendOutlined onClick={addPeoplechat} style={{ marginLeft: "-40px" }} /></div></div>
         </div>
     )
 }

@@ -3,7 +3,7 @@ import { DoubleRightOutlined, SolutionOutlined, CommentOutlined, EditOutlined, D
 import { useNavigate } from 'react-router-dom';
 import userHead from '../../assests/images/head1.png'
 import { TreeSelect, Input, Tree, message, Modal, Form, Button, Select } from 'antd';
-
+import { v4 as uuidv4 } from "uuid"
 import axios from 'axios'
 import './index.scss'
 import { copyArr } from '../../utils/func'
@@ -35,6 +35,8 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
     const [treeData, setTreeData] = useState([])
     const [listvalue, setListValue] = useState();
     const token = sessionStorage.getItem('token')
+    const userId = sessionStorage.getItem('userId')
+
     const line = useRef()
     const [defaultData, setDefaultData] = useState([]);
     const [dataList, setDataList] = useState([]);
@@ -45,23 +47,23 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
     //选择
     const handleSelete = (i) => {
         let lis = document.querySelectorAll('.LeftSidebar-chats-Li')
-        console.log(lis, i, '11111');
         for (let i = 0; i < lis.length; i++) {
             lis[i].className = 'LeftSidebar-chats-Li'
         }
         let li = lis[i]
-        console.log(lis, li, 'li');
         if (li) {
             li.className += ' LeftSidebar-chats-seletedLi'
         }
     }
     //命名
     useEffect(() => {
-        if (name) {
+        if (name && name.value) {
             let newChats = copyArr(chat)
-            newChats[current] = name || ''
+            newChats[current].name = name.value || ''
+            if (name.chatId) {
+                newChats[current].chatId = name.chatId
+            }
             setName('')
-            console.log(newChats, 'newChats');
             setChat(newChats)
         }
     }, [name])
@@ -147,7 +149,9 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
             } else {
                 message.warning(res.data.msg)
             }
-        }).catch(e => { message.warning('Error'); })
+        }).catch(e => {
+            message.warning('Error'); navigate('/login')
+        })
     }
     const Chinese = { title: '个人信息', username: '用户名', email: '邮箱*', phone: '手机号码', language: '语言', save: '保存', chinese: '简体中文', english: '英文', choose: '选择语言', password: '密码' }
     const English = { title: 'UserInformation', username: 'username', email: 'email*', phone: 'phone-number', language: 'language', save: 'save', chinese: 'Chinese', english: 'English', choose: 'choose language', password: 'password' }
@@ -253,7 +257,9 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
         // setHide(false)
         if (chat.length <= 19) {
             let chats = copyArr(chat)
-            chats.push('New chat')
+            const chatId = uuidv4();
+
+            chats.push({ name: 'New chat', chatId })
             setChat(chats)
             setList(list + 1)
             setCurrent(chats.length - 1)
@@ -263,7 +269,6 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
 
     }
     useEffect(() => {
-        console.log(current, 'current');
         if (current >= 0) {
             handleSelete(current)
         }
@@ -285,14 +290,12 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
         setRepair(repairs)
     }
     const handleRepair = (e, i, node) => {
-        console.log(node, 'dawfdwafawfdadadad1111');
         if (e.keyCode === 13) {
-            console.log('dawfdwafawfdadadad');
             let repairs = copyArr(repair)
             repairs[i] = false
             setRepair(repairs)
             let chats = copyArr(chat)
-            chats[i] = node ? node.target.value : e.target.value
+            chats[i].name = node ? node.target.value : e.target.value
             setChat(chats)
         }
     }
@@ -306,19 +309,17 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
             }
         }
         if (j === current) {
-            console.log('j===current');
             setCurrent(current - 1)
         }
         setChat(chats)
         setDeleteNumber(j)
-        console.log(list - 1, 'list - 1');
         setList(list - 1)
     }
     //根据数据库获取行泪资料
     const handleSelect = (value, node, extra) => {
         if (node) {
-            setDataSourceId(parseInt(node.db))
-            getTableData(parseInt(node.db))
+            setDataSourceId(node.title)
+            getTableData(node.title)
         }
     }
     //往右边输入框加字
@@ -326,14 +327,14 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
         setAddText(value.props.children[2])
     }
     //获取每个数据库的行列
-    const getTableData = (number) => {
+    const getTableData = (dbname) => {
         axios({
             headers: {
                 'Content-Type': 'application/json',
                 "Authorization": token
             },
             method: 'GET',
-            url: `http://10.21.76.236:8081/api/db/schema/${number}`,
+            url: `http://10.21.76.236:8081/api/db/schema?userId=${userId}&dbname=${dbname}`,
         }).then(res => {
             if (res.status === 200) {
                 let data = res.data
@@ -370,7 +371,7 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
                 "Authorization": token
             },
             method: 'GET',
-            url: `http://10.21.76.236:8081/api/db/list`,
+            url: `http://10.21.76.236:8081/api/db/list?userId=${userId}`,
         }).then(res => {
             const firstKey = Object.keys(res.data)[0];
             let treeData = []
@@ -383,9 +384,9 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
                 })
             }
             setTreeData(treeData)
-            getTableData(firstKey)
+            getTableData(res.data[firstKey])
             setFirstTreeName(treeData[0].title)
-            setDataSourceId(parseInt(firstKey))
+            setDataSourceId(treeData[0].title)
         }).catch(e => {
             message.warning('please login again!', 1);
             navigate('/login')
@@ -494,11 +495,11 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
     }, [searchValue, defaultData]);
     //增加第一个会话
     useEffect(() => {
-        if (addFirstChat) {
+        if (addFirstChat && addFirstChat.value) {
             // setHide(true)
             setList(list + 1)
             let chats = copyArr(chat)
-            chats.push(addFirstChat)
+            chats.push({ name: addFirstChat.value, chatId: addFirstChat.chatId })
             setChat(chats)
             setCurrent(chats.length - 1)
             setAddFirstChat('')
@@ -620,7 +621,7 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
                 <div onClick={addNewChat} className='LeftSidebar-addNewChat'>+ &nbsp;&nbsp;New chat</div>
                 <ul className='LeftSidebar-chats'>
                     {chat.length !== 0 ? chat.map((v, i) => {
-                        return (<li className='LeftSidebar-chats-Li' key={i}><CommentOutlined />&nbsp;&nbsp;&nbsp;&nbsp;{repair[i] ? <input type="text" onBlur={(e) => handleRepair({ keyCode: 13 }, i, e)} onKeyDown={(e) => handleRepair(e, i)} style={{ margin: '0' }} className='newChatInput' /> : <div onClick={() => setCurrent(i)} className='LeftSidebar-chats-name'> {v}</div>}&nbsp;&nbsp;&nbsp;&nbsp;<EditOutlined onClick={() => changeReapir(i)} />&nbsp;&nbsp;&nbsp;&nbsp;<DeleteOutlined onClick={() => deleteChat(i)} /></li>)
+                        return (<li className='LeftSidebar-chats-Li' key={i}><CommentOutlined />&nbsp;&nbsp;&nbsp;&nbsp;{repair[i] ? <input type="text" onBlur={(e) => handleRepair({ keyCode: 13 }, i, e)} onKeyDown={(e) => handleRepair(e, i)} style={{ margin: '0' }} className='newChatInput' /> : <div onClick={() => setCurrent(i)} className='LeftSidebar-chats-name'> {v.name}</div>}&nbsp;&nbsp;&nbsp;&nbsp;<EditOutlined onClick={() => changeReapir(i)} />&nbsp;&nbsp;&nbsp;&nbsp;<DeleteOutlined onClick={() => deleteChat(i)} /></li>)
                     }) : ''}
                 </ul>
                 {/* <div className={hide ? 'hidden' : 'newChatInputDiv'}><input onKeyDown={handleConfirmName} type="text" className='newChatInput' placeholder='title of chat' /></div> */}

@@ -20,3 +20,14 @@ export function debounce(func, delay) {
         }, delay);
     }();
 }
+
+export function Myreplace(str, list) {
+    let temp =str
+    if(list&&str){
+        list.map((v,i)=>{
+           temp= temp.replace(new RegExp(v,'g'),"")
+
+        })
+    }
+    return temp
+}

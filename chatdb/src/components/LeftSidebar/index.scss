@@ -180,6 +180,14 @@ input::placeholder {
         height: 58vh;
         padding-left: 10px;
 
+        .anticon-double-right {
+            display: flex;
+            justify-content: center !important;
+            // svg {
+            //     margin-bottom: -8px;
+            // }
+        }
+
         .site-tree-search-value {
             background: var(--secondary-color1) !important;
             border-radius: 5px;

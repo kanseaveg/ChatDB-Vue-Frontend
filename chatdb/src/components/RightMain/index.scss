@@ -181,12 +181,21 @@
 
             .RightMain-bottom-stopButton {
                 background: rgb(242, 201, 125) !important;
+                border-radius: 0;
+                border: none;
             }
         }
 
         .RightMain-bottom-delete {
             font-size: 20px;
-            margin: 0 30px;
+            margin: 0 20px;
+        }
+
+        .RightMain-bottom-upload {
+            border: none;
+            font-size: 20px;
+            margin-top: -10px;
+            margin-right: 20px;
         }
 
         svg {

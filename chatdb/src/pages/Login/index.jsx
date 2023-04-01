@@ -8,6 +8,7 @@ import code from '../../assests/images/code.png'
 import { copyArr, debounce } from '../../utils/func';
 import Logo from '../../assests/images/logo.png'
 import { v4 as uuidv4 } from "uuid"
+import Cookies from 'js-cookie'
 const { Option } = Select;
 export default function Login() {
 
@@ -197,8 +198,11 @@ export default function Login() {
                 email,
                 password, captchaCode, captchaKey: captcha[3]
             },
+            maxBodyLength: Infinity,
+            withCredentials: true,
             url: `http://10.21.76.236:8081/api/user/login`,
         }).then(res => {
+            console.log(Cookies.get(), '111');
             if (res.data.code !== 200) {
                 message.warning(res.data.data)
             } else {

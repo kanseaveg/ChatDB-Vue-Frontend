@@ -8,7 +8,7 @@ export default function ChatDb() {
     const [list, setList] = useState(-1)
     const [addText, setAddText] = useState()
     const [addFirstChat, setAddFirstChat] = useState()
-    const [dataSourceId, setDataSourceId] = useState(1)
+    const [dataSourceId, setDataSourceId] = useState('')
     const [refresh, setRefresh] = useState(false)
     const [name, setName] = useState('')
     const [flag, setFlag] = useState(false)
