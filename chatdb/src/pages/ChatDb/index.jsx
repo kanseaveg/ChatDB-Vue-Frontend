@@ -12,6 +12,8 @@ export default function ChatDb() {
     const [refresh, setRefresh] = useState(false)
     const [name, setName] = useState('')
     const [flag, setFlag] = useState(false)
+    const [uploadAndRefresh, setUploadAndRefresh] = useState(false)
+    const [dbDisabled, setDbDisabled] = useState(false)
     useEffect(() => {
         let list = localStorage.getItem('list')
         if (!isNaN(list) && list !== null && list !== undefined) {
@@ -28,8 +30,8 @@ export default function ChatDb() {
     }, [current, list])
     return (
         <div className='ChatDb'>
-            <LeftSidebar name={name} setName={setName} setRefresh={setRefresh} setDataSourceId={setDataSourceId} addFirstChat={addFirstChat} setAddFirstChat={setAddFirstChat} setAddText={setAddText} list={list} setList={setList} setCurrent={setCurrent} current={current} setDeleteNumber={setDeleteNumber}></LeftSidebar>
-            <RightMain setName={setName} setDeleteNumber={setDeleteNumber} setRefresh={setRefresh} refresh={refresh} dataSourceId={dataSourceId} setAddFirstChat={setAddFirstChat} setCurrent={setCurrent} addText={addText} list={list} current={current} deleteNumber={deleteNumber}></RightMain>
+            <LeftSidebar dbDisabled={dbDisabled} uploadAndRefresh={uploadAndRefresh} setUploadAndRefresh={setUploadAndRefresh} name={name} setName={setName} setRefresh={setRefresh} setDataSourceId={setDataSourceId} addFirstChat={addFirstChat} setAddFirstChat={setAddFirstChat} setAddText={setAddText} list={list} setList={setList} setCurrent={setCurrent} current={current} setDeleteNumber={setDeleteNumber}></LeftSidebar>
+            <RightMain setDbDisabled={setDbDisabled} setUploadAndRefresh={setUploadAndRefresh} setName={setName} setDeleteNumber={setDeleteNumber} setRefresh={setRefresh} refresh={refresh} dataSourceId={dataSourceId} setAddFirstChat={setAddFirstChat} setCurrent={setCurrent} addText={addText} list={list} current={current} deleteNumber={deleteNumber}></RightMain>
         </div>
     )
 }

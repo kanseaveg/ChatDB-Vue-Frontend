@@ -33,7 +33,7 @@ const columns = [
 // // .env.prod
 // const REACT_APP_API_URL=http://localhost:8081
 
-export default function RightMain({ setName, current, setDeleteNumber, deleteNumber, list, addText, setCurrent, setAddFirstChat, dataSourceId, setRefresh, refresh }) {
+export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName, current, setDeleteNumber, deleteNumber, list, addText, setCurrent, setAddFirstChat, dataSourceId, setRefresh, refresh }) {
     // [[{ who: 'ai', content: 'page1你好' }, { who: 'people', content: 'page1你好3' }], [{ who: 'ai', content: 'page2你好' }, { who: 'people', content: 'page2你好3' }]]
     const [chats, setChats] = useState([])
     const navigate = useNavigate();
@@ -60,6 +60,7 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
             }
             if (info.file.status === 'done') {
                 message.success(`${info.file.name} file uploaded successfully`);
+                setUploadAndRefresh(true)
             } else if (info.file.status === 'error') {
                 message.error(`${info.file.name} file upload failed.`);
             }
@@ -69,6 +70,14 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
     const controller = new AbortController();
     const signal = controller.signal;
     const [showStopBtn, setShowStopBtn] = useState(false)
+    //回答时不得转换数据库
+    useEffect(() => {
+        if (showStopBtn) {
+            setDbDisabled(true)
+        } else {
+            setDbDisabled(false)
+        }
+    }, [showStopBtn])
     //历史记录
     useEffect(() => {
         let Chats = JSON.parse(localStorage.getItem('chats'))
@@ -204,7 +213,7 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
                 let columns = []
                 let data = []
                 res.data.data.columns.map((v, i) => {
-                    columns.push({ title: v.name, dataIndex: v.name, key: v.name })
+                    columns.push({ title: v, dataIndex: v, key: v })
                 })
                 res.data.data.rows.map((v, i) => {
                     v.key = i
@@ -319,7 +328,8 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
             if (chats.length === 0 || current === -1) {
                 const chatId = uuidv4()
                 chats.push([{ who: 'people', content: value }])
-                current === -1 ? setAddFirstChat({ value, chatId }) : setName({ value, chatId })
+                let db = JSON.parse(sessionStorage.getItem('db'))
+                current === -1 ? setAddFirstChat({ value, chatId, db }) : setName({ value, chatId, db })
                 peopleInput.current.value = ''
                 let newChats = copyArr(chats)
                 newChats[newChats.length - 1].push({ who: 'ai' })
@@ -444,7 +454,8 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
                     newChats[current].push({ who: 'people', content: value })
                 } else {
                     newChats[current] = [{ who: 'people', content: value }]
-                    setName({ value })
+                    let db = JSON.parse(sessionStorage.getItem('db'))
+                    setName({ value, db })
                 }
                 setChats(newChats)
                 peopleInput.current.value = ''
@@ -481,6 +492,7 @@ export default function RightMain({ setName, current, setDeleteNumber, deleteNum
                             let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "").replace(/\n/g, "")
                             let newChats3 = copyArr(newChats1)
                             let length = newChats3[current].length
+                            console.log(text, 'text');
                             if (text) {
                                 if (text.includes('message') && text.includes('messageType')) {
                                     let count = text.split('}').length

@@ -26,14 +26,14 @@ const getParentKey = (key, tree) => {
     }
     return parentKey;
 };
-export default function LeftSidebar({ setAddFirstChat, current, name, setName, setCurrent, setDeleteNumber, list, setList, setAddText, addFirstChat, setDataSourceId, setRefresh }) {
+export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAndRefresh, setAddFirstChat, current, name, setName, setCurrent, setDeleteNumber, list, setList, setAddText, addFirstChat, setDataSourceId, setRefresh }) {
     const [chat, setChat] = useState([])
     const navigate = useNavigate();
     const [heightChange, setHeightChange] = useState(0)
     // const [hide, setHide] = useState(true)
     const [repair, setRepair] = useState([])
     const [treeData, setTreeData] = useState([])
-    const [listvalue, setListValue] = useState();
+    const [dbValue, setDbValue] = useState();
     const token = sessionStorage.getItem('token')
     const userId = sessionStorage.getItem('userId')
 
@@ -62,6 +62,9 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
             newChats[current].name = name.value || ''
             if (name.chatId) {
                 newChats[current].chatId = name.chatId
+            }
+            if (name.db) {
+                newChats[current].db = name.db
             }
             setName('')
             setChat(newChats)
@@ -253,13 +256,12 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
         localStorage.clear()
     }
     //新增会话
-    const addNewChat = () => {
+    const addNewChat = (db) => {
         // setHide(false)
         if (chat.length <= 19) {
             let chats = copyArr(chat)
             const chatId = uuidv4();
-
-            chats.push({ name: 'New chat', chatId })
+            chats.push({ name: 'New chat', chatId, db })
             setChat(chats)
             setList(list + 1)
             setCurrent(chats.length - 1)
@@ -271,6 +273,12 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
     useEffect(() => {
         if (current >= 0) {
             handleSelete(current)
+            treeData.map((v, i) => {
+                if (chat[current].db.db === v.db) {
+                    setDbValue(v.title)
+                    getTableData(v.db)
+                }
+            })
         }
     }, [current])
     //确认名字
@@ -318,8 +326,10 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
     //根据数据库获取行泪资料
     const handleSelect = (value, node, extra) => {
         if (node) {
-            setDataSourceId(node.title)
+            setDataSourceId(node.db)
             getTableData(node.title)
+            addNewChat(node)
+            sessionStorage.setItem('db', JSON.stringify(node))
         }
     }
     //往右边输入框加字
@@ -378,11 +388,13 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
             let i = 0
             for (i in res.data) {
                 treeData.push({
-                    title: res.data[i],
+                    title: res.data[i].includes('$') ? res.data[i].split('$')[1] : res.data[i],
                     value: res.data[i] + i + Math.random() * 1000,
-                    db: i
+                    db: res.data[i]
+
                 })
             }
+            sessionStorage.setItem('db', JSON.stringify(treeData[0]))
             setTreeData(treeData)
             getTableData(res.data[firstKey])
             setFirstTreeName(treeData[0].title)
@@ -394,6 +406,13 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
 
 
     }
+    //上传后刷新数据库
+    useEffect(() => {
+        if (uploadAndRefresh) {
+            getDBTreeData()
+            setUploadAndRefresh(false)
+        }
+    }, [uploadAndRefresh])
     //中间线
     const init = () => {
         //监听鼠标拖动
@@ -638,11 +657,12 @@ export default function LeftSidebar({ setAddFirstChat, current, name, setName, s
                             width: '98%',
                             color: 'white!important'
                         }}
-                        value={listvalue}
+                        value={dbValue}
                         dropdownStyle={{
                             maxHeight: 400,
                             overflow: 'auto',
                         }}
+                        disabled={dbDisabled}
                         placeholder={firstTreeName}
                         onSelect={(value, node, extra) => handleSelect(value, node, extra)}
                         treeData={treeData}
