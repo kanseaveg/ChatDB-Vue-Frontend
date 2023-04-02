@@ -23,6 +23,9 @@ export default function ChatDb() {
         setFlag(true)
     }, [])
     useEffect(() => {
+        console.log(dataSourceId);
+    }, [dataSourceId])
+    useEffect(() => {
         if (flag) {
             localStorage.setItem('current', current)
             localStorage.setItem('list', parseInt(list))

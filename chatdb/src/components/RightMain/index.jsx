@@ -738,7 +738,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 <DeleteOutlined onClick={showModal} className='RightMain-bottom-delete' /> <Upload {...props}>
                     <Button className='RightMain-bottom-upload' icon={<UploadOutlined />}></Button>
                 </Upload>
-                <div className='input'><input placeholder='Ask anything about your Data base!' disabled={showStopBtn} onKeyDown={handleKeyDown} ref={peopleInput} type="text" /><SendOutlined onClick={addPeoplechat} style={{ marginLeft: "-40px" }} /></div></div>
+                <div className='input'><input placeholder='Ask anything about your Database!' disabled={showStopBtn} onKeyDown={handleKeyDown} ref={peopleInput} type="text" /><SendOutlined onClick={addPeoplechat} style={{ marginLeft: "-40px" }} /></div></div>
         </div>
     )
 }

@@ -72,10 +72,17 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
     }, [name])
     //历史记录
     useEffect(() => {
+        init()
         let chat = JSON.parse(localStorage.getItem('chat'))
         if (chat && chat.length !== 0) {
             setChat(chat)
             setTheme(localStorage.getItem('theme'))
+            let db = chat[localStorage.getItem('current')].db
+            setDbValue(db.title)
+            getTableData(db.db)
+            setFirstTreeName(db.title)
+            setDataSourceId(db.db)
+            sessionStorage.setItem('db', JSON.stringify(db))
         }
         //获取个人信息
         axios({
@@ -274,9 +281,10 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
         if (current >= 0) {
             handleSelete(current)
             treeData.map((v, i) => {
-                if (chat[current].db.db === v.db) {
+                if (chat[current].db && chat[current].db.db === v.db) {
                     setDbValue(v.title)
                     getTableData(v.db)
+                    setDataSourceId(v.db)
                 }
             })
         }
@@ -325,9 +333,9 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
     }
     //根据数据库获取行泪资料
     const handleSelect = (value, node, extra) => {
-        if (node) {
+        if (node.db !== JSON.parse(sessionStorage.getItem('db')).db) {
             setDataSourceId(node.db)
-            getTableData(node.title)
+            getTableData(node.db)
             addNewChat(node)
             sessionStorage.setItem('db', JSON.stringify(node))
         }
@@ -394,11 +402,13 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
 
                 })
             }
-            sessionStorage.setItem('db', JSON.stringify(treeData[0]))
             setTreeData(treeData)
-            getTableData(res.data[firstKey])
-            setFirstTreeName(treeData[0].title)
-            setDataSourceId(treeData[0].title)
+            if (!localStorage.getItem('current')) {
+                sessionStorage.setItem('db', JSON.stringify(treeData[0]))
+                getTableData(res.data[firstKey])
+                setFirstTreeName(treeData[0].title)
+                setDataSourceId(treeData[0].db)
+            }
         }).catch(e => {
             message.warning('please login again!', 1);
             navigate('/login')
@@ -454,10 +464,8 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
         getDBTreeData()
 
     }
-    //初始化
-    useEffect(() => {
-        init()
-    }, [])
+
+
     //树展示
     const [expandedKeys, setExpandedKeys] = useState([]);
     const [searchValue, setSearchValue] = useState('');
@@ -518,7 +526,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
             // setHide(true)
             setList(list + 1)
             let chats = copyArr(chat)
-            chats.push({ name: addFirstChat.value, chatId: addFirstChat.chatId })
+            chats.push({ name: addFirstChat.value, chatId: addFirstChat.chatId, db: addFirstChat.db })
             setChat(chats)
             setCurrent(chats.length - 1)
             setAddFirstChat('')
@@ -637,7 +645,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                 </Form>
             </Modal>
             <div className='LeftSidebar-top' style={{ height: `calc(40vh + ${heightChange}px)` }}>
-                <div onClick={addNewChat} className='LeftSidebar-addNewChat'>+ &nbsp;&nbsp;New chat</div>
+                <div onClick={() => addNewChat(sessionStorage.getItem('db'))} className='LeftSidebar-addNewChat'>+ &nbsp;&nbsp;New chat</div>
                 <ul className='LeftSidebar-chats'>
                     {chat.length !== 0 ? chat.map((v, i) => {
                         return (<li className='LeftSidebar-chats-Li' key={i}><CommentOutlined />&nbsp;&nbsp;&nbsp;&nbsp;{repair[i] ? <input type="text" onBlur={(e) => handleRepair({ keyCode: 13 }, i, e)} onKeyDown={(e) => handleRepair(e, i)} style={{ margin: '0' }} className='newChatInput' /> : <div onClick={() => setCurrent(i)} className='LeftSidebar-chats-name'> {v.name}</div>}&nbsp;&nbsp;&nbsp;&nbsp;<EditOutlined onClick={() => changeReapir(i)} />&nbsp;&nbsp;&nbsp;&nbsp;<DeleteOutlined onClick={() => deleteChat(i)} /></li>)
