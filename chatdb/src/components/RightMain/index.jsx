@@ -117,7 +117,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
             setRefresh(false)
         }
     }, [refresh])
-    //打字机
+    //执行SQL
     // const jsonData = ["Ok,here's an example SQL statement to create a basic table in a relational database:", 'To create a basic table in a relational database, you could use a SQL statement like this:', 'If you need to set up a basic table in a relational database, the following SQL statement can be used:', 'The following SQL statement is an example of how to create a simple table in a relational database:', 'When it comes to creating a basic table in a relational database, you might use something like the following SQL statement:'];
     // useEffect(() => {
     //     if (current < 0) {
@@ -630,8 +630,8 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
             },
             method: 'POST',
             data: {
-                data_source_id: dataSourceId,
-                query, filetype
+                dbname: dataSourceId,
+                query, filetype, userId
             },
             responseType: 'text/csv',
             url: `http://10.21.76.236:8081/api/db/export`,

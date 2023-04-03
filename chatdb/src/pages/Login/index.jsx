@@ -202,12 +202,12 @@ export default function Login() {
             withCredentials: true,
             url: `http://10.21.76.236:8081/api/user/login`,
         }).then(res => {
-            console.log(Cookies.get(), '111');
             if (res.data.code !== 200) {
                 message.warning(res.data.data)
             } else {
                 message.success(res.data.msg)
                 console.log(res, 'reslogin');
+                sessionStorage.clear()
                 sessionStorage.setItem('token', res.headers.authorization)
                 sessionStorage.setItem('userId', res.headers.userid)
                 navigate('/chatdb')

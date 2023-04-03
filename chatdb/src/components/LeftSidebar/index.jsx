@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react'
-import { DoubleRightOutlined, SolutionOutlined, CommentOutlined, EditOutlined, DeleteOutlined, TableOutlined, SettingOutlined, LogoutOutlined, BulbOutlined, DatabaseOutlined } from '@ant-design/icons';
+import { DoubleRightOutlined, SolutionOutlined, CommentOutlined, EditOutlined, DeleteOutlined, TableOutlined, SettingOutlined, LogoutOutlined, BulbOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import userHead from '../../assests/images/head1.png'
 import { TreeSelect, Input, Tree, message, Modal, Form, Button, Select } from 'antd';
@@ -354,8 +354,8 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
             method: 'GET',
             url: `http://10.21.76.236:8081/api/db/schema?userId=${userId}&dbname=${dbname}`,
         }).then(res => {
-            if (res.status === 200) {
-                let data = res.data
+            if (res.data.code === 200) {
+                let data = res.data.data
                 let defaultData = []
                 let dataList = []
                 data.map((v, i) => {
@@ -372,7 +372,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                 setDefaultData(defaultData)
                 setDataList(dataList)
             } else {
-                message.warning('something wrong')
+                message.warning(res.data.msg)
             }
         }).catch(e => {
             message.warning('please login again!', 1)
@@ -391,24 +391,27 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
             method: 'GET',
             url: `http://10.21.76.236:8081/api/db/list?userId=${userId}`,
         }).then(res => {
-            const firstKey = Object.keys(res.data)[0];
             let treeData = []
-            let i = 0
-            for (i in res.data) {
-                treeData.push({
-                    title: res.data[i].includes('$') ? res.data[i].split('$')[1] : res.data[i],
-                    value: res.data[i] + i + Math.random() * 1000,
-                    db: res.data[i]
-
+            console.log(res);
+            if (res.data.code === 200) {
+                res.data.data.map((v, i) => {
+                    treeData.push({
+                        title: v.includes('$') ? v.split('$')[1] : v,
+                        value: v + i + Math.random() * 1000,
+                        db: v
+                    })
                 })
+                setTreeData(treeData)
+                if (!localStorage.getItem('current')) {
+                    sessionStorage.setItem('db', JSON.stringify(treeData[0]))
+                    getTableData(res.data.data[0])
+                    setFirstTreeName(treeData[0].title)
+                    setDataSourceId(treeData[0].db)
+                }
+            } else {
+                message.warning(res.data.msg)
             }
-            setTreeData(treeData)
-            if (!localStorage.getItem('current')) {
-                sessionStorage.setItem('db', JSON.stringify(treeData[0]))
-                getTableData(res.data[firstKey])
-                setFirstTreeName(treeData[0].title)
-                setDataSourceId(treeData[0].db)
-            }
+
         }).catch(e => {
             message.warning('please login again!', 1);
             navigate('/login')
