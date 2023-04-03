@@ -234,6 +234,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
         const root = document.documentElement;
         if (theme === 'light') {
             root.style.setProperty(`--primary-color`, 'rgb(24, 24, 28)');
+            root.style.setProperty(`--primary-color1`, 'rgb(46, 60, 72)');
             root.style.setProperty(`--secondary-color`, '#86CBFA');
             root.style.setProperty(`--secondary-color1`, 'gray');
             root.style.setProperty(`--third-color`, 'white');
@@ -242,6 +243,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
             setTheme('dark')
         } else {
             root.style.setProperty(`--primary-color`, 'white');
+            root.style.setProperty(`--primary-color1`, 'rgb(248, 248, 255)');
             root.style.setProperty(`--secondary-color`, '#86CBFA');
             root.style.setProperty(`--secondary-color1`, 'rgba(134, 203, 250, .2)');
             root.style.setProperty(`--third-color`, 'rgb(36, 36, 36)');
@@ -388,7 +390,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
 
     }
     //获取数据库数据
-    const getDBTreeData = () => {
+    const getDBTreeData = (which) => {
         axios({
             headers: {
                 'Content-Type': 'application/json',
@@ -414,6 +416,9 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                     setFirstTreeName(treeData[0].title)
                     setDataSourceId(treeData[0].db)
                 }
+                if (which === 1) {
+                    sessionStorage.setItem('db', JSON.stringify(treeData[treeData.len]))
+                }
             } else {
                 message.warning(res.data.msg)
             }
@@ -430,7 +435,8 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
     //上传后刷新数据库
     useEffect(() => {
         if (uploadAndRefresh) {
-            getDBTreeData()
+            getDBTreeData(1)
+
             setUploadAndRefresh(false)
         }
     }, [uploadAndRefresh])

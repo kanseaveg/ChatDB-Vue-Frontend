@@ -46,7 +46,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     //上传文件
     const props = {
         name: 'file',
-        action: '${URL}/api/db/upload',
+        action: `${URL}/api/db/upload`,
         headers: {
             Authorization: token
         },
@@ -669,10 +669,14 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     }, [current])
     useEffect(() => {
         if (main.current) {
-            main.current.scroll({
-                top: 1000000000,
-                behavior: 'smooth'
-            });
+            setTimeout(() => {
+                console.log(1);
+                main.current.scroll({
+                    top: 1000000000,
+                    behavior: 'smooth'
+                });
+            }, 1)
+
         }
     }, [chats])
     useEffect(() => {

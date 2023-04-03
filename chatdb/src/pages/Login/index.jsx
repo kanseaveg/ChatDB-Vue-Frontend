@@ -160,7 +160,7 @@ export default function Login() {
         }
 
     }
-
+    //登录i=1 注册i=0
     const sendCaptcha = (i) => {
         debounce(() => {
             const myUuid = uuidv4();
@@ -201,6 +201,7 @@ export default function Login() {
         }).then(res => {
             if (res.data.code !== 200) {
                 message.warning(res.data.data)
+                sendCaptcha(1)
             } else {
                 message.success(res.data.msg)
                 console.log(res, 'reslogin');
@@ -228,6 +229,7 @@ export default function Login() {
             console.log(res, 'res');
             if (res.data.code !== 200) {
                 message.warning(res.data.data)
+                sendCaptcha(0)
             } else {
                 message.success(res.data.data)
                 handleCancel()

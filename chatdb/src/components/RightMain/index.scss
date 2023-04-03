@@ -119,7 +119,7 @@
                         .copyBtn {
                             margin-top: 3px;
                             background: rgba(0, 0, 0, 0);
-                            color: var(--first-color);
+                            color: var(--third-color);
                         }
                     }
 
@@ -128,6 +128,9 @@
                         padding-left: 20px !important;
                         padding-right: 20px !important;
                         border-radius: 0 0 10px 10px;
+                        background: var(--primary-color1) !important;
+                        color: var(--third-color2) !important;
+
                     }
 
                     // padding: 0 100px;
