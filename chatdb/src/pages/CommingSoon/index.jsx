@@ -24,7 +24,7 @@ function ComingSoon() {
                     'Content-Type': 'application/json',
                 },
                 method: 'POST',
-                url: `http://localhost:8081/api/user/subscribe?email=${Email}`,
+                url: `http://10.21.76.236:8081/api/user/subscribe?email=${Email}`,
             }).then(res => {
                 console.log(res, 'res');
                 if (res.data.code === 200) {

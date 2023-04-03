@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import LeftSidebar from '../../components/LeftSidebar'
 import RightMain from '../../components/RightMain'
+import URL from '../../env.js'
 import './index.scss'
 export default function ChatDb() {
     const [current, setCurrent] = useState(-1)
@@ -15,7 +16,6 @@ export default function ChatDb() {
     const [uploadAndRefresh, setUploadAndRefresh] = useState(false)
     const [dbDisabled, setDbDisabled] = useState(false)
     useEffect(() => {
-        let list = localStorage.getItem('list')
         if (!isNaN(list) && list !== null && list !== undefined) {
             setList(parseInt(list))
             setCurrent(parseInt(localStorage.getItem('current')))

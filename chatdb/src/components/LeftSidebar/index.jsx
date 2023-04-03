@@ -7,6 +7,8 @@ import { v4 as uuidv4 } from "uuid"
 import axios from 'axios'
 import './index.scss'
 import { copyArr } from '../../utils/func'
+import URL from '../../env.js'
+
 const { Search } = Input;
 const { DirectoryTree } = Tree;
 const { Option } = Select;
@@ -91,7 +93,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                 "Authorization": token
             },
             method: 'GET',
-            url: `http://10.21.76.236:8081/api/userinfo/details?userId=${sessionStorage.getItem('userId')}`,
+            url: `${URL}/api/userinfo/details?userId=${sessionStorage.getItem('userId')}`,
         }).then(res => {
             if (res.data.code === 200) {
                 let username = res.data.data.username
@@ -103,6 +105,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                 message.warning(res.data.msg)
             }
         }).catch(e => {
+            console.log(e, 'e');
             message.warning('please login again', 1);
             navigate('/login')
         })
@@ -152,7 +155,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                 email: userInfo.email,
                 password, emailCode
             },
-            url: `http://10.21.76.236:8081/api/userinfo/update`,
+            url: `${URL}/api/userinfo/update`,
         }).then(res => {
             if (res.data.code === 200) {
                 message.success('save success!')
@@ -160,6 +163,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                 message.warning(res.data.msg)
             }
         }).catch(e => {
+
             message.warning('Error'); navigate('/login')
         })
     }
@@ -205,7 +209,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                     email: userInfo.email,
                     type: '2'
                 },
-                url: `http://10.21.76.236:8081/api/user/send`,
+                url: `${URL}/api/user/send`,
             }).then(res => {
                 if (res.code === 200) {
                     message.success(res.data)
@@ -255,7 +259,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                 "Authorization": token
             },
             method: 'GET',
-            url: `http://10.21.76.236:8081/api/user/logout`,
+            url: `${URL}/api/user/logout`,
         }).then(res => {
         }).catch(e => { })
         navigate('/login')
@@ -352,7 +356,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                 "Authorization": token
             },
             method: 'GET',
-            url: `http://10.21.76.236:8081/api/db/schema?userId=${userId}&dbname=${dbname}`,
+            url: `${URL}/api/db/schema?userId=${userId}&dbname=${dbname}`,
         }).then(res => {
             if (res.data.code === 200) {
                 let data = res.data.data
@@ -375,6 +379,8 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                 message.warning(res.data.msg)
             }
         }).catch(e => {
+            console.log(e, 'e');
+
             message.warning('please login again!', 1)
             navigate('/login')
                 ;
@@ -389,7 +395,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                 "Authorization": token
             },
             method: 'GET',
-            url: `http://10.21.76.236:8081/api/db/list?userId=${userId}`,
+            url: `${URL}/api/db/list?userId=${userId}`,
         }).then(res => {
             let treeData = []
             console.log(res);
@@ -413,6 +419,8 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
             }
 
         }).catch(e => {
+            console.log(e, 'e');
+
             message.warning('please login again!', 1);
             navigate('/login')
         })

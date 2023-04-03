@@ -9,6 +9,8 @@ import { copyArr, debounce } from '../../utils/func';
 import Logo from '../../assests/images/logo.png'
 import { v4 as uuidv4 } from "uuid"
 import Cookies from 'js-cookie'
+import URL from '../../env.js'
+
 const { Option } = Select;
 export default function Login() {
 
@@ -35,7 +37,7 @@ export default function Login() {
                 email,
                 password, emailCode
             },
-            url: `http://10.21.76.236:8081/api/user/reset`,
+            url: `${URL}/api/user/reset`,
         }).then(res => {
             console.log(res, 'resetpassword');
             if (res.data.code === 200) {
@@ -102,7 +104,7 @@ export default function Login() {
                     'Content-Type': 'application/json',
                 },
                 method: 'GET',
-                url: `http://10.21.76.236:8081/api/user/isExists?email=${email}`,
+                url: `${URL}/api/user/isExists?email=${email}`,
             }).then(res => {
                 i === '1' ? setCanSendCode([false, 30]) : setCanSendCode1([false, 30])
                 if (res.data.code !== 200) {
@@ -118,7 +120,7 @@ export default function Login() {
                                 email,
                                 type: i
                             },
-                            url: `http://10.21.76.236:8081/api/user/send`,
+                            url: `${URL}/api/user/send`,
                         }).then(res => {
                             if (res.data.code === 200) {
                                 message.success(res.data.data)
@@ -139,7 +141,7 @@ export default function Login() {
                                 email,
                                 type: i
                             },
-                            url: `http://10.21.76.236:8081/api/user/send`,
+                            url: `${URL}/api/user/send`,
                         }).then(res => {
                             if (res.data.code === 200) {
                                 message.success(res.data.data)
@@ -153,11 +155,6 @@ export default function Login() {
 
                 }
             })
-
-
-
-
-
         } else {
             message.warning('请输入有效邮箱地址！')
         }
@@ -173,7 +170,7 @@ export default function Login() {
                 },
                 method: 'GET',
                 responseType: 'arraybuffer',
-                url: `http://10.21.76.236:8081/api/user/captcha?captchaKey=${myUuid}`,
+                url: `${URL}/api/user/captcha?captchaKey=${myUuid}`,
             }).then(res => {
                 let imgData = btoa(String.fromCharCode(...new Uint8Array(res.data)));
                 let temp = copyArr(captcha)
@@ -200,7 +197,7 @@ export default function Login() {
             },
             maxBodyLength: Infinity,
             withCredentials: true,
-            url: `http://10.21.76.236:8081/api/user/login`,
+            url: `${URL}/api/user/login`,
         }).then(res => {
             if (res.data.code !== 200) {
                 message.warning(res.data.data)
@@ -226,7 +223,7 @@ export default function Login() {
                 username,
                 password, email, phone, emailCode, captchaCode, captchaKey: captcha[2], inviteCode
             },
-            url: `http://10.21.76.236:8081/api/user/register`,
+            url: `${URL}/api/user/register`,
         }).then(res => {
             console.log(res, 'res');
             if (res.data.code !== 200) {

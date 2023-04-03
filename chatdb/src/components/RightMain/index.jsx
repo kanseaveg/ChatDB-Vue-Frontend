@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import './index.scss'
 import temp from '../../logo.svg'
-import { UploadOutlined, PauseCircleOutlined, FileOutlined, SendOutlined, DeleteOutlined, DoubleRightOutlined, RedoOutlined, SmallDashOutlined } from '@ant-design/icons';
+import { CopyOutlined, UploadOutlined, PauseCircleOutlined, FileOutlined, SendOutlined, DeleteOutlined, DoubleRightOutlined, RedoOutlined, SmallDashOutlined } from '@ant-design/icons';
 import axios from 'axios'
 import { copyArr, Myreplace } from '../../utils/func'
 import { message, Upload } from 'antd';
@@ -10,7 +10,12 @@ import { Space, Table, Tag, Modal, Tooltip, Button } from 'antd';
 import head1 from '../../assests/images/head1.png'
 import head2 from '../../assests/images/head2.png'
 import { v4 as uuidv4 } from "uuid"
-
+import SyntaxHighlighter from "react-syntax-highlighter";
+import { docco, github, monokai, tomorrow } from "react-syntax-highlighter/dist/esm/styles/hljs";
+import { CopyToClipboard } from "react-copy-to-clipboard";
+import URL from '../../env.js'
+// import { prism, dark, coy, funky, okaidia, solarizedlight } from "react-syntax-highlighter/dist/esm/styles/prism";
+// SyntaxHighlighter.supportedLanguages("sql", sql);
 // import bg2 from '../../assests/images/bg2.png'
 const columns = [
     {
@@ -26,12 +31,7 @@ const columns = [
         address: 'Sydney No. 1 Lake Park',
     },
 ];
-// // .env.dev
-// const REACT_APP_API_URL=http://10.21.76.236:8081
-// // .env.test
-// const REACT_APP_API_URL=http://10.21.76.236:8081
-// // .env.prod
-// const REACT_APP_API_URL=http://localhost:8081
+
 
 export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName, current, setDeleteNumber, deleteNumber, list, addText, setCurrent, setAddFirstChat, dataSourceId, setRefresh, refresh }) {
     // [[{ who: 'ai', content: 'page1你好' }, { who: 'people', content: 'page1你好3' }], [{ who: 'ai', content: 'page2你好' }, { who: 'people', content: 'page2你好3' }]]
@@ -46,7 +46,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     //上传文件
     const props = {
         name: 'file',
-        action: 'http://10.21.76.236:8081/api/db/upload',
+        action: '${URL}/api/db/upload',
         headers: {
             Authorization: token
         },
@@ -152,7 +152,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     //执行SQL
     const execute = (i, sql) => {
         sql = 'SELECT' + sql.split('SELECT')[1];
-        // fetch('http://10.21.76.236:8081/api/db/query', {
+        // fetch('${URL}/api/db/query', {
         //     method: 'POST',
         //     headers: {
         //         'Content-Type': 'application/json',
@@ -207,7 +207,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 query: sql,
                 userId
             },
-            url: `http://10.21.76.236:8081/api/db/query`,
+            url: `${URL}/api/db/query`,
         }).then(res => {
             if (res.data.code === 200) {
                 let columns = []
@@ -237,7 +237,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
         let value = newChats[current][i - 1].content
         // let conversationId = i - 2 < 0 ? '' : newChats[current][i - 2].conversationId || ''
         // let parentId = i - 2 < 0 ? '' : newChats[current][i - 2].parentId || ''
-        fetch(`http://10.21.76.236:8081/api/chat/query?question=${value}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&`, {
+        fetch(`${URL}/api/chat/query?question=${value}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -337,7 +337,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 // Text.push([''])
                 // setText(Text)
                 setChats(newChats)
-                fetch(`http://10.21.76.236:8081/api/chat/query?question=${value}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&`, {
+                fetch(`${URL}/api/chat/query?question=${value}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -421,7 +421,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 //         conversationId: '',
                 //         parentId: ''
                 //     },
-                //     url: `http://10.21.76.236:8081/api/chat/query`,
+                //     url: `${URL}/api/chat/query`,
                 // }).then(res => {
                 //     if (res.data.code === 200) {
                 //         console.log(res);
@@ -468,7 +468,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 // let length = newChats[current].length
                 // let conversationId = newChats[current][length - 2] ? newChats[current][length - 2].conversationId || '' : ''
                 // let parentId = newChats[current][length - 2] ? newChats[current][length - 2].parentId || '' : ''
-                fetch(`http://10.21.76.236:8081/api/chat/query?question=${value}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&`, {
+                fetch(`${URL}/api/chat/query?question=${value}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -565,7 +565,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 //         parentId
                 //     },
                 //     responseType: 'text/event-stream',
-                //     url: `http://10.21.76.236:8081/api/chat/query`,
+                //     url: `${URL}/api/chat/query`,
                 // }).then(res => {
                 //     console.log(res);
                 //     if (res.status === 200) {
@@ -634,7 +634,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 query, filetype, userId
             },
             responseType: 'text/csv',
-            url: `http://10.21.76.236:8081/api/db/export`,
+            url: `${URL}/api/db/export`,
         }).then(res => {
             if (res.status === 200) {
                 message.success('正在下载中...')
@@ -674,7 +674,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 behavior: 'smooth'
             });
         }
-
     }, [chats])
     useEffect(() => {
         if (deleteNumber >= 0) {
@@ -692,6 +691,11 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
             peopleInput.current.value += addText
         }
     }, [addText])
+    const [copied, setCopied] = useState(false);
+    const handleCopy = () => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1000);
+    };
     return (
         <div className='RightMain '>
             <Modal title="清空对话" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
@@ -702,7 +706,17 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                     {chats[myCurrent]?.map((v, i) => {
                         return (v.who === 'ai' ? <li key={i} className='RightMain-chatli RightMain-aichat'><img className='RightMain-aichat-head' src={head2} alt="" /><div className='RightMain-aichat-content'>
                             {/* <div className='RightMain-aichat-content-start'>{text[myCurrent] ? text[myCurrent][(i - 1) / 2] : ''}</div> */}
-                            <div className='RightMain-aichat-content-content'>{v.content}
+                            <div className='RightMain-aichat-content-content'>
+                                {/* coy ,funky,okaidia,solarizedlight */}
+                                {v.content ? <div className='RightMain-aichat-content-typeCopy' style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    sql
+                                    <CopyToClipboard text={v.content} onCopy={handleCopy}>
+                                        <button className='copyBtn'><CopyOutlined /> {copied ? "Copied!" : "Copy"}</button>
+                                    </CopyToClipboard>
+                                </div> : ''}
+                                <SyntaxHighlighter language='sql' style={docco}>
+                                    {v.content}
+                                </SyntaxHighlighter>
                                 {i === chats[myCurrent].length - 1 ? <div className='RightMain-aichat-content-tool'><Tooltip placement="rightTop" title={<div >执行SQL</div>}><DoubleRightOutlined onClick={() => execute(i, v.content)} /></Tooltip><Tooltip placement="rightTop" title='重新生成SQL'><RedoOutlined onClick={() => reProduct(i)} /></Tooltip></div> : ''}</div>
                             {v.table && v.table[0] ? <><Table columns={v.table[0]} dataSource={v.table[1]} /><Tooltip color='white' title={<ul style={{ color: 'black' }} className='RightMain-aichat-content-download'><li onClick={() => DownloadFile(v.content, 'csv')}><FileOutlined />&nbsp; Download as CSV File</li><li onClick={() => DownloadFile(v.content, 'xlsx')}><FileOutlined />&nbsp; Download as Excel File</li></ul>}><SmallDashOutlined className='RightMain-aichat-content-downloadIcon' /></Tooltip> </> : ''}
                         </div></li> :
@@ -733,8 +747,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 {showStopBtn ?
                     <div className='RightMain-bottom-stopBtn'><Button onClick={stopResponding} className='RightMain-bottom-stopButton' style={{ background: 'rgb(242, 201, 125)!important' }}><PauseCircleOutlined style={{ color: 'white' }} />  Stop Responding</Button></div>
                     : ''}
-
-
                 <DeleteOutlined onClick={showModal} className='RightMain-bottom-delete' /> <Upload {...props}>
                     <Button className='RightMain-bottom-upload' icon={<UploadOutlined />}></Button>
                 </Upload>
