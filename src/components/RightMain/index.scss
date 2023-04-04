@@ -1,0 +1,272 @@
+@import '../../App.scss';
+
+.dark {
+    color: rgba(36, 36, 36, .8) !important;
+    background: rgba(36, 36, 36, ) !important;
+}
+
+.ant-table,
+.ant-table-cell {
+    background: var(--primary-color) !important;
+    color: var(--third-color) !important;
+}
+
+.ant-tooltip:hover {
+    cursor: pointer;
+}
+
+.ant-pagination .ant-pagination-item a {
+    color: var(--third-color);
+}
+
+.ant-pagination .ant-pagination-item-active {
+    background: var(--primary-color);
+}
+
+.RightMain-aichat-content-download {
+    li {
+        margin: 5px 0;
+    }
+
+    li:hover {
+        cursor: pointer;
+    }
+}
+
+.RightMain-aichat-content-downloadIcon {
+    width: 30px;
+    height: 30px;
+    transition: all .3s;
+    padding-left: 5px;
+}
+
+.RightMain-aichat-content-downloadIcon:hover {
+    cursor: pointer;
+    color: rgba(34, 203, 250, .5);
+    border: 1px solid rgba(34, 203, 250, .5);
+}
+
+.RightMain {
+    position: relative;
+    width: calc(98vw - 250px);
+    height: calc(98vh + 2px);
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0);
+    color: rgba(36, 36, 36, );
+    transition: all .3s;
+
+    iframe {
+        border-radius: 20px;
+    }
+
+    .RightMain-main {
+        padding: 0 2vw;
+        width: 100%;
+        height: calc(98vh - 75px);
+        overflow: auto;
+        background: var(--primary-color);
+
+        .RightMain-chatli {
+            width: 100%;
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .RightMain-aichat {
+            justify-content: start;
+
+            .RightMain-aichat-head {
+                width: 30px;
+                height: 30px;
+                border-radius: 40px;
+                margin-right: 15px;
+            }
+
+            .RightMain-aichat-content {
+                position: relative;
+                padding: 20px;
+                border-radius: 10px;
+                font-family: sans-serif;
+                max-width: 90%;
+                background: var(--primary-color);
+                border: 1px solid var(--third-color1);
+                color: var(--third-color);
+                overflow-wrap: wrap;
+                word-break: break-all;
+
+                .ant-table {
+                    overflow: auto;
+
+                    .ant-table-thead>tr>th {
+                        min-width: 200px !important;
+                    }
+                }
+
+                .RightMain-aichat-content-start {
+                    margin-bottom: 20px;
+                    font-weight: 400;
+                }
+
+                .RightMain-aichat-content-content {
+                    line-height: 40px;
+                    // background: rgba(169, 168, 168, .2);
+                    margin-bottom: 20px;
+                    font-weight: 400;
+
+                    .RightMain-aichat-content-typeCopy {
+                        background: rgba(61, 68, 81, .5);
+                        width: 100%;
+                        margin-bottom: 0 !important;
+                        padding-right: 20px;
+                        border-radius: 10px 10px 0 0;
+                        padding-left: 20px;
+                        align-items: center;
+
+                        .copyBtn {
+                            margin-top: 3px;
+                            background: rgba(0, 0, 0, 0);
+                            color: var(--third-color);
+                        }
+                    }
+
+                    pre {
+                        margin: 0 !important;
+                        padding-left: 20px !important;
+                        padding-right: 20px !important;
+                        border-radius: 0 0 10px 10px;
+                        background: var(--primary-color1) !important;
+                        color: var(--third-color2) !important;
+
+                    }
+
+                    // padding: 0 100px;
+                    .RightMain-aichat-content-tool {
+                        position: absolute;
+                        width: 2px;
+                        right: -10px;
+                        color: var(--third-color1);
+                        top: 0;
+
+                        svg: {
+                            transition: all .3s;
+                        }
+
+                        svg:hover {
+                            color: rgba(34, 203, 250, .5);
+                            cursor: pointer;
+                        }
+                    }
+                }
+            }
+        }
+
+        .RightMain-peoplechat {
+
+            justify-content: end;
+
+            .RightMain-peoplechat-head {
+                margin-left: 15px;
+                width: 30px;
+                height: 30px;
+                border-radius: 15px;
+                font-size: 26px;
+            }
+
+            .RightMain-peoplechat-content {
+                padding: 15px;
+                border-radius: 10px;
+                font-family: sans-serif;
+                max-width: 40%;
+                background: rgba(134, 203, 250, .2);
+                word-break: break-all;
+                color: var(--third-color);
+
+
+            }
+        }
+
+
+    }
+
+    .RightMain-main::-webkit-scrollbar {
+        width: 0;
+    }
+
+    .RightMain-bottom {
+        position: absolute;
+        display: flex;
+        // justify-content: space-around;
+        align-items: center;
+        background: var(--primary-color);
+        bottom: 0;
+        width: 100%;
+        height: 75px;
+
+        .RightMain-bottom-stopBtn {
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            bottom: 75px;
+            color: white;
+
+            .RightMain-bottom-stopButton {
+                background: rgb(242, 201, 125) !important;
+                border-radius: 0;
+                border: none;
+            }
+        }
+
+        .RightMain-bottom-delete {
+            font-size: 20px;
+            margin: 0 20px;
+        }
+
+        .RightMain-bottom-upload {
+            border: none;
+            font-size: 20px;
+            margin-top: -10px;
+            margin-right: 20px;
+        }
+
+        svg {
+            color: var(--third-color);
+            transition: all .3s;
+        }
+
+        svg:hover {
+            cursor: pointer;
+            color: rgb(34, 203, 250);
+        }
+
+        .input {
+            align-self: center;
+
+            input {
+                height: 60px;
+                border-radius: 5px;
+                min-width: 800px;
+                width: calc(98vw - 400px);
+                font-size: 20px;
+                transition: all .3s;
+                padding-left: 20px;
+                padding-right: 50px;
+                border: 1px solid rgba(0, 0, 0, .1);
+                box-shadow: 0px 0px 10px 10px rgba(255, 255, 255, .1);
+                transition: all .3s;
+                background: var(--primary-color);
+                color: var(--third-color);
+            }
+
+            input:hover {
+                border: 1px solid rgb(34, 203, 250);
+            }
+
+            input::placeholder {
+                color: gray !important;
+            }
+        }
+
+
+    }
+}

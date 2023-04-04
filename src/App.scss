@@ -1,0 +1,18 @@
+:root {
+    --primary-color: white;
+    --primary-color1: rgb(248, 248, 255);
+    --secondary-color: #86CBFA;
+    --secondary-color1: rgba(149, 192, 222, .2);
+    --third-color: rgb(36, 36, 36);
+    --third-color1: rgba(36, 36, 36, .2);
+    --third-color2: rgba(36, 36, 36, .6);
+
+}
+
+.App {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    background: var(--primary-color);
+
+}

@@ -1,0 +1,290 @@
+@import '../../App.scss';
+
+.hidden {
+    display: none;
+}
+
+.ant-modal-body {
+    color: var(--third-color);
+}
+
+input::placeholder {
+    color: var(--third-color) !important;
+    /* 设置placeholder字体颜色为灰色 */
+}
+
+
+.model2-userInfo {
+    width: 100%;
+    color: var(--third-color);
+    background: var(--primary-color);
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--third-color1);
+    margin-bottom: 20px;
+}
+
+.ant-form-item .ant-form-item-label>label {
+    color: var(--third-color) !important;
+
+}
+
+.ant-input,
+.ant-select-selector {
+    background: var(--primary-color) !important;
+    color: var(--third-color) !important;
+
+}
+
+.ant-modal-content {
+    background: var(--primary-color) !important;
+}
+
+.LeftSidebar {
+    width: 250px;
+    height: calc(98vh + 1.5px);
+    background: var(--primary-color);
+    border-right: 1px solid var(--third-color1);
+    color: var(--third-color);
+    position: relative;
+    overflow: hidden;
+
+
+    .LeftSidebar-introduction {
+        margin-top: 30px;
+        width: 90%;
+        text-align: center;
+        font-style: italic;
+        font-family: serif;
+        color: var(--third-color1);
+        font-size: 20px;
+    }
+
+    .LeftSidebar-line {
+        height: 2px;
+        background: rgba(0, 0, 0, 0);
+        border-bottom: 1px solid var(--third-color1);
+    }
+
+    .LeftSidebar-line:hover {
+        cursor: ns-resize;
+    }
+
+    .LeftSidebar-top {
+        height: 40vh;
+        overflow: auto;
+
+        .LeftSidebar-top-deteleAll {
+            border-radius: 5px;
+            margin: auto;
+            width: 92%;
+            height: 40px;
+            text-align: center;
+            font-size: 16px;
+            color: var(--third-color);
+            line-height: 40px;
+            transition: all .3s;
+        }
+
+        .LeftSidebar-top-deteleAll:hover {
+            background: var(--third-color1);
+            color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        .newChatInput {
+            width: 110px;
+            padding-left: 10px;
+            background: rgba(0, 0, 0, 0);
+            border-bottom: 1px solid var(--third-color);
+            color: var(--third-color);
+        }
+
+        .newChatInputDiv {
+            margin: 0 auto;
+            height: 40px;
+            width: 92%;
+            border-radius: 5px;
+            background: var(--secondary-color1);
+            border: 1px solid var(--third-color1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+
+        }
+
+
+        .LeftSidebar-addNewChat {
+            margin-top: 10px;
+            margin-left: 10px;
+            padding-left: 20px;
+            width: 230px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            color: var(--third-color);
+            font-size: 18px;
+            border: 1px dashed var(--secondary-color);
+            border-radius: 5px;
+            transition: all .3s;
+        }
+
+        .LeftSidebar-addNewChat:hover {
+            color: var(--secondary-color);
+            cursor: pointer;
+        }
+
+        .LeftSidebar-chats {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+
+            li {
+                height: 40px;
+                width: 92%;
+                padding-right: 8px;
+                border-radius: 5px;
+                display: flex;
+                flex-wrap: nowrap;
+                align-items: center;
+                padding-left: 10px;
+                transition: all .3s;
+
+                .LeftSidebar-chats-name {
+                    width: 90%;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    overflow: hidden;
+                }
+            }
+
+            li:hover {
+                background: var(--third-color1);
+                cursor: pointer;
+            }
+
+            .LeftSidebar-chats-seletedLi {
+                background: var(--third-color1);
+            }
+        }
+    }
+
+    .LeftSidebar-top::-webkit-scrollbar {
+        width: 0px;
+    }
+
+    .LeftSidebar-bottom {
+        overflow: auto;
+        height: 58vh;
+        padding-left: 10px;
+
+        .anticon-double-right {
+            display: flex;
+            align-items: center !important;
+            // svg {
+            //     margin-bottom: -8px;
+            // }
+        }
+
+        .site-tree-search-value {
+            background: var(--secondary-color1) !important;
+            border-radius: 5px;
+        }
+
+        .ant-tree-node-selected {
+            background: var(--secondary-color1) !important;
+        }
+
+        .LeftSidebar-bottom-top {
+            overflow: auto;
+        }
+
+        .LeftSidebar-bottom-top::-webkit-scrollbar {
+            width: 0;
+        }
+
+        .ant-select-selection-placeholder {
+            color: var(--third-color) !important;
+        }
+
+        .ant-input {
+            background: var(--primary-color);
+            color: var(--third-color) !important;
+        }
+
+        .ant-tree-list-holder-inner {
+            background: var(--primary-color);
+            color: var(--third-color);
+        }
+
+        .LeftSidebar-bottom-TreeSelect {
+            width: 98%;
+            margin-top: 10px;
+
+            .ant-select-selector {
+                background: rgba(0, 0, 0, 0) !important;
+                color: var(--third-color) !important;
+            }
+
+            .ant-select-arrow {
+                color: var(--third-color) !important;
+            }
+        }
+
+        .LeftSidebar-trees {
+            li {
+                height: 50px;
+                padding-left: 30px;
+            }
+        }
+
+        .LeftSidebar-bottom-userInfo {
+            position: absolute;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 75px;
+            background: var(--primary-color);
+            border-top: 1px solid var(--third-color1);
+
+            svg {
+                transition: all .3s;
+                color: var(--third-color);
+            }
+
+            svg:hover {
+                cursor: pointer;
+                color: var(--secondary-color);
+
+            }
+
+            .LeftSidebar-bottom-head {
+                width: 40px;
+                height: 40px;
+                border-radius: 40px;
+                background: var(--third-color1);
+            }
+
+            .LeftSidebar-bottom-name {
+                color: var(--third-color);
+                display: block;
+                font-size: 16px;
+                font-weight: 700;
+                margin-left: -10px;
+            }
+        }
+
+    }
+
+    .LeftSidebar-bottom::-webkit-scrollbar {
+        width: 0px;
+
+    }
+}
