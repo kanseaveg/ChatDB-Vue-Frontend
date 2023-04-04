@@ -60,31 +60,12 @@ function ComingSoon() {
     return (
         <div style={{ display: 'flex' }}>
             <div className="coming-soon">
-                <h1>Coming Soon</h1>
-                <p>Chat2DB is launching on April 1, 2023!</p>
-                <div className="countdown">
-                    <div className="countdown-item">
-                        <div className="countdown-value">{countdown.days}</div>
-                        <div className="countdown-label">Days</div>
-                    </div>
-                    <div className="countdown-item">
-                        <div className="countdown-value">{countdown.hours}</div>
-                        <div className="countdown-label">Hours</div>
-                    </div>
-                    <div className="countdown-item">
-                        <div className="countdown-value">{countdown.minutes}</div>
-                        <div className="countdown-label">Minutes</div>
-                    </div>
-
-                    <div className="countdown-item">
-                        <div className="countdown-value">{countdown.seconds}</div>
-                        <div className="countdown-label">Seconds</div>
-                    </div>
-                </div>
+                <h1>Chat2DB</h1>
+                <h1>Ask anything about your Database</h1>
 
                 <form className="signup-form" onSubmit={(e) => e.preventDefault()}>
                     <input ref={email} type="email" placeholder="Enter your email address" />
-                    <button onClick={submit}>Subscribe</button>
+                    <button onClick={submit}>Join Wailist</button>
                 </form>
 
             </div>
