@@ -16,9 +16,12 @@ export default function ChatDb() {
     const [uploadAndRefresh, setUploadAndRefresh] = useState(false)
     const [dbDisabled, setDbDisabled] = useState(false)
     useEffect(() => {
-        if (!isNaN(list) && list !== null && list !== undefined) {
+        let list = parseInt(localStorage.getItem('list'))
+        let current = parseInt(localStorage.getItem('current '))
+
+        if (!isNaN(list) && list !== null && list !== undefined && !isNaN(current) && current !== null && current !== undefined) {
             setList(parseInt(list))
-            setCurrent(parseInt(localStorage.getItem('current')))
+            setCurrent(parseInt(current))
         }
         setFlag(true)
     }, [])
