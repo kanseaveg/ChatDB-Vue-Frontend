@@ -17,7 +17,7 @@ export default function ChatDb() {
     const [dbDisabled, setDbDisabled] = useState(false)
     useEffect(() => {
         let list = parseInt(localStorage.getItem('list'))
-        let current = parseInt(localStorage.getItem('current '))
+        let current = parseInt(localStorage.getItem('current'))
 
         if (!isNaN(list) && list !== null && list !== undefined && !isNaN(current) && current !== null && current !== undefined) {
             setList(parseInt(list))

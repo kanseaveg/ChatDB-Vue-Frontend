@@ -339,6 +339,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
     }
     //根据数据库获取行泪资料
     const handleSelect = (value, node, extra) => {
+        console.log('选择了啊啊啊啊啊啊啊', node);
         if (node.db !== JSON.parse(sessionStorage.getItem('db')).db) {
             setDataSourceId(node.db)
             getTableData(node.db)
@@ -417,7 +418,6 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                     setDataSourceId(treeData[0].db)
                 }
                 if (which === 1) {
-                    sessionStorage.setItem('db', JSON.stringify(treeData[treeData.len]))
                 }
             } else {
                 message.warning(res.data.msg)

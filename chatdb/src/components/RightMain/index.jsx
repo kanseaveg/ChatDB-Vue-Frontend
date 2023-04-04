@@ -59,13 +59,13 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
             if (info.file.status !== 'uploading') {
             }
             if (info.file.status === 'done') {
-                message.success(`${info.file.name} file uploaded successfully`);
+                message.success(`${info.file.name} file uploaded successfully`, 1);
                 setUploadAndRefresh(true)
             } else if (info.file.status === 'error') {
                 message.error(`${info.file.name} file upload failed.`);
             }
         },
-    };
+    }
     //用于终止fetch回答
     const controller = new AbortController();
     const signal = controller.signal;
@@ -258,7 +258,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                         if (text.includes('message') && text.includes('messageType')) {
                             let count = text.split('}').length
                             if (count === 2) {
-                                let newText = Myreplace(text.split(',')[0], ['{', '}', '"', ':', ',', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                let newText = Myreplace(text.split(',')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
                                 newText = newText.replace(/\\n/g, ' ')
                                 if (newChats3[current][i].content) {
                                     newChats3[current][i].content += newText
@@ -267,7 +267,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                 }
                             } else {
                                 for (let a = 0; a < count; a++) {
-                                    let newText = Myreplace(text.split('}')[a].split(',')[0], ['{', '}', '"', ':', ',', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                    let newText = Myreplace(text.split('}')[a].split(',')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
                                     newText = newText.replace(/\\n/g, ' ')
                                     if (newChats3[current][i].content) {
                                         newChats3[current][i].content += newText
@@ -364,7 +364,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                 if (text.includes('message') && text.includes('messageType')) {
                                     let count = text.split('}').length
                                     if (count === 2) {
-                                        let newText = Myreplace(text.split(',')[0], ['{', '}', '"', ':', ',', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                        let newText = Myreplace(text.split(',')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
                                         newText = newText.replace(/\\n/g, ' ')
                                         if (newChats3[newChats3.length - 1][1].content) {
                                             newChats3[newChats3.length - 1][1].content += newText
@@ -373,7 +373,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                         }
                                     } else {
                                         for (let i = 0; i < count; i++) {
-                                            let newText = Myreplace(text.split('}')[i].split(',')[0], ['{', '}', '"', ':', ',', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                            let newText = Myreplace(text.split('}')[i].split(',')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
                                             newText = newText.replace(/\\n/g, ' ')
                                             if (newChats3[newChats3.length - 1][1].content) {
                                                 newChats3[newChats3.length - 1][1].content += newText
@@ -497,7 +497,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                 if (text.includes('message') && text.includes('messageType')) {
                                     let count = text.split('}').length
                                     if (count === 2) {
-                                        let newText = Myreplace(text.split(',')[0], ['{', '}', '"', ':', ',', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                        let newText = Myreplace(text.split(',')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
                                         newText = newText.replace(/\\n/g, ' ')
                                         if (newChats3[current][length - 1].content) {
                                             newChats3[current][length - 1].content += newText
@@ -506,7 +506,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                         }
                                     } else {
                                         for (let i = 0; i < count; i++) {
-                                            let newText = Myreplace(text.split('}')[i].split(',')[0], ['{', '}', '"', ':', ',', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                            let newText = Myreplace(text.split('}')[i].split(',')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
                                             newText = newText.replace(/\\n/g, ' ')
                                             if (newChats3[current][length - 1].content) {
                                                 newChats3[current][length - 1].content += newText
@@ -722,7 +722,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                     {v.content}
                                 </SyntaxHighlighter>
                                 {i === chats[myCurrent].length - 1 ? <div className='RightMain-aichat-content-tool'><Tooltip placement="rightTop" title={<div >执行SQL</div>}><DoubleRightOutlined onClick={() => execute(i, v.content)} /></Tooltip><Tooltip placement="rightTop" title='重新生成SQL'><RedoOutlined onClick={() => reProduct(i)} /></Tooltip></div> : ''}</div>
-                            {v.table && v.table[0] ? <><Table columns={v.table[0]} dataSource={v.table[1]} /><Tooltip color='white' title={<ul style={{ color: 'black' }} className='RightMain-aichat-content-download'><li onClick={() => DownloadFile(v.content, 'csv')}><FileOutlined />&nbsp; Download as CSV File</li><li onClick={() => DownloadFile(v.content, 'xlsx')}><FileOutlined />&nbsp; Download as Excel File</li></ul>}><SmallDashOutlined className='RightMain-aichat-content-downloadIcon' /></Tooltip> </> : ''}
+                            {v.table && v.table[0] ? <><Table tableLayout='auto' columns={v.table[0]} dataSource={v.table[1]} /><Tooltip color='white' title={<ul style={{ color: 'black' }} className='RightMain-aichat-content-download'><li onClick={() => DownloadFile(v.content, 'csv')}><FileOutlined />&nbsp; Download as CSV File</li><li onClick={() => DownloadFile(v.content, 'xlsx')}><FileOutlined />&nbsp; Download as Excel File</li></ul>}><SmallDashOutlined className='RightMain-aichat-content-downloadIcon' /></Tooltip> </> : ''}
                         </div></li> :
                             <li key={i} className='RightMain-chatli RightMain-peoplechat'><div className='RightMain-peoplechat-content'>{v.content}</div><img src={head1} alt="" className='RightMain-peoplechat-head' /></li>)
 
