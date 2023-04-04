@@ -27,7 +27,7 @@ export default function ChatDb() {
     }, [dataSourceId])
     useEffect(() => {
         if (flag) {
-            localStorage.setItem('current', current)
+            localStorage.setItem('current', parseInt(current))
             localStorage.setItem('list', parseInt(list))
         }
     }, [current, list])
