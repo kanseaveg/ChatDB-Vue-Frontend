@@ -65,16 +65,16 @@ function ComingSoon() {
 
                 <form className="signup-form" onSubmit={(e) => e.preventDefault()}>
                     <input ref={email} type="email" placeholder="Enter your email address" />
-                    <button onClick={submit}>Join Wailist</button>
+                    <button onClick={submit}>Join Waitlist</button>
                 </form>
 
             </div>
 
 
-            <div className="right">
-                {/* <h1 style={{ fontSize: '38px' }}>Chat2DB</h1>
-                <p style={{ marginTop: "-0px" }}>Ask anything about your Database!</p> */}
-            </div>
+            {/* <div className="right">
+                <h1 style={{ fontSize: '38px' }}>Chat2DB</h1>
+                <p style={{ marginTop: "-0px" }}>Ask anything about your Database!</p>
+            </div> */}
         </div>
 
     );
