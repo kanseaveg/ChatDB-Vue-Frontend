@@ -94,6 +94,19 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     //终止回答
     const stopResponding = () => {
         controller.abort()
+        switch (sessionStorage.getItem('show')) {
+            case 'reshow':
+                sessionStorage.setItem('show', 'notreshow')
+                break;
+            case 'show':
+                sessionStorage.setItem('show', 'notshow')
+                break;
+            case 'show1':
+                sessionStorage.setItem('show', 'notshow1')
+                break;
+            default:
+                break;
+        }
         setShowStopBtn(false)
     }
     //清空对话
@@ -227,11 +240,12 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
             } else {
                 message.warning(res.data.msg)
             }
-        })
+        }).catch((e) => message.warning(e.response.data.data || e.response.data.msg))
     }
     //重新生成SQL
     const reProduct = (i) => {
         setShowStopBtn(true)
+        sessionStorage.setItem('show', 'reshow')
         const chatId = JSON.parse(localStorage.getItem('chat'))[current].chatId
         let newChats = copyArr(chats)
         newChats[current][i] = { who: 'ai' }
@@ -248,63 +262,74 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
         })
             .then(response => {
                 // 使用 ReadableStream API 解析事件流数据并更新 state
-                const streamReader = response.body.getReader();
-                streamReader.read().then(function processResult(result) {
-                    if (result.done) {
-                        setShowStopBtn(false)
-                        return;
-                    }
-                    let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "").replace(/\n/g, "")
-                    let newChats3 = copyArr(newChats)
-                    if (text) {
-                        if (text.includes('message') && text.includes('messageType')) {
-                            let count = text.split('}').length
-                            if (count === 2) {
-                                let newText = Myreplace(text.split(',')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
-                                newText = newText.replace(/\\n/g, ' ')
-                                if (newChats3[current][i].content) {
-                                    newChats3[current][i].content += newText
-                                } else {
-                                    newChats3[current][i].content = newText
-                                }
-                            } else {
-                                for (let a = 0; a < count; a++) {
-                                    let newText = Myreplace(text.split('}')[a].split(',')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                if (sessionStorage.getItem('show') === 'reshow') {
+                    const streamReader = response.body.getReader();
+                    streamReader.read().then(function processResult(result) {
+                        if (result.done) {
+                            setShowStopBtn(false)
+                            sessionStorage.setItem('show', 'finishreshow')
+                            return;
+                        }
+                        let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "").replace(/\n/g, "")
+                        let newChats3 = copyArr(newChats)
+                        if (text) {
+                            if (text.includes('message') && text.includes('messageType')) {
+                                let count = text.split('}').length
+                                if (count === 2) {
+                                    let newText = Myreplace(text.split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
                                     newText = newText.replace(/\\n/g, ' ')
-                                    if (newChats3[current][i].content) {
-                                        newChats3[current][i].content += newText
-                                    } else {
-                                        newChats3[current][i].content = newText
+                                    if (newText !== ',') {
+                                        if (newChats3[current][i].content) {
+                                            newChats3[current][i].content += newText
+                                        } else {
+                                            newChats3[current][i].content = newText
+                                        }
+                                    }
+
+                                } else {
+                                    for (let a = 0; a < count; a++) {
+                                        let newText = Myreplace(text.split('}')[a].split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                        newText = newText.replace(/\\n/g, ' ')
+                                        if (newText !== ',') {
+
+                                            if (newChats3[current][i].content) {
+                                                newChats3[current][i].content += newText
+                                            } else {
+                                                newChats3[current][i].content = newText
+                                            }
+                                        }
                                     }
                                 }
                             }
-                        }
-                        else {
-                            let newText = text.split('"data":"')[1]
-                            newText = Myreplace(newText, ['{', '}', '"', ':', ',', 'message', 'messageType'])
-                            if (newText.includes('token wrong')) {
-                                message.warning('请重新登陆！')
-                                navigate('/login')
-                            } else {
-                                newChats3[current][i].content = newText
+                            else {
+                                let newText = text.includes('data') ? text.split('"data":"')[1] : text.split('"msg":"')[1]
+                                newText = Myreplace(newText, ['{', '}', '"', ':', ',', 'message', 'messageType'])
+                                if (newText.includes('token wrong')) {
+                                    message.warning('请重新登陆！')
+                                    navigate('/login')
+                                } else {
+                                    newChats3[current][i].content = newText
+                                }
                             }
+                            setChats(newChats3)
                         }
-                        setChats(newChats3)
-                    }
-                    // if (text.includes('"')) {
-                    //     console.log('报错了');
-                    //     newChats3[current][i].content = text.split('"data":"')[1].replace(/"/g, "").replace(/}/g, "")
-                    // } else {
-                    //     if (newChats3[current][i].content) {
-                    //         newChats3[current][i].content += text
-                    //     } else {
-                    //         newChats3[current][i].content = text
-                    //     }
-                    // }
 
-                    // setChats(newChats3)
-                    return streamReader.read().then(processResult);
-                });
+                        // if (text.includes('"')) {
+                        //     console.log('报错了');
+                        //     newChats3[current][i].content = text.includes('data') ? text.split('"data":"')[1] : text.split('"msg":"')[1].replace(/"/g, "").replace(/}/g, "")
+                        // } else {
+                        //     if (newChats3[current][i].content) {
+                        //         newChats3[current][i].content += text
+                        //     } else {
+                        //         newChats3[current][i].content = text
+                        //     }
+                        // }
+
+                        // setChats(newChats3)
+                        return streamReader.read().then(processResult);
+                    });
+                }
+
             })
             .catch(e => {
                 message.warning('please login again!', 1)
@@ -325,6 +350,26 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     }
     const addPeoplechat = () => {
         setShowStopBtn(true)
+        //处理终止按钮
+        let judge = 0
+        switch (sessionStorage.getItem('show')) {
+            case 'notshow':
+                judge = 'show1'
+                sessionStorage.setItem('show', 'show1')
+                break;
+            case 'notshow1':
+                judge = 'show'
+                sessionStorage.setItem('show', 'show')
+                break;
+            case 'finishshow':
+                judge = 'show'
+                sessionStorage.setItem('show', 'show')
+                break;
+            default:
+                judge = 'show'
+                sessionStorage.setItem('show', 'show')
+                break;
+        }
         let value = peopleInput.current.value || ''
         if (value) {
             if (chats.length === 0 || current === -1) {
@@ -348,59 +393,71 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                     signal: signal
                 })
                     .then(response => {
-                        // 使用 ReadableStream API 解析事件流数据并更新 state
-                        let newChats2 = copyArr(newChats)
-                        let length = newChats2.length
-                        // newChats2[length - 1][1].conversationId = response.headers.conversationid || ''
-                        // newChats2[length - 1][1].parentId = response.headers.parentid || ''
-                        setChats(newChats2)
-                        const streamReader = response.body.getReader();
-                        streamReader.read().then(function processResult(result) {
-                            if (result.done) {
-                                setShowStopBtn(false)
-                                return;
-                            }
-                            let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "").replace(/\n/g, "")
-                            let newChats3 = copyArr(newChats2)
-                            if (text) {
-                                if (text.includes('message') && text.includes('messageType')) {
-                                    let count = text.split('}').length
-                                    if (count === 2) {
-                                        let newText = Myreplace(text.split(',')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
-                                        newText = newText.replace(/\\n/g, ' ')
-                                        if (newChats3[newChats3.length - 1][1].content) {
-                                            newChats3[newChats3.length - 1][1].content += newText
-                                        } else {
-                                            newChats3[newChats3.length - 1][1].content = newText
-                                        }
-                                    } else {
-                                        for (let i = 0; i < count; i++) {
-                                            let newText = Myreplace(text.split('}')[i].split(',')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+
+                        if (sessionStorage.getItem('show') === judge) {
+                            // 使用 ReadableStream API 解析事件流数据并更新 state
+                            let newChats2 = copyArr(newChats)
+                            let length = newChats2.length
+                            // newChats2[length - 1][1].conversationId = response.headers.conversationid || ''
+                            // newChats2[length - 1][1].parentId = response.headers.parentid || ''
+                            setChats(newChats2)
+                            const streamReader = response.body.getReader();
+                            streamReader.read().then(function processResult(result) {
+                                if (result.done) {
+                                    sessionStorage.setItem('show', 'finishshow')
+                                    setShowStopBtn(false)
+                                    return;
+                                }
+                                let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "").replace(/\n/g, "")
+                                let newChats3 = copyArr(newChats2)
+                                if (text) {
+                                    if (text.includes('message') && text.includes('messageType')) {
+                                        let count = text.split('}').length
+                                        if (count === 2) {
+                                            let newText = Myreplace(text.split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+
                                             newText = newText.replace(/\\n/g, ' ')
-                                            if (newChats3[newChats3.length - 1][1].content) {
-                                                newChats3[newChats3.length - 1][1].content += newText
-                                            } else {
-                                                newChats3[newChats3.length - 1][1].content = newText
+                                            if (newText !== ',') {
+
+                                                if (newChats3[newChats3.length - 1][1].content) {
+                                                    newChats3[newChats3.length - 1][1].content += newText
+                                                } else {
+                                                    newChats3[newChats3.length - 1][1].content = newText
+                                                }
+                                            }
+                                        } else {
+                                            for (let i = 0; i < count; i++) {
+                                                let newText = Myreplace(text.split('}')[i].split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                                newText = newText.replace(/\\n/g, ' ')
+                                                if (newText !== ',') {
+                                                    if (newChats3[newChats3.length - 1][1].content) {
+                                                        newChats3[newChats3.length - 1][1].content += newText
+                                                    } else {
+                                                        newChats3[newChats3.length - 1][1].content = newText
+                                                    }
+                                                }
+
                                             }
                                         }
-                                    }
-                                } else {
-                                    let newText = text.split('"data":"')[1]
-                                    newText = Myreplace(newText, ['{', '}', '"', ':', ',', 'message', 'messageType'])
-                                    if (newText.includes('token wrong')) {
-                                        message.warning('请重新登陆！')
-                                        navigate('/login')
                                     } else {
-                                        newChats3[newChats3.length - 1][1].content = newText
+                                        let newText = text.includes('data') ? text.split('"data":"')[1] : text.split('"msg":"')[1]
+                                        newText = Myreplace(newText, ['{', '}', '"', ':', ',', 'message', 'messageType'])
+                                        if (newText.includes('token wrong')) {
+                                            message.warning('请重新登陆！')
+                                            navigate('/login')
+                                        } else {
+                                            newChats3[newChats3.length - 1][1].content = newText
 
+                                        }
                                     }
+
+                                    setChats(newChats3)
                                 }
 
-                                setChats(newChats3)
-                            }
+                                return streamReader.read().then(processResult);
+                            });
+                        }
 
-                            return streamReader.read().then(processResult);
-                        });
                     })
                     .catch(error => {
                         if (error.name === 'AbortError') {
@@ -485,66 +542,74 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                         // newChats2[current][length - 1].conversationId = response.headers.conversationid || ''
                         // newChats2[current][length - 1].parentId = response.headers.parentid || ''
                         // setChats(newChats2)
-                        const streamReader = response.body.getReader();
-                        streamReader.read().then(function processResult(result) {
-                            if (result.done) {
-                                setShowStopBtn(false)
-                                return;
-                            }
-                            let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "").replace(/\n/g, "")
-                            let newChats3 = copyArr(newChats1)
-                            let length = newChats3[current].length
-                            console.log(text, 'text');
-                            if (text) {
-                                if (text.includes('message') && text.includes('messageType')) {
-                                    let count = text.split('}').length
-                                    if (count === 2) {
-                                        let newText = Myreplace(text.split(',')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
-                                        newText = newText.replace(/\\n/g, ' ')
-                                        if (newChats3[current][length - 1].content) {
-                                            newChats3[current][length - 1].content += newText
-                                        } else {
-                                            newChats3[current][length - 1].content = newText
-                                        }
-                                    } else {
-                                        for (let i = 0; i < count; i++) {
-                                            let newText = Myreplace(text.split('}')[i].split(',')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                        if (sessionStorage.getItem('show') === judge) {
+                            const streamReader = response.body.getReader();
+                            streamReader.read().then(function processResult(result) {
+                                if (result.done) {
+                                    sessionStorage.setItem('show', 'finishshow')
+                                    setShowStopBtn(false)
+                                    return;
+                                }
+                                let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "").replace(/\n/g, "")
+                                let newChats3 = copyArr(newChats1)
+                                let length = newChats3[current].length
+                                if (text) {
+                                    if (text.includes('message') && text.includes('messageType')) {
+                                        let count = text.split('}').length
+                                        if (count === 2) {
+                                            let newText = Myreplace(text.split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
                                             newText = newText.replace(/\\n/g, ' ')
-                                            if (newChats3[current][length - 1].content) {
-                                                newChats3[current][length - 1].content += newText
-                                            } else {
-                                                newChats3[current][length - 1].content = newText
+                                            if (newText !== ',') {
+                                                if (newChats3[current][length - 1].content) {
+                                                    newChats3[current][length - 1].content += newText
+                                                } else {
+                                                    newChats3[current][length - 1].content = newText
+                                                }
+                                            }
+
+                                        } else {
+                                            for (let i = 0; i < count; i++) {
+                                                let newText = Myreplace(text.split('}')[i].split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                                newText = newText.replace(/\\n/g, ' ')
+                                                if (newText !== ',') {
+                                                    if (newChats3[current][length - 1].content) {
+                                                        newChats3[current][length - 1].content += newText
+                                                    } else {
+                                                        newChats3[current][length - 1].content = newText
+                                                    }
+                                                }
                                             }
                                         }
-                                    }
 
-                                } else {
-                                    let newText = text.split('"data":"')[1]
-                                    newText = Myreplace(newText, ['{', '}', '"', ':', ',', 'message', 'messageType'])
-                                    if (newText.includes('token wrong')) {
-                                        message.warning('请重新登陆！')
-                                        navigate('/login')
                                     } else {
-                                        newChats3[current][length - 1].content = newText
+                                        let newText = text.includes('data') ? text.split('"data":"')[1] : text.split('"msg":"')[1]
+                                        newText = Myreplace(newText, ['{', '}', '"', ':', ',', 'message', 'messageType'])
+                                        if (newText && newText.includes('token wrong')) {
+                                            message.warning('请重新登陆！')
+                                            navigate('/login')
+                                        } else {
+                                            newChats3[current][length - 1].content = newText
 
+                                        }
                                     }
+                                    setChats(newChats3)
                                 }
-                                setChats(newChats3)
-                            }
-                            // if (text.includes('"')) {
-                            //     console.log('报错了');
-                            //     newChats3[current][length - 1].content = text.split('"data":"')[1].replace(/"/g, "").replace(/}/g, "")
-                            // } else {
-                            //     console.log(text, 'text');
-                            //     if (newChats3[current][length - 1].content) {
-                            //         newChats3[current][length - 1].content += text
-                            //     } else {
-                            //         newChats3[current][length - 1].content = text
-                            //     }
-                            // }
-                            // setChats(newChats3)
-                            return streamReader.read().then(processResult);
-                        });
+                                // if (text.includes('"')) {
+                                //     console.log('报错了');
+                                //     newChats3[current][length - 1].content = text.includes('data') ? text.split('"data":"')[1] : text.split('"msg":"')[1].replace(/"/g, "").replace(/}/g, "")
+                                // } else {
+                                //     console.log(text, 'text');
+                                //     if (newChats3[current][length - 1].content) {
+                                //         newChats3[current][length - 1].content += text
+                                //     } else {
+                                //         newChats3[current][length - 1].content = text
+                                //     }
+                                // }
+                                // setChats(newChats3)
+                                return streamReader.read().then(processResult);
+                            });
+                        }
+
                     })
                     .catch(error => {
                         if (error.name === 'AbortError') {
@@ -609,7 +674,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
         for (let i = 0; i < chats.length; i++) {
             console.log(i, index, newChats);
             if (i !== index) {
-                console.log('in');
                 let temp = copyArr(chats[i])
                 newChats.push(temp)
                 // let temp1 = copyArr(text[i])
