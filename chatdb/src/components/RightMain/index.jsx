@@ -40,8 +40,8 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     const [myCurrent, setMyCurrent] = useState(0)
     const peopleInput = useRef()
     const main = useRef()
-    const token = sessionStorage.getItem('token')
-    const userId = sessionStorage.getItem('userId')
+    const token = localStorage.getItem('token')
+    const userId = localStorage.getItem('userId')
     const [text1, setText] = useState([]);
     //上传文件
     const props = {
@@ -87,6 +87,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
         }
     }, [])
     useEffect(() => {
+        console.log(chats, 'Chats');
         localStorage.setItem('chats', JSON.stringify(chats))
         // localStorage.setItem('text', JSON.stringify(text))
     }, [chats])
@@ -110,6 +111,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     //清空所有
     useEffect(() => {
         if (refresh) {
+            console.log('?????');
             let newChats = []
             let newText = []
             setChats(newChats)
@@ -328,7 +330,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
             if (chats.length === 0 || current === -1) {
                 const chatId = uuidv4()
                 chats.push([{ who: 'people', content: value }])
-                let db = JSON.parse(sessionStorage.getItem('db'))
+                let db = JSON.parse(localStorage.getItem('db'))
                 current === -1 ? setAddFirstChat({ value, chatId, db }) : setName({ value, chatId, db })
                 peopleInput.current.value = ''
                 let newChats = copyArr(chats)
@@ -454,7 +456,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                     newChats[current].push({ who: 'people', content: value })
                 } else {
                     newChats[current] = [{ who: 'people', content: value }]
-                    let db = JSON.parse(sessionStorage.getItem('db'))
+                    let db = JSON.parse(localStorage.getItem('db'))
                     setName({ value, db })
                 }
                 setChats(newChats)
@@ -605,7 +607,9 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
         let newChats = []
         let newText = []
         for (let i = 0; i < chats.length; i++) {
+            console.log(i, index, newChats);
             if (i !== index) {
+                console.log('in');
                 let temp = copyArr(chats[i])
                 newChats.push(temp)
                 // let temp1 = copyArr(text[i])

@@ -205,9 +205,9 @@ export default function Login() {
             } else {
                 message.success(res.data.msg)
                 console.log(res, 'reslogin');
-                sessionStorage.clear()
-                sessionStorage.setItem('token', res.headers.authorization)
-                sessionStorage.setItem('userId', res.headers.userid)
+                localStorage.clear()
+                localStorage.setItem('token', res.headers.authorization)
+                localStorage.setItem('userId', res.headers.userid)
                 navigate('/chatdb')
             }
         })

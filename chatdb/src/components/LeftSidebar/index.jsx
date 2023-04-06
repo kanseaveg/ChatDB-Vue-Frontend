@@ -36,8 +36,8 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
     const [repair, setRepair] = useState([])
     const [treeData, setTreeData] = useState([])
     const [dbValue, setDbValue] = useState();
-    const token = sessionStorage.getItem('token')
-    const userId = sessionStorage.getItem('userId')
+    const token = localStorage.getItem('token')
+    const userId = localStorage.getItem('userId')
 
     const line = useRef()
     const [defaultData, setDefaultData] = useState([]);
@@ -79,12 +79,12 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
         if (chat && chat.length !== 0) {
             setChat(chat)
             setTheme(localStorage.getItem('theme'))
-            let db = chat[localStorage.getItem('current')].db
+            let db = chat[parseInt(localStorage.getItem('current'))].db
             setDbValue(db.title)
             getTableData(db.db)
             setFirstTreeName(db.title)
             setDataSourceId(db.db)
-            sessionStorage.setItem('db', JSON.stringify(db))
+            localStorage.setItem('db', JSON.stringify(db))
         }
         //获取个人信息
         axios({
@@ -93,7 +93,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                 "Authorization": token
             },
             method: 'GET',
-            url: `${URL}/api/userinfo/details?userId=${sessionStorage.getItem('userId')}`,
+            url: `${URL}/api/userinfo/details?userId=${localStorage.getItem('userId')}`,
         }).then(res => {
             if (res.data.code === 200) {
                 let username = res.data.data.username
@@ -149,7 +149,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
             },
             method: 'POST',
             data: {
-                userId: sessionStorage.getItem('userId'),
+                userId: localStorage.getItem('userId'),
                 username,
                 phone,
                 email: userInfo.email,
@@ -265,7 +265,6 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
         }).then(res => {
         }).catch(e => { })
         navigate('/login')
-        sessionStorage.clear()
         localStorage.clear()
     }
     //新增会话
@@ -330,7 +329,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                 chats.push(chat[i])
             }
         }
-        if (j === current) {
+        if (j <= current) {
             setCurrent(current - 1)
         }
         setChat(chats)
@@ -340,11 +339,11 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
     //根据数据库获取行泪资料
     const handleSelect = (value, node, extra) => {
         console.log('选择了啊啊啊啊啊啊啊', node);
-        if (node.db !== JSON.parse(sessionStorage.getItem('db')).db) {
+        if (node.db !== JSON.parse(localStorage.getItem('db')).db) {
             setDataSourceId(node.db)
             getTableData(node.db)
             addNewChat(node)
-            sessionStorage.setItem('db', JSON.stringify(node))
+            localStorage.setItem('db', JSON.stringify(node))
         }
     }
     //往右边输入框加字
@@ -401,7 +400,6 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
             url: `${URL}/api/db/list?userId=${userId}`,
         }).then(res => {
             let treeData = []
-            console.log(res);
             if (res.data.code === 200) {
                 res.data.data.map((v, i) => {
                     treeData.push({
@@ -411,8 +409,8 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                     })
                 })
                 setTreeData(treeData)
-                if (!localStorage.getItem('current')) {
-                    sessionStorage.setItem('db', JSON.stringify(treeData[0]))
+                if (!parseInt(localStorage.getItem('current')) || parseInt(localStorage.getItem('current')) === -1) {
+                    localStorage.setItem('db', JSON.stringify(treeData[0]))
                     getTableData(res.data.data[0])
                     setFirstTreeName(treeData[0].title)
                     setDataSourceId(treeData[0].db)
@@ -662,7 +660,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                 </Form>
             </Modal>
             <div className='LeftSidebar-top' style={{ height: `calc(40vh + ${heightChange}px)` }}>
-                <div onClick={() => addNewChat(sessionStorage.getItem('db'))} className='LeftSidebar-addNewChat'>+ &nbsp;&nbsp;New chat</div>
+                <div onClick={() => addNewChat(JSON.parse(localStorage.getItem('db')))} className='LeftSidebar-addNewChat'>+ &nbsp;&nbsp;New chat</div>
                 <ul className='LeftSidebar-chats'>
                     {chat.length !== 0 ? chat.map((v, i) => {
                         return (<li className='LeftSidebar-chats-Li' key={i}><CommentOutlined />&nbsp;&nbsp;&nbsp;&nbsp;{repair[i] ? <input type="text" onBlur={(e) => handleRepair({ keyCode: 13 }, i, e)} onKeyDown={(e) => handleRepair(e, i)} style={{ margin: '0' }} className='newChatInput' /> : <div onClick={() => setCurrent(i)} className='LeftSidebar-chats-name'> {v.name}</div>}&nbsp;&nbsp;&nbsp;&nbsp;<EditOutlined onClick={() => changeReapir(i)} />&nbsp;&nbsp;&nbsp;&nbsp;<DeleteOutlined onClick={() => deleteChat(i)} /></li>)
