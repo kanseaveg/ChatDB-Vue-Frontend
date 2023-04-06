@@ -248,7 +248,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
         sessionStorage.setItem('show', 'reshow')
         const chatId = JSON.parse(localStorage.getItem('chat'))[current].chatId
         let newChats = copyArr(chats)
-        newChats[current][i] = { who: 'ai' }
+        newChats[current][i] = { who: 'ai', finish: false }
         setChats(newChats)
         let value = newChats[current][i - 1].content
         // let conversationId = i - 2 < 0 ? '' : newChats[current][i - 2].conversationId || ''
@@ -265,13 +265,14 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 if (sessionStorage.getItem('show') === 'reshow') {
                     const streamReader = response.body.getReader();
                     streamReader.read().then(function processResult(result) {
+                        let newChats3 = copyArr(newChats)
                         if (result.done) {
                             setShowStopBtn(false)
+                            newChats3[current][i].finish = true
                             sessionStorage.setItem('show', 'finishreshow')
                             return;
                         }
                         let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "").replace(/\n/g, "")
-                        let newChats3 = copyArr(newChats)
                         if (text) {
                             if (text.includes('message') && text.includes('messageType')) {
                                 let count = text.split('}').length
@@ -403,13 +404,14 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                             setChats(newChats2)
                             const streamReader = response.body.getReader();
                             streamReader.read().then(function processResult(result) {
+                                let newChats3 = copyArr(newChats2)
                                 if (result.done) {
                                     sessionStorage.setItem('show', 'finishshow')
+                                    newChats3[newChats3.length - 1][1].finish = true
                                     setShowStopBtn(false)
                                     return;
                                 }
                                 let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "").replace(/\n/g, "")
-                                let newChats3 = copyArr(newChats2)
                                 if (text) {
                                     if (text.includes('message') && text.includes('messageType')) {
                                         let count = text.split('}').length
@@ -545,14 +547,15 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                         if (sessionStorage.getItem('show') === judge) {
                             const streamReader = response.body.getReader();
                             streamReader.read().then(function processResult(result) {
+                                let newChats3 = copyArr(newChats1)
+                                let length = newChats3[current].length
                                 if (result.done) {
                                     sessionStorage.setItem('show', 'finishshow')
+                                    newChats3[current][length - 1].finish = true
                                     setShowStopBtn(false)
                                     return;
                                 }
                                 let text = new TextDecoder("utf-8").decode(result.value).replace(/data:/g, "").replace(/SQL/g, "").replace(/```/g, "").replace(/sql/g, "").replace(/\n/g, "")
-                                let newChats3 = copyArr(newChats1)
-                                let length = newChats3[current].length
                                 if (text) {
                                     if (text.includes('message') && text.includes('messageType')) {
                                         let count = text.split('}').length
@@ -789,7 +792,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                 <SyntaxHighlighter language='sql' style={docco}>
                                     {v.content}
                                 </SyntaxHighlighter>
-                                {i === chats[myCurrent].length - 1 ? <div className='RightMain-aichat-content-tool'><Tooltip placement="rightTop" title={<div >执行SQL</div>}><DoubleRightOutlined onClick={() => execute(i, v.content)} /></Tooltip><Tooltip placement="rightTop" title='重新生成SQL'><RedoOutlined onClick={() => reProduct(i)} /></Tooltip></div> : ''}</div>
+                                {i === chats[myCurrent].length - 1 && v.finish ? <div className='RightMain-aichat-content-tool'><Tooltip placement="rightTop" title={<div >执行SQL</div>}><DoubleRightOutlined onClick={() => execute(i, v.content)} /></Tooltip><Tooltip placement="rightTop" title='重新生成SQL'><RedoOutlined onClick={() => reProduct(i)} /></Tooltip></div> : ''}</div>
                             {v.table && v.table[0] ? <><Table tableLayout='auto' columns={v.table[0]} dataSource={v.table[1]} /><Tooltip color='white' title={<ul style={{ color: 'black' }} className='RightMain-aichat-content-download'><li onClick={() => DownloadFile(v.content, 'csv')}><FileOutlined />&nbsp; Download as CSV File</li><li onClick={() => DownloadFile(v.content, 'xlsx')}><FileOutlined />&nbsp; Download as Excel File</li></ul>}><SmallDashOutlined className='RightMain-aichat-content-downloadIcon' /></Tooltip> </> : ''}
                         </div></li> :
                             <li key={i} className='RightMain-chatli RightMain-peoplechat'><div className='RightMain-peoplechat-content'>{v.content}</div><img src={head1} alt="" className='RightMain-peoplechat-head' /></li>)
