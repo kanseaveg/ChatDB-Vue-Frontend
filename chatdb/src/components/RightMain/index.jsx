@@ -14,6 +14,7 @@ import SyntaxHighlighter from "react-syntax-highlighter";
 import { docco, github, monokai, tomorrow } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import URL from '../../env.js'
+import Introduce from '../Introduce'
 // import { prism, dark, coy, funky, okaidia, solarizedlight } from "react-syntax-highlighter/dist/esm/styles/prism";
 // SyntaxHighlighter.supportedLanguages("sql", sql);
 // import bg2 from '../../assests/images/bg2.png'
@@ -773,6 +774,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     };
     return (
         <div className='RightMain '>
+            {myCurrent === -1 ? <Introduce /> : ''}
             <Modal title="清空对话" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
                 <p>是否清空对话？</p>
             </Modal>
