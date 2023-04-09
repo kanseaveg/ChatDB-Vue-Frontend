@@ -34,7 +34,7 @@ const columns = [
 ];
 
 
-export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName, current, setDeleteNumber, deleteNumber, list, addText, setCurrent, setAddFirstChat, dataSourceId, setRefresh, refresh }) {
+export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName, current, setDeleteNumber, deleteNumber, list, addText, setAddText, setCurrent, setAddFirstChat, dataSourceId, setRefresh, refresh }) {
     // [[{ who: 'ai', content: 'page1你好' }, { who: 'people', content: 'page1你好3' }], [{ who: 'ai', content: 'page2你好' }, { who: 'people', content: 'page2你好3' }]]
     const [chats, setChats] = useState([])
     const navigate = useNavigate();
@@ -654,6 +654,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     useEffect(() => {
         if (addText) {
             peopleInput.current.value += addText
+            setAddText('')
         }
     }, [addText])
     const [copied, setCopied] = useState(false);
@@ -663,7 +664,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     };
     return (
         <div className='RightMain '>
-            {myCurrent === -1 ? <Introduce /> : ''}
+            {myCurrent === -1 || (chats[myCurrent] && chats[myCurrent].length) === 0 ? <Introduce setAddText={setAddText} /> : ''}
             <Modal title="清空对话" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
                 <p>是否清空对话？</p>
             </Modal>

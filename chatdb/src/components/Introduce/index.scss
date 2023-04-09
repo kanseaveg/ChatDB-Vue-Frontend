@@ -42,6 +42,15 @@
             }
 
             ul {
+                .addText {
+                    transition: all .3s;
+                }
+
+                .addText:hover {
+                    cursor: pointer;
+                    background: var(--secondary-color1);
+                }
+
                 li {
                     display: flex;
                     align-items: center;

@@ -1,5 +1,5 @@
 .coming-soon {
-    width: 100vw;
+    width: 60vw;
     height: 100vh;
     padding-top: 100px;
     display: flex;
@@ -80,25 +80,4 @@
 .right {
     width: 40vw;
     height: 100vh;
-    background: black;
-    flex-direction: column;
-    color: gray;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    background: white;
-    color: black;
-
-    h1 {
-        width: 100%;
-        text-align: center;
-        font-size: 34px;
-        font-weight: 700;
-    }
-
-    p {
-        margin-top: -100px;
-        font-size: 26px;
-    }
 }

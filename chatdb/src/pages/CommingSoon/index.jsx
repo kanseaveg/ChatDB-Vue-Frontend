@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { message } from 'antd';
 import './index.scss'
 import axios from 'axios'
-
+import Wait from '../../assests/images/wait.gif'
 function ComingSoon() {
     const [countdown, setCountdown] = useState({
         days: "",
@@ -71,10 +71,7 @@ function ComingSoon() {
             </div>
 
 
-            {/* <div className="right">
-                <h1 style={{ fontSize: '38px' }}>Chat2DB</h1>
-                <p style={{ marginTop: "-0px" }}>Ask anything about your Database!</p>
-            </div> */}
+            <img className="right" src={Wait} alt="" />
         </div>
 
     );
