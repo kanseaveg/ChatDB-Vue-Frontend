@@ -56,12 +56,17 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
         },
         showUploadList: false,
         accept: '.xlsx,.xls,.csv',
-        onChange(info) {
+        onChange(info, event) {
             if (info.file.status !== 'uploading') {
             }
             if (info.file.status === 'done') {
-                message.success(`${info.file.name} file uploaded successfully`, 1);
-                setUploadAndRefresh(true)
+                if (info.file.response.code === 200) {
+                    console.log(info.file.response, 'info.file.response');
+                    message.success(`${info.file.name} file uploaded successfully`, 1);
+                    setUploadAndRefresh(true)
+                } else {
+                    message.warning(info.file.response.msg)
+                }
             } else if (info.file.status === 'error') {
                 message.error(`${info.file.name} file upload failed.`);
             }
@@ -88,7 +93,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
         }
     }, [])
     useEffect(() => {
-        console.log(chats, 'Chats');
         localStorage.setItem('chats', JSON.stringify(chats))
         // localStorage.setItem('text', JSON.stringify(text))
     }, [chats])
@@ -278,28 +282,29 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                             if (text.includes('message') && text.includes('messageType')) {
                                 let count = text.split('}').length
                                 if (count === 2) {
-                                    let newText = Myreplace(text.split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
-                                    newText = newText.replace(/\\n/g, ' ')
-                                    if (newText !== ',') {
+                                    // let newText = Myreplace(text.split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                    // newText = newText.replace(/\\n/g, ' ')
+                                    // if (newText !== ',') {
+                                    let newText = JSON.parse(text).message || ''
+                                    if (newChats3[current][i].content) {
+                                        newChats3[current][i].content += newText
+                                    } else {
+                                        newChats3[current][i].content = newText
+                                    }
+                                    // }
+
+                                } else {
+                                    for (let a = 0; a < count; a++) {
+                                        // let newText = Myreplace(text.split('}')[a].split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                        // newText = newText.replace(/\\n/g, ' ')
+                                        // if (newText !== ',') {
+                                        let newText = JSON.parse('{' + Myreplace(text.split('}')[a], ['{', '}']) + '}').message || ''
                                         if (newChats3[current][i].content) {
                                             newChats3[current][i].content += newText
                                         } else {
                                             newChats3[current][i].content = newText
                                         }
-                                    }
-
-                                } else {
-                                    for (let a = 0; a < count; a++) {
-                                        let newText = Myreplace(text.split('}')[a].split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
-                                        newText = newText.replace(/\\n/g, ' ')
-                                        if (newText !== ',') {
-
-                                            if (newChats3[current][i].content) {
-                                                newChats3[current][i].content += newText
-                                            } else {
-                                                newChats3[current][i].content = newText
-                                            }
-                                        }
+                                        // }
                                     }
                                 }
                             }
@@ -315,19 +320,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                             }
                             setChats(newChats3)
                         }
-
-                        // if (text.includes('"')) {
-                        //     console.log('报错了');
-                        //     newChats3[current][i].content = text.includes('data') ? text.split('"data":"')[1] : text.split('"msg":"')[1].replace(/"/g, "").replace(/}/g, "")
-                        // } else {
-                        //     if (newChats3[current][i].content) {
-                        //         newChats3[current][i].content += text
-                        //     } else {
-                        //         newChats3[current][i].content = text
-                        //     }
-                        // }
-
-                        // setChats(newChats3)
                         return streamReader.read().then(processResult);
                     });
                 }
@@ -382,9 +374,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 peopleInput.current.value = ''
                 let newChats = copyArr(chats)
                 newChats[newChats.length - 1].push({ who: 'ai' })
-                // let Text = copyArr(text)
-                // Text.push([''])
-                // setText(Text)
+
                 setChats(newChats)
                 fetch(`${URL}/api/chat/query?question=${value}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&`, {
                     method: 'GET',
@@ -399,9 +389,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                         if (sessionStorage.getItem('show') === judge) {
                             // 使用 ReadableStream API 解析事件流数据并更新 state
                             let newChats2 = copyArr(newChats)
-                            let length = newChats2.length
-                            // newChats2[length - 1][1].conversationId = response.headers.conversationid || ''
-                            // newChats2[length - 1][1].parentId = response.headers.parentid || ''
                             setChats(newChats2)
                             const streamReader = response.body.getReader();
                             streamReader.read().then(function processResult(result) {
@@ -417,32 +404,33 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                     if (text.includes('message') && text.includes('messageType')) {
                                         let count = text.split('}').length
                                         if (count === 2) {
-                                            let newText = Myreplace(text.split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
-
-                                            newText = newText.replace(/\\n/g, ' ')
-                                            if (newText !== ',') {
-
+                                            // let newText = Myreplace(text.split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                            // newText = newText.replace(/\\n/g, ' ')
+                                            // if (newText !== ',') {
+                                            let newText = JSON.parse(text).message || ''
+                                            if (newChats3[newChats3.length - 1][1].content) {
+                                                newChats3[newChats3.length - 1][1].content += newText
+                                            } else {
+                                                newChats3[newChats3.length - 1][1].content = newText
+                                            }
+                                            // }
+                                        } else {
+                                            for (let i = 0; i < count; i++) {
+                                                // let newText = Myreplace(text.split('}')[i].split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                                // newText = newText.replace(/\\n/g, ' ')
+                                                // if (newText !== ',') {
+                                                let newText = JSON.parse('{' + Myreplace(text.split('}')[i], ['{', '}']) + '}').message || ''
                                                 if (newChats3[newChats3.length - 1][1].content) {
                                                     newChats3[newChats3.length - 1][1].content += newText
                                                 } else {
                                                     newChats3[newChats3.length - 1][1].content = newText
                                                 }
                                             }
-                                        } else {
-                                            for (let i = 0; i < count; i++) {
-                                                let newText = Myreplace(text.split('}')[i].split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
-                                                newText = newText.replace(/\\n/g, ' ')
-                                                if (newText !== ',') {
-                                                    if (newChats3[newChats3.length - 1][1].content) {
-                                                        newChats3[newChats3.length - 1][1].content += newText
-                                                    } else {
-                                                        newChats3[newChats3.length - 1][1].content = newText
-                                                    }
-                                                }
 
-                                            }
+                                            // }
                                         }
                                     } else {
+                                        console.log(text, 'text');
                                         let newText = text.includes('data') ? text.split('"data":"')[1] : text.split('"msg":"')[1]
                                         newText = Myreplace(newText, ['{', '}', '"', ':', ',', 'message', 'messageType'])
                                         if (newText.includes('token wrong')) {
@@ -470,45 +458,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                 ;
                         }
                     })
-                // axios({
-                //     headers: {
-                //         'Content-Type': 'application/json',
-                //         "Authorization": token
-                //     },
-                //     method: 'POST',
-                //     data: {
-                //         prompt: value,
-                //         dbId: dataSourceId,
-                //         userId,
-                //         conversationId: '',
-                //         parentId: ''
-                //     },
-                //     url: `${URL}/api/chat/query`,
-                // }).then(res => {
-                //     if (res.data.code === 200) {
-                //         console.log(res);
-                //         let newChats2 = copyArr(newChats)
-                //         let length = newChats2.length
-                //         newChats2[current][length].conversationId = res.headers.conversationid || ''
-                //         newChats2[current][length].parentId = res.headers.parentid || ''
-                //         newChats2[current][length].content = res.data.data.answers || ''
-                //         setChats(newChats2)
-                //     } else {
-                //         message.warning(res.data.data || res.data.msg)
-                //     }
-                // }).catch(e => {
-                //     console.log(e, 'e');
-                //     if (e.response.status === 503) {
-                //         message.warning(e.message || e.response.data.error || "can't find the result")
-                //         // message.warning('token过期，请重新登陆');
-                //         // navigate('/login')
-                //     }
-                //     else {
-                //         message.warning(e.message || e.response.data.error || "can't find the result")
-                //     }
-
-                // })
-                // ; navigate('/login') 
             } else {
                 const chatId = JSON.parse(localStorage.getItem('chat'))[current].chatId
                 let newChats = copyArr(chats)
@@ -523,13 +472,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 peopleInput.current.value = ''
                 let newChats1 = copyArr(newChats)
                 newChats1[current].push({ who: 'ai' })
-                // let Text = copyArr(text)
-                // Text[current] ? Text[current].push('') : Text[current] = ['']
-                // setText(Text)
                 setChats(newChats1)
-                // let length = newChats[current].length
-                // let conversationId = newChats[current][length - 2] ? newChats[current][length - 2].conversationId || '' : ''
-                // let parentId = newChats[current][length - 2] ? newChats[current][length - 2].parentId || '' : ''
                 fetch(`${URL}/api/chat/query?question=${value}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&`, {
                     method: 'GET',
                     headers: {
@@ -540,11 +483,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 })
                     .then(response => {
                         // 使用 ReadableStream API 解析事件流数据并更新 state
-                        // let newChats2 = copyArr(newChats1)
-                        // let length = newChats2[current].length
-                        // newChats2[current][length - 1].conversationId = response.headers.conversationid || ''
-                        // newChats2[current][length - 1].parentId = response.headers.parentid || ''
-                        // setChats(newChats2)
                         if (sessionStorage.getItem('show') === judge) {
                             const streamReader = response.body.getReader();
                             streamReader.read().then(function processResult(result) {
@@ -561,27 +499,29 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                     if (text.includes('message') && text.includes('messageType')) {
                                         let count = text.split('}').length
                                         if (count === 2) {
-                                            let newText = Myreplace(text.split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
-                                            newText = newText.replace(/\\n/g, ' ')
-                                            if (newText !== ',') {
+                                            // let newText = Myreplace(text.split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                            // newText = newText.replace(/\\n/g, ' ')
+                                            // if (newText !== ',') {
+                                            let newText = JSON.parse(text).message || ''
+                                            if (newChats3[current][length - 1].content) {
+                                                newChats3[current][length - 1].content += newText
+                                            } else {
+                                                newChats3[current][length - 1].content = newText
+                                            }
+                                            // }
+
+                                        } else {
+                                            for (let i = 0; i < count; i++) {
+                                                let newText = JSON.parse('{' + Myreplace(text.split('}')[i], ['{', '}']) + '}').message || ''
+                                                // let newText = Myreplace(text.split('}')[i].split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
+                                                // newText = newText.replace(/\\n/g, ' ')
+                                                // if (newText !== ',') {
                                                 if (newChats3[current][length - 1].content) {
                                                     newChats3[current][length - 1].content += newText
                                                 } else {
                                                     newChats3[current][length - 1].content = newText
                                                 }
-                                            }
-
-                                        } else {
-                                            for (let i = 0; i < count; i++) {
-                                                let newText = Myreplace(text.split('}')[i].split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
-                                                newText = newText.replace(/\\n/g, ' ')
-                                                if (newText !== ',') {
-                                                    if (newChats3[current][length - 1].content) {
-                                                        newChats3[current][length - 1].content += newText
-                                                    } else {
-                                                        newChats3[current][length - 1].content = newText
-                                                    }
-                                                }
+                                                // }
                                             }
                                         }
 
@@ -598,18 +538,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                     }
                                     setChats(newChats3)
                                 }
-                                // if (text.includes('"')) {
-                                //     console.log('报错了');
-                                //     newChats3[current][length - 1].content = text.includes('data') ? text.split('"data":"')[1] : text.split('"msg":"')[1].replace(/"/g, "").replace(/}/g, "")
-                                // } else {
-                                //     console.log(text, 'text');
-                                //     if (newChats3[current][length - 1].content) {
-                                //         newChats3[current][length - 1].content += text
-                                //     } else {
-                                //         newChats3[current][length - 1].content = text
-                                //     }
-                                // }
-                                // setChats(newChats3)
                                 return streamReader.read().then(processResult);
                             });
                         }
@@ -622,45 +550,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                             navigate('/login')
                         }
                     });
-                // axios({
-                //     headers: {
-                //         'Content-Type': 'application/json',
-                //         "Authorization": token
-                //     },
-                //     method: 'POST',
-                //     data: {
-                //         prompt: value,
-                //         dbId: dataSourceId,
-                //         userId,
-                //         conversationId: conversationId,
-                //         parentId
-                //     },
-                //     responseType: 'text/event-stream',
-                //     url: `${URL}/api/chat/query`,
-                // }).then(res => {
-                //     console.log(res);
-                //     if (res.status === 200) {
-                //         console.log(res, 'chat');
-                //         let sql = parseString(res.data)
-                //         let newChats2 = copyArr(newChats1)
-                //         let length = newChats2[current].length
-                //         newChats2[current][length - 1].content = sql || ''
-                //         newChats2[current][length - 1].conversationId = res.headers.conversationid || ''
-                //         newChats2[current][length - 1].parentId = res.headers.parentid || ''
-                //         setChats(newChats2)
-                //     } else {
-                //         message.warning(res.data.data || res.data.msg)
-                //     }
-                // }).catch(e => {
-                //     console.log(e, 'e');
-                //     if (e.response.status === 503) {
-                //         message.warning(e.message || e.response.data.error || "can't find the result")
-                //     }
-                //     else {
-                //         message.warning(e.message || e.response.data.error || "can't find the result")
-                //     }
-
-                // })
             }
         }
     }
@@ -801,30 +690,13 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
 
                     })}
                 </ul>
-                {/* <table style={{}}>
-                    <thead>
-                        <tr>
-                            {tableData.columns.map((column, index) => (
-                                <th key={index}>{column}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {tableData.rows.map((row, rowIndex) => (
-                            <tr key={rowIndex}>
-                                {row.map((cell, cellIndex) => (
-                                    <td key={`${rowIndex}-${cellIndex}`}>{cell}</td>
-                                ))}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table> */}
             </div>
             <div className='RightMain-bottom'>
                 {showStopBtn ?
                     <div className='RightMain-bottom-stopBtn'><Button onClick={stopResponding} className='RightMain-bottom-stopButton' style={{ background: 'rgb(242, 201, 125)!important' }}><PauseCircleOutlined style={{ color: 'white' }} />  Stop Responding</Button></div>
                     : ''}
-                <DeleteOutlined onClick={showModal} className='RightMain-bottom-delete' /> <Upload {...props}>
+                <DeleteOutlined onClick={showModal} className='RightMain-bottom-delete' />
+                <Upload {...props}>
                     <Button className='RightMain-bottom-upload' icon={<UploadOutlined />}></Button>
                 </Upload>
                 <div className='input'><input placeholder='Ask anything about your Database!' disabled={showStopBtn} onKeyDown={handleKeyDown} ref={peopleInput} type="text" /><SendOutlined onClick={addPeoplechat} style={{ marginLeft: "-40px" }} /></div></div>
