@@ -19,10 +19,10 @@ const routes = [
     path: '/commingsoon',
     element: <ComingSoon />,
 },
-//默认路由
+// default route
       {
         path: '',
-        element: <ComingSoon />
+        element: <Login />
     }
  ]
  export default routes 

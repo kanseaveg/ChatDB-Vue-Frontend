@@ -606,7 +606,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                     blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                 }
                 // 生成下载链接
-                const url = URL.createObjectURL(blob);
+                const url = window.URL.createObjectURL(blob);
                 // 创建a标签并设置下载链接和文件名
                 const link = document.createElement('a');
                 link.href = url;
@@ -616,7 +616,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 link.click();
 
                 // 释放资源
-                URL.revokeObjectURL(url);
+                window.URL.revokeObjectURL(url);
                 document.body.removeChild(link);
             } else {
                 message.warning('下载失败！')
