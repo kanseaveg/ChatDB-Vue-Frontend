@@ -19,9 +19,10 @@ const routes = [
     path: '/commingsoon',
     element: <ComingSoon />,
 },
+// default route
       {
         path: '',
-        element: <ComingSoon />
+        element: <Login />
     }
  ]
  export default routes 
