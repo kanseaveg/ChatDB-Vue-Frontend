@@ -84,6 +84,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
             setDbDisabled(false)
         }
     }, [showStopBtn])
+
     //历史记录
     useEffect(() => {
         let Chats = JSON.parse(localStorage.getItem('chats'))
@@ -643,6 +644,10 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     useEffect(() => {
         if (deleteNumber >= 0) {
             DeleteChat(deleteNumber)
+            if (deleteNumber === myCurrent && showStopBtn) {
+                setShowStopBtn(false)
+                sessionStorage.setItem('show', 'not')
+            }
             setDeleteNumber(-1)
         }
     }, [deleteNumber])
@@ -658,13 +663,14 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
         }
     }, [addText])
     const [copied, setCopied] = useState(false);
+
     const handleCopy = () => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1000);
     };
     return (
         <div className='RightMain '>
-            {myCurrent === -1 || (chats[myCurrent] && chats[myCurrent].length) === 0 ? <Introduce setAddText={setAddText} /> : ''}
+            {myCurrent === -1 || (chats[myCurrent] && chats[myCurrent].length) === 0 ? <Introduce myCurrent={myCurrent} setAddText={setAddText} /> : ''}
             <Modal title="清空对话" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
                 <p>是否清空对话？</p>
             </Modal>

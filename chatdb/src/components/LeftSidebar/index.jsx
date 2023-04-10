@@ -330,7 +330,11 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
             }
         }
         if (j <= current) {
-            setCurrent(current - 1)
+            if (current - 1 === -1 && list !== 0) {
+                setCurrent(0)
+            } else {
+                setCurrent(current - 1)
+            }
         }
         setChat(chats)
         setDeleteNumber(j)
