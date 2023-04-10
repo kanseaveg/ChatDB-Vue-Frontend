@@ -19,6 +19,7 @@ const routes = [
     path: '/commingsoon',
     element: <ComingSoon />,
 },
+//默认路由
       {
         path: '',
         element: <ComingSoon />
