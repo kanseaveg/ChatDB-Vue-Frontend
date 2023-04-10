@@ -595,7 +595,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 dbname: dataSourceId,
                 query, filetype, userId
             },
-            responseType: 'text/csv',
+            responseType: 'arraybuffer',
             url: `${URL}/api/db/export`,
         }).then(res => {
             if (res.status === 200) {
