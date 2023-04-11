@@ -11,7 +11,7 @@ export default function Introduce({ setAddText, myCurrent }) {
         setData(data)
     }, [])
     useEffect(() => {
-        if (myCurrent >= 0) {
+        if (myCurrent >= 0 && data && data.length) {
             let title = JSON.parse(localStorage.getItem('chat'))[myCurrent].db.title
             let Nowdata = copyArr(data)
             switch (title) {

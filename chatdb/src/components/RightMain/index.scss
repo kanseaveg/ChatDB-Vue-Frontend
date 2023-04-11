@@ -46,6 +46,32 @@
     border: 1px solid rgba(34, 203, 250, .5);
 }
 
+.RightMain-feedback,
+.RightMain-feedbacksql {
+    border: 2px solid var(--third-color2);
+    border-radius: 5px;
+    background: var(--primary-color1);
+    padding-left: 10px;
+    color: var(--third-color);
+    vertical-align: top;
+}
+
+.RightMain-feedback {
+    height: 100px;
+    padding-top: 5px;
+}
+
+.RightMain-feedbacksql {
+    height: 30px;
+    margin-bottom: 10px;
+}
+
+.RightMain-feedbacksql::placeholder,
+.RightMain-feedback::placeholder {
+    color: var(--third-color1) !important;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
 .RightMain {
     position: relative;
     width: calc(98vw - 250px);
@@ -58,6 +84,8 @@
     iframe {
         border-radius: 20px;
     }
+
+
 
     .RightMain-main {
         padding: 0 2vw;
@@ -144,7 +172,12 @@
                         width: 2px;
                         right: -10px;
                         color: var(--third-color1);
-                        top: 0;
+                        top: -10px;
+
+                        .feedbackSelete {
+                            pointer-events: none;
+                            color: var(--secondary-color);
+                        }
 
                         svg: {
                             transition: all .3s;

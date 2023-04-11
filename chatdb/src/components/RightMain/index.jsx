@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import './index.scss'
 import temp from '../../logo.svg'
-import { CopyOutlined, UploadOutlined, PauseCircleOutlined, FileOutlined, SendOutlined, DeleteOutlined, DoubleRightOutlined, RedoOutlined, SmallDashOutlined } from '@ant-design/icons';
+import { LikeOutlined, DislikeOutlined, CopyOutlined, UploadOutlined, PauseCircleOutlined, FileOutlined, SendOutlined, DeleteOutlined, DoubleRightOutlined, RedoOutlined, SmallDashOutlined } from '@ant-design/icons';
 import axios from 'axios'
 import { copyArr, Myreplace } from '../../utils/func'
 import { message, Upload } from 'antd';
@@ -115,14 +115,79 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
         }
         setShowStopBtn(false)
     }
+    //提供反馈
+    const [isModalOpen1, setIsModalOpen1] = useState(false);
+    const FeedbackSql = useRef()
+    const Feedback = useRef()
+    const showModal1 = () => {
+        setIsModalOpen1(true);
+    };
+    const feedback = (goldenSql, feedbackDescription, likeFlag) => {
+        const chatId = JSON.parse(localStorage.getItem('chat'))[current].chatId
+        const db = JSON.parse(localStorage.getItem('chat'))[current].db.db
+        let length = JSON.parse(localStorage.getItem('chats'))[current].length
+        const question = JSON.parse(localStorage.getItem('chats'))[current][length - 2].content
+        const currentSql = JSON.parse(localStorage.getItem('chats'))[current][length - 1].content
+        axios({
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": token
+            },
+            method: 'POST',
+            data: {
+                userId, chatId, db, question, currentSql, goldenSql, feedbackDescription, likeFlag
+            },
+            url: `${URL}/api/chat/feedback`,
+        }).then(res => {
+            if (res.data.code === 200) {
+                setIsModalOpen1(false);
+                let data = copyArr(chats)
+                data[current][data[current].length - 1].feedback = { flag: likeFlag }
+                setChats(data)
+                if (Feedback.current && FeedbackSql.current) {
+                    Feedback.current.value = ''
+                    FeedbackSql.current.value = ''
+                }
+                message.success(res.data.data || res.data.msg)
+            } else {
+                message.warning(res.data.data || res.data.msg)
+            }
+        }).catch(e => { console.log(e); })
+    }
+    const handleOk1 = () => {
+        const goldenSql = FeedbackSql.current.value || ''
+        const feedbackDescription = Feedback.current.value || ''
+        if (goldenSql || feedbackDescription) {
+            feedback(goldenSql, feedbackDescription, false)
+        } else {
+            message.warning('请输入内容')
+        }
+    };
+    const handleCancel1 = () => {
+        setIsModalOpen1(false);
+    };
     //清空对话
     const [isModalOpen, setIsModalOpen] = useState(false);
+
     const showModal = () => {
         setIsModalOpen(true);
     };
     const handleOk = () => {
         RefreshOne()
         setIsModalOpen(false);
+        const chatId = JSON.parse(localStorage.getItem('chat'))[current].chatId
+        axios({
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": token
+            },
+            method: 'GET',
+            url: `${URL}/api/chat/clear?userId=${userId}&chatId=${chatId}`,
+        }).then(res => {
+            // if (res.data.code !== 200) {
+            //     message.warning(res.data.data || res.data.msg)
+            // }
+        }).catch(e => { console.log(e); })
     };
     const handleCancel = () => {
         setIsModalOpen(false);
@@ -674,6 +739,12 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
             <Modal title="清空对话" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
                 <p>是否清空对话？</p>
             </Modal>
+            <Modal title={<div style={{ display: 'flex', alignItems: 'center' }}><div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgb(254, 226, 226)', width: '40px', height: '40px', borderRadius: '20px' }}>
+                <DislikeOutlined style={{ color: 'red', fontSize: '23px' }} /></div> &nbsp;&nbsp; 提供额外的反馈</div>} okText='提交反馈' cancelText='取消'
+                open={isModalOpen1} onOk={handleOk1} onCancel={handleCancel1}>
+                <input ref={FeedbackSql} maxLength='100' placeholder='输入你觉着更理想的sql语句' className='RightMain-feedbacksql' style={{ width: '100%' }} type="text" name="" id="" />
+                <textarea ref={Feedback} maxLength='450' placeholder='向我们提供额外的反馈' className='RightMain-feedback' style={{ width: '100%' }} type="text" name="" id="" />
+            </Modal>
             <div ref={main} className='RightMain-main '>
                 <ul>
                     {chats[myCurrent]?.map((v, i) => {
@@ -690,7 +761,9 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                 <SyntaxHighlighter language='sql' style={docco}>
                                     {v.content}
                                 </SyntaxHighlighter>
-                                {i === chats[myCurrent].length - 1 && v.finish ? <div className='RightMain-aichat-content-tool'><Tooltip placement="rightTop" title={<div >执行SQL</div>}><DoubleRightOutlined onClick={() => execute(i, v.content)} /></Tooltip><Tooltip placement="rightTop" title='重新生成SQL'><RedoOutlined onClick={() => reProduct(i)} /></Tooltip></div> : ''}</div>
+                                {i === chats[myCurrent].length - 1 && v.finish ? <div className='RightMain-aichat-content-tool'><Tooltip placement="rightTop" title={<div >执行SQL</div>}><DoubleRightOutlined onClick={() => execute(i, v.content)} /></Tooltip><Tooltip placement="rightTop" title='重新生成SQL'><RedoOutlined onClick={() => reProduct(i)} /></Tooltip>
+                                    {v.feedback ? v.feedback.flag ? <LikeOutlined className='feedbackSelete' /> : <DislikeOutlined className='feedbackSelete' />
+                                        : <><LikeOutlined onClick={() => feedback('', '', true)} /><DislikeOutlined onClick={showModal1} /></>} </div> : ''}</div>
                             {v.table && v.table[0] ? <><Table tableLayout='auto' columns={v.table[0]} dataSource={v.table[1]} /><Tooltip color='white' title={<ul style={{ color: 'black' }} className='RightMain-aichat-content-download'><li onClick={() => DownloadFile(v.content, 'csv')}><FileOutlined />&nbsp; Download as CSV File</li><li onClick={() => DownloadFile(v.content, 'xlsx')}><FileOutlined />&nbsp; Download as Excel File</li></ul>}><SmallDashOutlined className='RightMain-aichat-content-downloadIcon' /></Tooltip> </> : ''}
                         </div></li> :
                             <li key={i} className='RightMain-chatli RightMain-peoplechat'><div className='RightMain-peoplechat-content'>{v.content}</div><img src={head1} alt="" className='RightMain-peoplechat-head' /></li>)
