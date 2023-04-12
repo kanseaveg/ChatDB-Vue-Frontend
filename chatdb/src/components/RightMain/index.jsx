@@ -157,11 +157,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     const handleOk1 = () => {
         const goldenSql = FeedbackSql.current.value || ''
         const feedbackDescription = Feedback.current.value || ''
-        if (goldenSql || feedbackDescription) {
-            feedback(goldenSql, feedbackDescription, false)
-        } else {
-            message.warning('请输入内容')
-        }
+        feedback(goldenSql, feedbackDescription, false)
     };
     const handleCancel1 = () => {
         setIsModalOpen1(false);
@@ -739,11 +735,17 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
             <Modal title="清空对话" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
                 <p>是否清空对话？</p>
             </Modal>
-            <Modal title={<div style={{ display: 'flex', alignItems: 'center' }}><div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgb(254, 226, 226)', width: '40px', height: '40px', borderRadius: '20px' }}>
-                <DislikeOutlined style={{ color: 'red', fontSize: '23px' }} /></div> &nbsp;&nbsp; 提供额外的反馈</div>} okText='提交反馈' cancelText='取消'
+            <Modal
+                footer={[
+                    <Button key="submit" type="primary" onClick={handleOk1}>
+                        Submit feedback
+                    </Button>,
+                ]}
+                title={<div style={{ display: 'flex', alignItems: 'center', fontWeight: 400 }}><div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgb(254, 226, 226)', width: '40px', height: '40px', borderRadius: '20px' }}>
+                    <DislikeOutlined style={{ color: 'rgba(255,0,0,.5)', fontSize: '23px', }} /></div> &nbsp;&nbsp; Provide additional feedback</div>}
                 open={isModalOpen1} onOk={handleOk1} onCancel={handleCancel1}>
-                <input ref={FeedbackSql} maxLength='100' placeholder='输入你觉着更理想的sql语句' className='RightMain-feedbacksql' style={{ width: '100%' }} type="text" name="" id="" />
-                <textarea ref={Feedback} maxLength='450' placeholder='向我们提供额外的反馈' className='RightMain-feedback' style={{ width: '100%' }} type="text" name="" id="" />
+                <input ref={FeedbackSql} maxLength='100' placeholder='Enter the SQL statement that you feel is more ideal' className='RightMain-feedbacksql' style={{ width: '100%' }} type="text" name="" id="" />
+                <textarea ref={Feedback} maxLength='450' placeholder='Give us additional feedback' className='RightMain-feedback' style={{ width: '100%' }} type="text" name="" id="" />
             </Modal>
             <div ref={main} className='RightMain-main '>
                 <ul>

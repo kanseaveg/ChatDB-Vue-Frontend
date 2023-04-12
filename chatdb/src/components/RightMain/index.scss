@@ -48,12 +48,13 @@
 
 .RightMain-feedback,
 .RightMain-feedbacksql {
-    border: 2px solid var(--third-color2);
+    border: 1px solid var(--third-color1);
     border-radius: 5px;
     background: var(--primary-color1);
     padding-left: 10px;
     color: var(--third-color);
     vertical-align: top;
+    font-family: normal;
 }
 
 .RightMain-feedback {
@@ -68,8 +69,9 @@
 
 .RightMain-feedbacksql::placeholder,
 .RightMain-feedback::placeholder {
-    color: var(--third-color1) !important;
-    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-weight: 400;
+    color: var(--third-color2) !important;
+    font-family: normal;
 }
 
 .RightMain {
