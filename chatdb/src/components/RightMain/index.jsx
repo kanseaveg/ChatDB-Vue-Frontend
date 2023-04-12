@@ -744,8 +744,8 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 title={<div style={{ display: 'flex', alignItems: 'center', fontWeight: 400 }}><div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgb(254, 226, 226)', width: '40px', height: '40px', borderRadius: '20px' }}>
                     <DislikeOutlined style={{ color: 'rgba(255,0,0,.5)', fontSize: '23px', }} /></div> &nbsp;&nbsp; Provide additional feedback</div>}
                 open={isModalOpen1} onOk={handleOk1} onCancel={handleCancel1}>
-                <input ref={FeedbackSql} maxLength='100' placeholder='Enter the SQL statement that you feel is more ideal' className='RightMain-feedbacksql' style={{ width: '100%' }} type="text" name="" id="" />
-                <textarea ref={Feedback} maxLength='450' placeholder='Give us additional feedback' className='RightMain-feedback' style={{ width: '100%' }} type="text" name="" id="" />
+                <input ref={FeedbackSql} maxLength='255' placeholder='Enter an appropriate golden SQL statement that you think is suitable.' className='RightMain-feedbacksql' style={{ width: '100%' }} type="text" name="" id="" />
+                <textarea ref={Feedback} maxLength='255' placeholder='Please give us the reason why you choose it as your golden SQL.' className='RightMain-feedback' style={{ width: '100%' }} type="text" name="" id="" />
             </Modal>
             <div ref={main} className='RightMain-main '>
                 <ul>
