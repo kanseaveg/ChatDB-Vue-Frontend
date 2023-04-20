@@ -1,0 +1,7 @@
+.ant-table {
+    overflow: auto;
+
+    .ant-table-thead>tr>th {
+        min-width: 250px !important;
+    }
+}
