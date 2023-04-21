@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { message } from 'antd';
 import './index.scss'
+import URL from '../../env.js'
 import axios from 'axios'
 import Wait from '../../assests/images/wait.gif'
 function ComingSoon() {
@@ -24,7 +25,7 @@ function ComingSoon() {
                     'Content-Type': 'application/json',
                 },
                 method: 'POST',
-                url: `http://10.21.76.236:8081/api/user/subscribe?email=${Email}`,
+                url: `${URL}/api/user/subscribe?email=${Email}`,
             }).then(res => {
                 console.log(res, 'res');
                 if (res.data.code === 200) {
