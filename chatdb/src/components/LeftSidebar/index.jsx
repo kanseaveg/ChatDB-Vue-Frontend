@@ -105,7 +105,6 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                 message.warning(res.data.msg)
             }
         }).catch(e => {
-            console.log(e, 'e');
             message.warning('please login again', 1);
             navigate('/login')
         })
@@ -152,13 +151,13 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                 userId: localStorage.getItem('userId'),
                 username,
                 phone,
-                email: userInfo.email,
+                email: userInfo[1],
                 password, emailCode
             },
             url: `${URL}/api/userinfo/update`,
         }).then(res => {
             if (res.data.code === 200) {
-                message.success('save success!')
+                message.success(res.data.data || res.data.msg)
             } else {
                 message.warning(res.data.msg)
             }
@@ -168,7 +167,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
         })
     }
     const Chinese = { title: '个人信息', username: '用户名', email: '邮箱*', phone: '手机号码', language: '语言', save: '保存', chinese: '简体中文', english: '英文', choose: '选择语言', password: '密码' }
-    const English = { title: 'UserInformation', username: 'username', email: 'email*', phone: 'phone-number', language: 'language', save: 'save', chinese: 'Chinese', english: 'English', choose: 'choose language', password: 'password' }
+    const English = { title: 'User Information', username: 'Username', email: 'Email*', phone: 'Phone-number', language: 'Language', save: 'Save', chinese: 'Chinese', english: 'English', choose: 'choose language', password: 'Password' }
     const [language, setLanguage] = useState(Chinese)
     const onGenderChange = (value) => {
         switch (value) {
@@ -198,7 +197,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
 
     }, [canSendCode]);
     const sendEmail = () => {
-        if (userInfo.email) {
+        if (userInfo[1]) {
             setCanSendCode([false, 30])
             axios({
                 headers: {
@@ -206,15 +205,15 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                 },
                 method: 'POST',
                 data: {
-                    email: userInfo.email,
+                    email: userInfo[1],
                     type: '2'
                 },
                 url: `${URL}/api/user/send`,
             }).then(res => {
-                if (res.code === 200) {
-                    message.success(res.data)
+                if (res.data.code === 200) {
+                    message.success(res.data.data || res.data.msg)
                 } else {
-                    message.warning(res.msg)
+                    message.warning(res.data.data | res.data.msg)
                 }
             })
         } else {
@@ -342,7 +341,6 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
     }
     //根据数据库获取行泪资料
     const handleSelect = (value, node, extra) => {
-        console.log('选择了啊啊啊啊啊啊啊', node);
         if (node.db !== JSON.parse(localStorage.getItem('db')).db) {
             setDataSourceId(node.db)
             getTableData(node.db)
@@ -385,7 +383,6 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                 message.warning(res.data.msg)
             }
         }).catch(e => {
-            console.log(e, 'e');
 
             message.warning('please login again!', 1)
             navigate('/login')
@@ -426,7 +423,6 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
             }
 
         }).catch(e => {
-            console.log(e, 'e');
 
             message.warning('please login again!', 1);
             navigate('/login')

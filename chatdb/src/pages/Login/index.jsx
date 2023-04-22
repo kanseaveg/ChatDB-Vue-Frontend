@@ -39,7 +39,6 @@ export default function Login() {
             },
             url: `${URL}/api/user/reset`,
         }).then(res => {
-            console.log(res, 'resetpassword');
             if (res.data.code === 200) {
                 message.success(res.data.data)
                 handleCancel1()
@@ -150,13 +149,12 @@ export default function Login() {
                             }
                         })
                     } else {
-                        message.warning('该邮箱未被注册')
                     }
 
                 }
             })
         } else {
-            message.warning('请输入有效邮箱地址！')
+            message.warning('Email format is not correct or not common')
         }
 
     }
@@ -180,9 +178,7 @@ export default function Login() {
             })
         }, 500)
     }
-    // useEffect(() => {
-    //     console.log('register', captcha[2], 'login', captcha[3]);
-    // }, [captcha])
+
     const onFinish = (values) => {
         // Dismiss manually and asynchronously
         const { email, password, captchaCode } = values
@@ -204,7 +200,6 @@ export default function Login() {
                 sendCaptcha(1)
             } else {
                 message.success(res.data.msg)
-                console.log(res, 'reslogin');
                 localStorage.clear()
                 localStorage.setItem('token', res.headers.authorization)
                 localStorage.setItem('userId', res.headers.userid)
@@ -226,7 +221,6 @@ export default function Login() {
             },
             url: `${URL}/api/user/register`,
         }).then(res => {
-            console.log(res, 'res');
             if (res.data.code !== 200) {
                 message.warning(res.data.data)
                 sendCaptcha(0)

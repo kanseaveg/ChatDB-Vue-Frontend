@@ -22,7 +22,7 @@ const routes = [
 // default route
       {
         path: '',
-        element: <Login />
+        element: <ComingSoon />
     }
  ]
  export default routes 

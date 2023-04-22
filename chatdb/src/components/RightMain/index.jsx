@@ -6,7 +6,7 @@ import axios from 'axios'
 import { copyArr, Myreplace } from '../../utils/func'
 import { message, Upload } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { Space, Table, Tag, Modal, Tooltip, Button } from 'antd';
+import { Space, Table, Tag, Modal, Tooltip, Button, Spin } from 'antd';
 import head1 from '../../assests/images/head1.png'
 import head2 from '../../assests/images/head2.png'
 import { v4 as uuidv4 } from "uuid"
@@ -44,6 +44,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     const token = localStorage.getItem('token')
     const userId = localStorage.getItem('userId')
     const [text1, setText] = useState([]);
+    const [loading, setLoading] = useState(false)
     //上传文件
     const props = {
         name: 'file',
@@ -57,9 +58,11 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
         showUploadList: false,
         accept: '.xlsx,.xls,.csv',
         onChange(info, event) {
+            setLoading(true)
             if (info.file.status !== 'uploading') {
             }
             if (info.file.status === 'done') {
+                setLoading(false)
                 if (info.file.response.code === 200) {
                     console.log(info.file.response, 'info.file.response');
                     message.success(`${info.file.name} file uploaded successfully`, 1);
@@ -68,6 +71,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                     message.warning(info.file.response.msg)
                 }
             } else if (info.file.status === 'error') {
+                setLoading(false)
                 message.error(`${info.file.name} file upload failed.`);
             }
         },
@@ -731,6 +735,9 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     };
     return (
         <div className='RightMain '>
+            {loading ? <div style={{ position: 'absolute', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: "1", width: '100%', height: "100%", background: 'rgba(255,255,255,.8)' }}><Spin size="large">
+                <div className="content" />
+            </Spin></div> : ''}
             {myCurrent === -1 || (chats[myCurrent] && chats[myCurrent].length) === 0 ? <Introduce myCurrent={myCurrent} setAddText={setAddText} /> : ''}
             <Modal title="清空对话" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
                 <p>是否清空对话？</p>

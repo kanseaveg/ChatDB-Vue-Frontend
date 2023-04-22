@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { message } from 'antd';
 import './index.scss'
+import URL from '../../env.js'
 import axios from 'axios'
 import Wait from '../../assests/images/wait.gif'
 function ComingSoon() {
@@ -14,21 +15,18 @@ function ComingSoon() {
     //邮箱订阅函数
     const submit = () => {
         let Email = email.current.value
-        console.log(Email);
         const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         if (Email && regex.test(Email)) {
-            console.log('合法的');
             //Email 就是邮箱 
             axios({
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 method: 'POST',
-                url: `http://10.21.76.236:8081/api/user/subscribe?email=${Email}`,
+                url: `${URL}/api/user/subscribe?email=${Email}`,
             }).then(res => {
-                console.log(res, 'res');
                 if (res.data.code === 200) {
-                    message.success('订阅成功')
+                    message.success(res.data.data || res.data.msg)
                 } else {
                     message.warning(res.data.msg)
                 }

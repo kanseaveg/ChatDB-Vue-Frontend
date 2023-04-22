@@ -26,10 +26,13 @@
 .RightMain-aichat-content-download {
     li {
         margin: 5px 0;
+        border-radius: 5px;
+        padding: 5px;
     }
 
     li:hover {
         cursor: pointer;
+        background-color: var(--third-color1);
     }
 }
 
