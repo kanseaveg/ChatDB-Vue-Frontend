@@ -4,7 +4,6 @@ import { LockOutlined, UserOutlined, RedoOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios'
 import { Button, Checkbox, Form, Input, message, Modal, Select, } from 'antd';
-import code from '../../assests/images/code.png'
 import { copyArr, debounce } from '../../utils/func';
 import Logo from '../../assests/images/logo.png'
 import { v4 as uuidv4 } from "uuid"

@@ -31,3 +31,6 @@ export function Myreplace(str, list) {
     }
     return temp
 }
+export function NotaNumber(str) {
+    return isNaN (Number (str,10))
+}
