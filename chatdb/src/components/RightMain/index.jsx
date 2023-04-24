@@ -64,7 +64,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
             if (info.file.status === 'done') {
                 setLoading(false)
                 if (info.file.response.code === 200) {
-                    console.log(info.file.response, 'info.file.response');
                     message.success(`${info.file.name} file uploaded successfully`, 1);
                     setUploadAndRefresh(true)
                 } else {
@@ -156,7 +155,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
             } else {
                 message.warning(res.data.data || res.data.msg)
             }
-        }).catch(e => { console.log(e); })
+        }).catch(e => { })
     }
     const handleOk1 = () => {
         const goldenSql = FeedbackSql.current.value || ''
@@ -187,7 +186,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
             // if (res.data.code !== 200) {
             //     message.warning(res.data.data || res.data.msg)
             // }
-        }).catch(e => { console.log(e); })
+        }).catch(e => { })
     };
     const handleCancel = () => {
         setIsModalOpen(false);
@@ -195,7 +194,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     //清空所有
     useEffect(() => {
         if (refresh) {
-            console.log('?????');
             let newChats = []
             let newText = []
             setChats(newChats)
@@ -496,7 +494,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                             // }
                                         }
                                     } else {
-                                        console.log(text, 'text');
                                         let newText = text.includes('data') ? text.split('"data":"')[1] : text.split('"msg":"')[1]
                                         newText = Myreplace(newText, ['{', '}', '"', ':', ',', 'message', 'messageType'])
                                         if (newText.includes('token wrong')) {
@@ -631,7 +628,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
         let newChats = []
         let newText = []
         for (let i = 0; i < chats.length; i++) {
-            console.log(i, index, newChats);
             if (i !== index) {
                 let temp = copyArr(chats[i])
                 newChats.push(temp)
@@ -689,7 +685,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
             }
 
 
-        }).catch(e => { console.log(e, e); message.warning('Error'); })
+        }).catch(e => { message.warning('Error'); })
     }
     useEffect(() => {
         setMyCurrent(current)
@@ -697,7 +693,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     useEffect(() => {
         if (main.current) {
             setTimeout(() => {
-                console.log(1);
                 main.current.scroll({
                     top: 1000000000,
                     behavior: 'smooth'
