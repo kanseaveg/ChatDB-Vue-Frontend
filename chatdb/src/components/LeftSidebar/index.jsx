@@ -289,6 +289,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                     setDbValue(v.title)
                     getTableData(v.db)
                     setDataSourceId(v.db)
+                    localStorage.setItem('db', JSON.stringify(chat[current].db))
                 }
             })
         }

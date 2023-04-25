@@ -234,7 +234,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     // }, [text]);
     // const [tableData, setTableData] = useState({ columns: [], rows: [] });
     //执行SQL
-    const execute = (i, sql) => {
+    const execute = (i, sql, page, pageSize) => {
         sql = 'SELECT' + sql.split('SELECT')[1];
         // fetch('${URL}/api/db/query', {
         //     method: 'POST',
@@ -289,7 +289,9 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
             data: {
                 dbname: dataSourceId,
                 query: sql,
-                userId
+                userId,
+                page,
+                pageSize
             },
             url: `${URL}/api/db/query`,
         }).then(res => {
@@ -297,14 +299,14 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 let columns = []
                 let data = []
                 res.data.data.columns.map((v, i) => {
-                    columns.push({ title: v, dataIndex: v, key: v })
+                    columns.push({ title: v, dataIndex: v, key: v, fixed: i === 0 ? true : false })
                 })
                 res.data.data.rows.map((v, i) => {
                     v.key = i
                 })
                 data = res.data.data.rows
                 let newChats3 = copyArr(chats)
-                newChats3[current][i].table = [columns, data]
+                newChats3[current][i].table = [columns, data, res.data.data.totalCount]
                 setChats(newChats3)
             } else {
                 message.warning(res.data.msg)
@@ -765,10 +767,10 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                 <SyntaxHighlighter language='sql' style={docco}>
                                     {v.content}
                                 </SyntaxHighlighter>
-                                {i === chats[myCurrent].length - 1 && v.finish ? <div className='RightMain-aichat-content-tool'><Tooltip placement="rightTop" title={<div >执行SQL</div>}><DoubleRightOutlined onClick={() => execute(i, v.content)} /></Tooltip><Tooltip placement="rightTop" title='重新生成SQL'><RedoOutlined onClick={() => reProduct(i)} /></Tooltip>
+                                {i === chats[myCurrent].length - 1 && v.finish ? <div className='RightMain-aichat-content-tool'><Tooltip placement="rightTop" title={<div >执行SQL</div>}><DoubleRightOutlined onClick={() => execute(i, v.content, 1, 10)} /></Tooltip><Tooltip placement="rightTop" title='重新生成SQL'><RedoOutlined onClick={() => reProduct(i)} /></Tooltip>
                                     {v.feedback ? v.feedback.flag ? <LikeOutlined className='feedbackSelete' /> : <DislikeOutlined className='feedbackSelete' />
                                         : <><LikeOutlined onClick={() => feedback('', '', true)} /><DislikeOutlined onClick={showModal1} /></>} </div> : ''}</div>
-                            {v.table && v.table[0] ? <><Table tableLayout='auto' columns={v.table[0]} dataSource={v.table[1]} /><Tooltip color='white' title={<ul style={{ color: 'black' }} className='RightMain-aichat-content-download'><li onClick={() => DownloadFile(v.content, 'csv')}><FileOutlined />&nbsp; Download as CSV File</li><li onClick={() => DownloadFile(v.content, 'xlsx')}><FileOutlined />&nbsp; Download as Excel File</li></ul>}><SmallDashOutlined className='RightMain-aichat-content-downloadIcon' /></Tooltip> </> : ''}
+                            {v.table && v.table[0] ? <><Table tableLayout='auto' pagination={{ total: v.table[2] }} onChange={(pagination) => execute(i, v.content, pagination.current, pagination.pageSize)} columns={v.table[0]} dataSource={v.table[1]} /><Tooltip color='white' title={<ul style={{ color: 'black' }} className='RightMain-aichat-content-download'><li onClick={() => DownloadFile(v.content, 'csv')}><FileOutlined />&nbsp; Download as CSV File</li><li onClick={() => DownloadFile(v.content, 'xlsx')}><FileOutlined />&nbsp; Download as Excel File</li></ul>}><SmallDashOutlined className='RightMain-aichat-content-downloadIcon' /></Tooltip> </> : ''}
                         </div></li> :
                             <li key={i} className='RightMain-chatli RightMain-peoplechat'><div className='RightMain-peoplechat-content'>{v.content}</div><img src={head1} alt="" className='RightMain-peoplechat-head' /></li>)
 
