@@ -299,7 +299,13 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 let columns = []
                 let data = []
                 res.data.data.columns.map((v, i) => {
-                    columns.push({ title: v, dataIndex: v, key: v, fixed: i === 0 ? true : false })
+                    columns.push({
+                        title: v, dataIndex: v, key: v, fixed: i === 0 ? true : false, ellipsis: {
+                            showTitle: false,
+                        },
+
+                        width: i === 0 ? 200 : 150
+                    })
                 })
                 res.data.data.rows.map((v, i) => {
                     v.key = i
@@ -770,7 +776,14 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                 {i === chats[myCurrent].length - 1 && v.finish ? <div className='RightMain-aichat-content-tool'><Tooltip placement="rightTop" title={<div >执行SQL</div>}><DoubleRightOutlined onClick={() => execute(i, v.content, 1, 10)} /></Tooltip><Tooltip placement="rightTop" title='重新生成SQL'><RedoOutlined onClick={() => reProduct(i)} /></Tooltip>
                                     {v.feedback ? v.feedback.flag ? <LikeOutlined className='feedbackSelete' /> : <DislikeOutlined className='feedbackSelete' />
                                         : <><LikeOutlined onClick={() => feedback('', '', true)} /><DislikeOutlined onClick={showModal1} /></>} </div> : ''}</div>
-                            {v.table && v.table[0] ? <><Table tableLayout='auto' pagination={{ total: v.table[2] }} onChange={(pagination) => execute(i, v.content, pagination.current, pagination.pageSize)} columns={v.table[0]} dataSource={v.table[1]} /><Tooltip color='white' title={<ul style={{ color: 'black' }} className='RightMain-aichat-content-download'><li onClick={() => DownloadFile(v.content, 'csv')}><FileOutlined />&nbsp; Download as CSV File</li><li onClick={() => DownloadFile(v.content, 'xlsx')}><FileOutlined />&nbsp; Download as Excel File</li></ul>}><SmallDashOutlined className='RightMain-aichat-content-downloadIcon' /></Tooltip> </> : ''}
+                            {v.table && v.table[0] ? <><Table pagination={{ total: v.table[2] }} onChange={(pagination) => execute(i, v.content, pagination.current, pagination.pageSize)}
+                                columns={v.table[0].map((v, i) => {
+                                    v.render = (v) => (
+                                        <Tooltip placement="topLeft" title={v}>
+                                            {v}
+                                        </Tooltip>)
+                                    return v
+                                })} dataSource={v.table[1]} /><Tooltip color='white' title={<ul style={{ color: 'black' }} className='RightMain-aichat-content-download'><li onClick={() => DownloadFile(v.content, 'csv')}><FileOutlined />&nbsp; Download as CSV File</li><li onClick={() => DownloadFile(v.content, 'xlsx')}><FileOutlined />&nbsp; Download as Excel File</li></ul>}><SmallDashOutlined className='RightMain-aichat-content-downloadIcon' /></Tooltip> </> : ''}
                         </div></li> :
                             <li key={i} className='RightMain-chatli RightMain-peoplechat'><div className='RightMain-peoplechat-content'>{v.content}</div><img src={head1} alt="" className='RightMain-peoplechat-head' /></li>)
 

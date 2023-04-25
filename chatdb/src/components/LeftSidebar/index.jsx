@@ -46,6 +46,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
     const [resetPassword, setResetPassword] = useState(false)
     const [canSendCode, setCanSendCode] = useState([true, 30])
     const [firstTreeName, setFirstTreeName] = useState('')
+    const [deleteFlag, setDeleteFlag] = useState(false)
     //选择
     const handleSelete = (i) => {
         let lis = document.querySelectorAll('.LeftSidebar-chats-Li')
@@ -282,7 +283,8 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
 
     }
     useEffect(() => {
-        if (current >= 0) {
+        if (current >= 0 || deleteFlag) {
+            setDeleteFlag(false)
             handleSelete(current)
             treeData.map((v, i) => {
                 if (chat[current].db && chat[current].db.db === v.db) {
@@ -293,7 +295,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                 }
             })
         }
-    }, [current])
+    }, [current, deleteFlag])
     //确认名字
     // const handleConfirmName = (e) => {
     //     if (e.keyCode === 13) {
@@ -332,6 +334,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
         if (j <= current) {
             if (current - 1 === -1 && list !== 0) {
                 setCurrent(0)
+                setDeleteFlag(true)
             } else {
                 setCurrent(current - 1)
             }

@@ -2,14 +2,21 @@ import React, { useState, useEffect } from 'react'
 import './index.scss'
 import { WarningOutlined, BulbOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { Myreplace, copyArr } from '../../utils/func';
-export default function Introduce({ setAddText, myCurrent }) {
+export default function Introduce({ setAddText }) {
     const [data, setData] = useState([{ title: 'Examples', icon: <BulbOutlined className='Introduce-main-topIcon' />, message: ['"向我展示nba里面所有球队的信息"', '"勒布朗詹姆斯打什么位置?"', '"湖人"队有哪些球员出生晚于1980年且出生于美国?'] },
     { title: 'Capabilities', icon: <ThunderboltOutlined className='Introduce-main-topIcon' />, message: ['You can talk everything with DB', 'Allow user to provide data to query', 'Trained to decline wrong sql queries'] },
     { title: 'Limitations', icon: <WarningOutlined className='Introduce-main-topIcon' />, message: ["May occasionally generate some incorrect SQL query statement", "May occasionally query no enough data", "Limited knowledge of public db and db content"] }])
 
     useEffect(() => {
-        if (myCurrent >= 0 && data && data.length) {
-            let title = JSON.parse(localStorage.getItem('chat'))[myCurrent].db.title
+        if (data && data.length) {
+            let myCurrent = parseInt(localStorage.getItem('current'))
+            let title
+            if (myCurrent === -1) {
+                title = JSON.parse(localStorage.getItem('db')) ? JSON.parse(localStorage.getItem('db')).title : 'nba'
+            }
+            else {
+                title = JSON.parse(localStorage.getItem('chat'))[myCurrent].db.title
+            }
             let Nowdata = copyArr(data)
             switch (title) {
                 case 'nba':
@@ -24,7 +31,7 @@ export default function Introduce({ setAddText, myCurrent }) {
             }
             setData(Nowdata)
         }
-    }, [myCurrent])
+    }, [localStorage.getItem('db'), localStorage.getItem('current')])
 
     return (
         <div className='Introduce'>
