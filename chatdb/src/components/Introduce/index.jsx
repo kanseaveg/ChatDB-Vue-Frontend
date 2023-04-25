@@ -8,7 +8,7 @@ export default function Introduce({ setAddText }) {
     { title: 'Limitations', icon: <WarningOutlined className='Introduce-main-topIcon' />, message: ["May occasionally generate some incorrect SQL query statement", "May occasionally query no enough data", "Limited knowledge of public db and db content"] }])
 
     useEffect(() => {
-        if (data && data.length) {
+        if (data && data.length && localStorage.getItem('current')) {
             let myCurrent = parseInt(localStorage.getItem('current'))
             let title
             if (myCurrent === -1) {
