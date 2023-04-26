@@ -5,6 +5,7 @@
  * @LastEditors: GuluGuluu
  * @LastEditTime: 2022-11-13 23:24:19
  */
+import { message } from "antd";
 import axios from "axios";
 import serverConfig from "./config";
 
@@ -14,7 +15,6 @@ const serviceAxios = axios.create({
   timeout: 10000, // 请求超时设置
   withCredentials: false, // 跨域请求是否需要携带 cookie
 });
-
 // 创建请求拦截
 serviceAxios.interceptors.request.use(
   (config) => {
@@ -45,6 +45,14 @@ serviceAxios.interceptors.response.use(
     const { data } = res;
     // 处理自己的业务逻辑，比如判断 token 是否过期等等
     // 代码块
+    if(data.code===400||data.msg==='token wrong or expire, please login again'){
+      message.warning(data.msg)
+      window.location.href = '/login';
+    }else{
+      if(data.code!==200){
+        message.warning(data.data||data.msg)
+      }
+    }
     return data;
   },
   (error) => {

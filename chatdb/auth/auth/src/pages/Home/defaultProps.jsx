@@ -1,6 +1,6 @@
 import { ChromeFilled, UserOutlined, HistoryOutlined, MessageOutlined, CrownFilled, SmileFilled, TabletFilled } from '@ant-design/icons';
 import React from 'react';
-import head from './head2.png'
+import head from '../../assests/images/logo.png'
 const defaultProps = {
     title: 'chatdb',
     logo: head,

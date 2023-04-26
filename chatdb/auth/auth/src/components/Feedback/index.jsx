@@ -3,7 +3,7 @@ import { Table, Space, Tag } from 'antd';
 import './index.scss'
 import { NotaNumber } from '../../utils/func'
 import serviceAxios from '../../request'
-
+import MyTable from '../MyTable';
 export default function UserDb({ searchValue }) {
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(false)
@@ -32,11 +32,10 @@ export default function UserDb({ searchValue }) {
         serviceAxios.get(`admin/feedback/search`, { params: params })
             .then((res) => {
                 setLoading(false)
-                console.log(res)
                 setData(res.data.map((v, i) => (
                     {
                         ...v,
-                        key: i, create_time: v.create_time.split('T')[0] + ' ' + v.create_time.split('T')[1].split('.')[0],
+                        key: i, create_time: v.create_time ? v.create_time.split('T')[0] + ' ' + v.create_time.split('T')[1].split('.')[0] : '',
                         like_flag: v.like_flag === 1 ? ['like'] : ['dislike']
                     })))
             })
@@ -47,7 +46,6 @@ export default function UserDb({ searchValue }) {
         serviceAxios.delete(`admin/feedback/delete/${id}`)
             .then((res) => {
                 setLoading(false)
-                console.log(res)
                 getData(searchValue)
             })
     }
@@ -181,10 +179,7 @@ export default function UserDb({ searchValue }) {
 
 
     return (
-        <div>
-            <Table size='middle' scroll={{
-                y: 450,
-            }} loading={loading} columns={columns} dataSource={data} />
-        </div>
+        <MyTable loading={loading} columns={columns} data={data} />
+
     )
 }

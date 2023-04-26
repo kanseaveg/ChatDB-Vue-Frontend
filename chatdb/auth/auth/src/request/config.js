@@ -9,6 +9,6 @@ import URL from '../env'
 const DOMAIN = URL;
 const serverConfig = {
     baseURL: DOMAIN, // 请求基础地址,可根据环境自定义
-    useTokenAuthorization: false, // 是否开启 token 认证
+    useTokenAuthorization: true, // 是否开启 token 认证
 };
 export default serverConfig;

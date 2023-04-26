@@ -3,11 +3,14 @@ import { Table, Space, Tag } from 'antd';
 import './index.scss'
 import { NotaNumber } from '../../utils/func'
 import serviceAxios from '../../request'
-
+import MyTable from '../MyTable';
 export default function PublicDb({ searchValue }) {
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(false)
     useEffect(() => {
+        if (searchValue === ' ') {
+            searchValue = ''
+        }
         getData(searchValue)
     }, [searchValue])
     const getData = (searchValue = '') => {
@@ -15,12 +18,11 @@ export default function PublicDb({ searchValue }) {
         serviceAxios.get(`admin/public_db/search?id=${NotaNumber(searchValue) ? '' : searchValue}&dbName=${NotaNumber(searchValue) ? searchValue : ''}`)
             .then((res) => {
                 setLoading(false)
-                console.log(res)
                 setData(res.data.map((v, i) => (
                     {
                         ...v,
-                        key: i, createTime: v.createTime.split('T')[0] + ' ' + v.createTime.split('T')[1].split('.')[0],
-                        updateTime: v.updateTime.split('T')[0] + ' ' + v.updateTime.split('T')[1].split('.')[0],
+                        key: i, createTime: v.createTime ? v.createTime.split('T')[0] + ' ' + v.createTime.split('T')[1].split('.')[0] : '',
+                        updateTime: v.updateTime ? v.updateTime.split('T')[0] + ' ' + v.updateTime.split('T')[1].split('.')[0] : '',
                         tags: v.isDeleted ? ['deleted'] : ['normal']
                     })))
             })
@@ -31,7 +33,6 @@ export default function PublicDb({ searchValue }) {
         serviceAxios.delete(`admin/public_db/${dbName}`)
             .then((res) => {
                 setLoading(false)
-                console.log(res)
                 getData(searchValue)
             })
     }
@@ -40,7 +41,6 @@ export default function PublicDb({ searchValue }) {
         serviceAxios.post(`admin/public_db/restore/${id}`)
             .then((res) => {
                 setLoading(false)
-                console.log(res)
                 getData(searchValue)
             })
     }
@@ -120,11 +120,8 @@ export default function PublicDb({ searchValue }) {
 
 
     return (
-        <div>
-            <Table size='middle' scroll={{
-                x: 400,
-                y: 480
-            }} loading={loading} columns={columns} dataSource={data} />
-        </div>
+        <>
+            <MyTable loading={loading} columns={columns} data={data} />
+        </>
     )
 }

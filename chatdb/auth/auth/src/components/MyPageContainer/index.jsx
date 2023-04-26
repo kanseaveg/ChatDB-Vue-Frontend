@@ -1,5 +1,5 @@
 import React, { useEffect, useState, } from 'react'
-import { Input, theme, Button, Upload, message, Form, Modal } from 'antd';
+import { Input, theme, Button, Upload, message, Form, Modal, Spin } from 'antd';
 import {
   SearchOutlined, UploadOutlined
 } from '@ant-design/icons';
@@ -14,110 +14,7 @@ import History from '../History'
 import Feedback from '../Feedback'
 import serviceAxios from '../../request'
 import URL from '../../env'
-const props = {
-  name: 'file',
-  action: `${URL}/admin/public_db/upload`,
-  showUploadList: false,
-  accept: '.xlsx,.xls,.csv',
-  onChange(info, event) {
-    if (info.file.status !== 'uploading') {
-    }
-    if (info.file.status === 'done') {
-      if (info.file.response.code === 200) {
-        console.log(info.file.response, 'info.file.response');
-        message.success(`${info.file.name} file uploaded successfully`, 1);
-      } else {
-        message.warning(info.file.response.msg)
-      }
-    } else if (info.file.status === 'error') {
-      message.error(`${info.file.name} file upload failed.`);
-    }
-  },
-}
-const Operate = ({ which, style, setSearchValue, setOpen }) => {
-  const { token } = theme.useToken();
-  return (
-    <div
-      style={{
-        display: 'flex',
-        width: '100%',
-        ...style,
-      }}
-    >
-      <SearchInput placeholder={which === 'publicdb' ?
-        '输入id或dbName进行搜索' :
-        which === 'userdb' ?
-          '输入id或dbName或userId进行搜索' :
-          which === 'info' ?
-            '搜索'
-            :
-            which === 'history' ?
-              '输入userId或chatId进行搜索'
-              :
-              which === 'feedback' ?
-                '输入userId或chatId或db进行搜索'
-                : ''} setSearchValue={setSearchValue} />
-      {which === 'publicdb' ?
-        <Upload {...props}>
-          <Button icon={<UploadOutlined />}>上传公共库</Button>
-        </Upload> :
-        // which === 'userdb' ? <Upload {...props} action={`${URL}/admin/user_db/upload`} >
-        //   <Button icon={<UploadOutlined />}>上传用户数据库</Button>
-        // </Upload> :
-        which === 'info' ?
-          <Button onClick={() => setOpen(true)}>添加用户</Button>
-          :
-          which === 'history' ?
-            ''
-            :
-            which === 'feedback' ? ''
-              : ''
-      }
 
-    </div>
-  );
-};
-const SearchInput = ({ placeholder, setSearchValue }) => {
-  const { token } = theme.useToken();
-  return (
-    <div
-      key="SearchOutlined"
-      aria-hidden
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        marginInlineEnd: 24,
-      }}
-      onMouseDown={(e) => {
-        e.stopPropagation();
-        e.preventDefault();
-      }}
-    >
-      <Input
-        style={{
-          borderRadius: 4,
-          marginInlineEnd: 12,
-          backgroundColor: token.colorBgTextHover,
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') { setSearchValue(e.target.value) }
-        }}
-        onChange={(e) => {
-          if (!e.target.value) { setSearchValue('') }
-        }}
-        prefix={
-          <SearchOutlined
-            style={{
-              color: token.colorTextLightSolid,
-            }}
-          />
-        }
-        placeholder={placeholder}
-        bordered={false}
-      />
-    </div>
-  );
-};
 const MyPageContainer = ({ pathname }) => {
   const { token } = theme.useToken();
   const [searchValue, setSearchValue] = useState('')
@@ -125,7 +22,7 @@ const MyPageContainer = ({ pathname }) => {
   let which = pathname.split('/')[pathname.split('/').length - 1]
   const onFinish = (values) => {
     serviceAxios.post('admin/user_manager/add_user', { data: values }).then((res) => {
-      console.log(res);
+      ;
       if (res.code === 200) {
         message.success('添加成功！')
         setOpen(false)
@@ -134,6 +31,119 @@ const MyPageContainer = ({ pathname }) => {
         message.warning(res.data || res.msg)
       }
     })
+  };
+  const props = {
+    name: 'file',
+    action: `${URL}/admin/public_db/upload`,
+    maxCount: 1,
+    // showUploadList: false,
+    accept: '.xlsx,.xls,.csv',
+    onChange(info, event) {
+      if (info.file.status === 'uploading') {
+      }
+      if (info.file.status === 'done') {
+        if (info.file.response.code === 200) {
+          setSearchValue(' ')
+          message.success(`${info.file.name} file uploaded successfully`, 1);
+        } else {
+          message.warning(info.file.response.msg)
+        }
+      } else if (info.file.status === 'error') {
+        message.error(`${info.file.name} file upload failed.`);
+      }
+    },
+    progress: {
+      strokeColor: {
+        '0%': '#108ee9',
+        '100%': '#87d068',
+      },
+      strokeWidth: 3,
+      format: (percent) => percent && `${parseFloat(percent.toFixed(2))}%`,
+    },
+  }
+  const Operate = ({ which, style, setSearchValue, setOpen }) => {
+    const { token } = theme.useToken();
+    return (
+      <div
+        style={{
+          display: 'flex',
+          width: '100%',
+          ...style,
+        }}
+      >
+        <SearchInput placeholder={which === 'publicdb' ?
+          '输入id或dbName进行搜索' :
+          which === 'userdb' ?
+            '输入id或dbName或userId进行搜索' :
+            which === 'info' ?
+              '搜索'
+              :
+              which === 'history' ?
+                '输入userId或chatId进行搜索'
+                :
+                which === 'feedback' ?
+                  '输入userId或chatId或db进行搜索'
+                  : ''} setSearchValue={setSearchValue} />
+        {which === 'publicdb' ?
+          <Upload {...props} >
+            <Button icon={<UploadOutlined />}>上传公共库</Button>
+          </Upload> :
+          // which === 'userdb' ? <Upload {...props} action={`${URL}/admin/user_db/upload`} >
+          //   <Button icon={<UploadOutlined />}>上传用户数据库</Button>
+          // </Upload> :
+          which === 'info' ?
+            <Button onClick={() => setOpen(true)}>添加用户</Button>
+            :
+            which === 'history' ?
+              ''
+              :
+              which === 'feedback' ? ''
+                : ''
+        }
+
+      </div>
+    );
+  };
+  const SearchInput = ({ placeholder, setSearchValue }) => {
+    const { token } = theme.useToken();
+    return (
+      <div
+        key="SearchOutlined"
+        aria-hidden
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          marginInlineEnd: 24,
+        }}
+        onMouseDown={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+        }}
+      >
+        <Input
+          style={{
+            borderRadius: 4,
+            marginInlineEnd: 12,
+            backgroundColor: token.colorBgTextHover,
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') { setSearchValue(e.target.value) }
+          }}
+          onChange={(e) => {
+            if (!e.target.value) { setSearchValue('') }
+          }}
+          prefix={
+            <SearchOutlined
+              style={{
+                color: token.colorTextLightSolid,
+              }}
+            />
+          }
+          placeholder={placeholder}
+          bordered={false}
+        />
+      </div>
+    );
   };
   return (
     <div
