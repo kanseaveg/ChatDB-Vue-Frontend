@@ -332,7 +332,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
         let value = encodeURIComponent(newChats[current][i - 1].content)
         // let conversationId = i - 2 < 0 ? '' : newChats[current][i - 2].conversationId || ''
         // let parentId = i - 2 < 0 ? '' : newChats[current][i - 2].parentId || ''
-        fetch(`${URL}/api/chat/query?question=${value}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&`, {
+        fetch(`${URL}/api/chat/query?question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -450,7 +450,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 newChats[newChats.length - 1].push({ who: 'ai' })
 
                 setChats(newChats)
-                fetch(`${URL}/api/chat/query?question=${encodeURIComponent(value)}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&`, {
+                fetch(`${URL}/api/chat/query?question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -546,7 +546,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                 let newChats1 = copyArr(newChats)
                 newChats1[current].push({ who: 'ai' })
                 setChats(newChats1)
-                fetch(`${URL}/api/chat/query?question=${encodeURIComponent(value)}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&`, {
+                fetch(`${URL}/api/chat/query?question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
