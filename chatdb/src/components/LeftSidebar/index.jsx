@@ -265,7 +265,8 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
         }).then(res => {
         }).catch(e => { })
         navigate('/login')
-        localStorage.clear()
+        localStorage.removeItem('userId');
+        localStorage.removeItem('token');
     }
     //新增会话
     const addNewChat = (db) => {

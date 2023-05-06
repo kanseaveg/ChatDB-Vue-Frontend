@@ -200,7 +200,6 @@ export default function Login() {
                 sendCaptcha(1)
             } else {
                 message.success(res.data.msg)
-                localStorage.clear()
                 localStorage.setItem('token', res.headers.authorization)
                 localStorage.setItem('userId', res.headers.userid)
                 navigate('/chatdb')
