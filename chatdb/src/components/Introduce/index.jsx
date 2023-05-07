@@ -8,14 +8,16 @@ export default function Introduce({ setAddText }) {
     { title: 'Limitations', icon: <WarningOutlined className='Introduce-main-topIcon' />, message: ["May occasionally generate some incorrect SQL query statement", "May occasionally query no enough data", "Limited knowledge of public db and db content"] }])
 
     useEffect(() => {
-        if (data && data.length && localStorage.getItem('current')) {
-            let myCurrent = parseInt(localStorage.getItem('current'))
+        let chat = JSON.parse(localStorage.getItem('chat'))
+        let current = parseInt(localStorage.getItem('current'))
+        let db = JSON.parse(localStorage.getItem('db'))
+        if (data && data.length && chat && chat[current]) {
             let title
-            if (myCurrent === -1) {
-                title = JSON.parse(localStorage.getItem('db')) ? JSON.parse(localStorage.getItem('db')).title : 'nba'
+            if (current === -1) {
+                title = db ? db.title : 'nba'
             }
             else {
-                title = JSON.parse(localStorage.getItem('chat'))[myCurrent].db.title
+                title = chat[current].db.title
             }
             let Nowdata = copyArr(data)
             switch (title) {
@@ -31,7 +33,7 @@ export default function Introduce({ setAddText }) {
             }
             setData(Nowdata)
         }
-    }, [localStorage.getItem('db'), localStorage.getItem('current')])
+    }, [localStorage.getItem('db'), localStorage.getItem('current'), localStorage.getItem('chat')])
 
     return (
         <div className='Introduce'>

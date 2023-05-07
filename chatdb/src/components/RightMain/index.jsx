@@ -15,27 +15,7 @@ import { docco, github, monokai, tomorrow } from "react-syntax-highlighter/dist/
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import URL from '../../env.js'
 import Introduce from '../Introduce'
-// import { prism, dark, coy, funky, okaidia, solarizedlight } from "react-syntax-highlighter/dist/esm/styles/prism";
-// SyntaxHighlighter.supportedLanguages("sql", sql);
-// import bg2 from '../../assests/images/bg2.png'
-const columns = [
-    {
-        title: 'Address',
-        dataIndex: 'address',
-        key: 'address',
-    },
-]; const data = [
-    {
-        key: '3',
-        name: 'Joe Black',
-        age: 32,
-        address: 'Sydney No. 1 Lake Park',
-    },
-];
-
-
-export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName, current, setDeleteNumber, deleteNumber, list, addText, setAddText, setCurrent, setAddFirstChat, dataSourceId, setRefresh, refresh }) {
-    // [[{ who: 'ai', content: 'page1你好' }, { who: 'people', content: 'page1你好3' }], [{ who: 'ai', content: 'page2你好' }, { who: 'people', content: 'page2你好3' }]]
+export default function RightMain({ lock, setLock, setDbDisabled, setUploadAndRefresh, setName, current, setDeleteNumber, deleteNumber, list, addText, setAddText, setCurrent, setAddFirstChat, dataSourceId, setRefresh, refresh }) {
     const [chats, setChats] = useState([])
     const navigate = useNavigate();
     const [myCurrent, setMyCurrent] = useState(0)
@@ -43,7 +23,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     const main = useRef()
     const token = localStorage.getItem('token')
     const userId = localStorage.getItem('userId')
-    const [text1, setText] = useState([]);
     const [loading, setLoading] = useState(false)
     //上传文件
     const props = {
@@ -87,18 +66,49 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
             setDbDisabled(false)
         }
     }, [showStopBtn])
-
-    //历史记录
+    //历史记录local
     useEffect(() => {
-        let Chats = JSON.parse(localStorage.getItem('chats'))
-        if (Chats && Chats.length !== 0) {
-            setChats(Chats)
-            setText(JSON.parse(localStorage.getItem('text')))
+        // let Chats = JSON.parse(localStorage.getItem('chats'))
+        // if (Chats && Chats.length !== 0) {
+        //     setChats(Chats)
+        // }
+        let chat = JSON.parse(localStorage.getItem('chat'))
+        if (!lock) {
+            if (chat && chat.length > 0) {
+                setLoading(true)
+                const promises = chat.map((v, i) => {
+                    return axios({
+                        headers: {
+                            'Content-Type': 'application/json',
+                            "Authorization": token
+                        },
+                        method: 'GET',
+                        url: `${URL}/api/chat/history?userId=${userId}&chatId=${v.chatId}`,
+                    }).then(res => {
+                        if (res.data.code === 200) {
+                            let data = []
+                            if (res.data.data.length > 0) {
+                                res.data.data.map((v) => {
+                                    data.push({ who: v.userType === 'USER' ? 'people' : 'ai', finish: true, content: v.message })
+                                })
+                            }
+                            return data
+                        } else {
+                            message.warning(res.data.data || res.data.msg)
+                        }
+                    }).catch(e => { })
+                })
+                Promise.all(promises).then(newChats => {
+                    // 在这里处理所有聊天记录
+                    setChats(newChats)
+                    setLoading(false)
+                })
+            }
+            setLock(true)
         }
-    }, [])
+    }, [lock])
     useEffect(() => {
         localStorage.setItem('chats', JSON.stringify(chats))
-        // localStorage.setItem('text', JSON.stringify(text))
     }, [chats])
     //终止回答
     const stopResponding = () => {
@@ -167,26 +177,26 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     };
     //清空对话
     const [isModalOpen, setIsModalOpen] = useState(false);
-
     const showModal = () => {
         setIsModalOpen(true);
     };
     const handleOk = () => {
         RefreshOne()
         setIsModalOpen(false);
-        const chatId = JSON.parse(localStorage.getItem('chat'))[current].chatId
-        axios({
-            headers: {
-                'Content-Type': 'application/json',
-                "Authorization": token
-            },
-            method: 'GET',
-            url: `${URL}/api/chat/clear?userId=${userId}&chatId=${chatId}`,
-        }).then(res => {
-            // if (res.data.code !== 200) {
-            //     message.warning(res.data.data || res.data.msg)
-            // }
-        }).catch(e => { })
+        if (JSON.parse(localStorage.getItem('chat')) && JSON.parse(localStorage.getItem('chat'))[current]) {
+            const chatId = JSON.parse(localStorage.getItem('chat'))[current].chatId
+            axios({
+                headers: {
+                    'Content-Type': 'application/json',
+                    "Authorization": token
+                },
+                method: 'POST',
+                url: `${URL}/api/chat/clear?userId=${userId}&chatId=${chatId}`,
+                data: {
+                    userId, chatId
+                }
+            }).then().catch(e => { })
+        }
     };
     const handleCancel = () => {
         setIsModalOpen(false);
@@ -195,91 +205,13 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
     useEffect(() => {
         if (refresh) {
             let newChats = []
-            let newText = []
             setChats(newChats)
-            setText(newText)
             setRefresh(false)
         }
     }, [refresh])
     //执行SQL
-    // const jsonData = ["Ok,here's an example SQL statement to create a basic table in a relational database:", 'To create a basic table in a relational database, you could use a SQL statement like this:', 'If you need to set up a basic table in a relational database, the following SQL statement can be used:', 'The following SQL statement is an example of how to create a simple table in a relational database:', 'When it comes to creating a basic table in a relational database, you might use something like the following SQL statement:'];
-    // useEffect(() => {
-    //     if (current < 0) {
-    //         let current = 0
-    //         if (text[current] && text[current].length !== 0) {
-    //             const intervalId = setInterval(() => {
-    //                 const char = jsonData[text[current].length % 5].charAt(text[current][text[current].length - 1].length);
-    //                 if (char) {
-    //                     let tempText = copyArr(text)
-    //                     tempText[current][tempText[current].length - 1] += char
-    //                     setText(tempText);
-    //                 }
-    //             }, 100);
-    //             return () => clearInterval(intervalId);
-    //         }
-    //     } else {
-    //         if (text[current] && text[current].length !== 0) {
-    //             const intervalId = setInterval(() => {
-    //                 const char = jsonData[text[current].length % 5].charAt(text[current][text[current].length - 1].length);
-    //                 if (char) {
-    //                     let tempText = copyArr(text)
-    //                     tempText[current][tempText[current].length - 1] += char
-    //                     setText(tempText);
-    //                 }
-    //             }, 100);
-    //             return () => clearInterval(intervalId);
-    //         }
-    //     }
-
-    // }, [text]);
-    // const [tableData, setTableData] = useState({ columns: [], rows: [] });
-    //执行SQL
     const execute = (i, sql, page, pageSize) => {
         sql = 'SELECT' + sql.split('SELECT')[1];
-        // fetch('${URL}/api/db/query', {
-        //     method: 'POST',
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //         "Authorization": token
-        //     },
-        //     body: JSON.stringify({
-        //         data_source_id: dataSourceId,
-        //         query: sql
-        //     })
-        // }).then(response => {
-        //     let isFirstChunk = true;
-        //     const streamReader = response.body.getReader();
-        //     let dataBuffer = '';
-        //     let rowsData = []
-        //     return streamReader.read().then(function processResult(result) {
-        //         if (result.done) {
-        //             console.log('Server closed the connection');
-        //             return;
-        //         }
-        //         // 如果是第一块数据，则需要将其作为表头处理
-        //         if (isFirstChunk) {
-        //             dataBuffer += new TextDecoder("utf-8").decode(result.value);
-        //             const [columns, ...rows] = dataBuffer.split('\n');
-        //             setTableData({
-        //                 columns: columns.split(','),
-        //                 rows: rows.filter(row => row !== '').map(row => row.split(','))
-        //             });
-        //             isFirstChunk = false;
-        //         } else {
-        //             dataBuffer += '\n' + new TextDecoder("utf-8").decode(result.value);
-        //             rowsData = dataBuffer.split('\n');
-        //             if (rowsData[rowsData.length - 1] === '') {
-        //                 rowsData.splice(-1, 1);
-        //             }
-        //             setTableData(prevData => ({
-        //                 ...prevData,
-        //                 rows: prevData.rows.concat(rowsData.map(row => row.split(',')))
-        //             }));
-        //         }
-        //         dataBuffer = rowsData.pop() || '';
-        //         return streamReader.read().then(processResult);
-        //     });
-        // }).catch(error => console.error('Error occurred:', error))
         axios({
             headers: {
                 'Content-Type': 'application/json',
@@ -330,9 +262,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
         newChats[current][i] = { who: 'ai', finish: false }
         setChats(newChats)
         let value = encodeURIComponent(newChats[current][i - 1].content)
-        // let conversationId = i - 2 < 0 ? '' : newChats[current][i - 2].conversationId || ''
-        // let parentId = i - 2 < 0 ? '' : newChats[current][i - 2].parentId || ''
-        fetch(`${URL}/api/chat/query?question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}`, {
+        fetch(`${URL}/api/chat/query?question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&re=1`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -356,9 +286,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                             if (text.includes('message') && text.includes('messageType')) {
                                 let count = text.split('}').length
                                 if (count === 2) {
-                                    // let newText = Myreplace(text.split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
-                                    // newText = newText.replace(/\\n/g, ' ')
-                                    // if (newText !== ',') {
                                     let newText = JSON.parse(text).message || ''
                                     if (newChats3[current][i].content) {
                                         newChats3[current][i].content += newText
@@ -369,9 +296,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
 
                                 } else {
                                     for (let a = 0; a < count; a++) {
-                                        // let newText = Myreplace(text.split('}')[a].split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
-                                        // newText = newText.replace(/\\n/g, ' ')
-                                        // if (newText !== ',') {
                                         let newText = JSON.parse('{' + Myreplace(text.split('}')[a], ['{', '}']) + '}').message || ''
                                         if (newChats3[current][i].content) {
                                             newChats3[current][i].content += newText
@@ -397,7 +321,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                         return streamReader.read().then(processResult);
                     });
                 }
-
             })
             .catch(e => {
                 message.warning('please login again!', 1)
@@ -405,17 +328,14 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                     ;
             }
             );
-
     }
     //清空一个
     const RefreshOne = () => {
         let newChats = copyArr(chats)
-        // let newText = copyArr(text)
         newChats[current] = []
-        // newText[current] = []
         setChats(newChats)
-        // setText(newText)
     }
+    //对话
     const addPeoplechat = () => {
         setShowStopBtn(true)
         //处理终止按钮
@@ -478,9 +398,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                     if (text.includes('message') && text.includes('messageType')) {
                                         let count = text.split('}').length
                                         if (count === 2) {
-                                            // let newText = Myreplace(text.split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
-                                            // newText = newText.replace(/\\n/g, ' ')
-                                            // if (newText !== ',') {
                                             let newText = JSON.parse(text).message || ''
                                             if (newChats3[newChats3.length - 1][1].content) {
                                                 newChats3[newChats3.length - 1][1].content += newText
@@ -490,9 +407,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                             // }
                                         } else {
                                             for (let i = 0; i < count; i++) {
-                                                // let newText = Myreplace(text.split('}')[i].split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
-                                                // newText = newText.replace(/\\n/g, ' ')
-                                                // if (newText !== ',') {
                                                 let newText = JSON.parse('{' + Myreplace(text.split('}')[i], ['{', '}']) + '}').message || ''
                                                 if (newChats3[newChats3.length - 1][1].content) {
                                                     newChats3[newChats3.length - 1][1].content += newText
@@ -572,9 +486,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                     if (text.includes('message') && text.includes('messageType')) {
                                         let count = text.split('}').length
                                         if (count === 2) {
-                                            // let newText = Myreplace(text.split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
-                                            // newText = newText.replace(/\\n/g, ' ')
-                                            // if (newText !== ',') {
                                             let newText = JSON.parse(text).message || ''
                                             if (newChats3[current][length - 1].content) {
                                                 newChats3[current][length - 1].content += newText
@@ -586,9 +497,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                                         } else {
                                             for (let i = 0; i < count; i++) {
                                                 let newText = JSON.parse('{' + Myreplace(text.split('}')[i], ['{', '}']) + '}').message || ''
-                                                // let newText = Myreplace(text.split('}')[i].split(',"messageType"')[0], ['{', '}', '"', ':', 'message', 'messageType', '\n\r', '[\n\r]', '\n', 'endtrue'])
-                                                // newText = newText.replace(/\\n/g, ' ')
-                                                // if (newText !== ',') {
                                                 if (newChats3[current][length - 1].content) {
                                                     newChats3[current][length - 1].content += newText
                                                 } else {
@@ -626,29 +534,24 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
             }
         }
     }
+    //增加新会话
     const addNewChat = () => {
         let newChats = copyArr(chats)
-        newChats.push([])
+        newChats.unshift([])
         setChats(newChats)
-        // let newText = copyArr(text)
-        // newText.push([])
-        // setText(newText)
     }
+    //删除会话
     const DeleteChat = (index) => {
         let newChats = []
-        let newText = []
         for (let i = 0; i < chats.length; i++) {
             if (i !== index) {
                 let temp = copyArr(chats[i])
                 newChats.push(temp)
-                // let temp1 = copyArr(text[i])
-                // newText.push(temp1)
             }
         }
         setChats(newChats)
-        setText(newText)
-
     }
+    //监听input框回车
     const handleKeyDown = (e) => {
         if (e.keyCode === 13) {
             addPeoplechat()
@@ -697,20 +600,22 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
 
         }).catch(e => { message.warning('Error'); })
     }
+    //监听current
     useEffect(() => {
         setMyCurrent(current)
     }, [current])
+    //滑到底部
     useEffect(() => {
-        if (main.current) {
-            setTimeout(() => {
+        setTimeout(() => {
+            if (main.current) {
                 main.current.scroll({
                     top: 1000000000,
                     behavior: 'smooth'
                 });
-            }, 1)
-
-        }
+            }
+        }, 1)
     }, [chats])
+    //监听左侧删除会话
     useEffect(() => {
         if (deleteNumber >= 0) {
             DeleteChat(deleteNumber)
@@ -721,19 +626,21 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
             setDeleteNumber(-1)
         }
     }, [deleteNumber])
+    //监听增加会话
     useEffect(() => {
         if (list >= chats.length) {
             addNewChat()
         }
     }, [list, current])
+    //监听左侧db文字映射输入框
     useEffect(() => {
         if (addText) {
             peopleInput.current.value += addText
             setAddText('')
         }
     }, [addText])
+    //复制
     const [copied, setCopied] = useState(false);
-
     const handleCopy = () => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1000);
@@ -761,9 +668,8 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
             </Modal>
             <div ref={main} className='RightMain-main '>
                 <ul>
-                    {chats[myCurrent]?.map((v, i) => {
+                    {chats[myCurrent] ? chats[myCurrent].map((v, i) => {
                         return (v.who === 'ai' ? <li key={i} className='RightMain-chatli RightMain-aichat'><img className='RightMain-aichat-head' src={head2} alt="" /><div className='RightMain-aichat-content'>
-                            {/* <div className='RightMain-aichat-content-start'>{text[myCurrent] ? text[myCurrent][(i - 1) / 2] : ''}</div> */}
                             <div className='RightMain-aichat-content-content'>
                                 {/* coy ,funky,okaidia,solarizedlight */}
                                 {v.content ? <div className='RightMain-aichat-content-typeCopy' style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -781,9 +687,6 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                             {v.table && v.table[0] ? <><Table pagination={{ total: v.table[2] }} onChange={(pagination) => execute(i, v.content, pagination.current, pagination.pageSize)}
                                 columns={v.table[0].map((v, i) => {
                                     v.render = (v) => (
-                                        // <Tooltip placement="topLeft" title={v}>
-                                        //     {v}
-                                        // </Tooltip>
                                         <div style={{ width: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} onDoubleClick={() => Modal.info({
                                             width: 1000,
                                             closable: true,
@@ -804,7 +707,7 @@ export default function RightMain({ setDbDisabled, setUploadAndRefresh, setName,
                         </div></li> :
                             <li key={i} className='RightMain-chatli RightMain-peoplechat'><div className='RightMain-peoplechat-content'>{v.content}</div><img src={head1} alt="" className='RightMain-peoplechat-head' /></li>)
 
-                    })}
+                    }) : ''}
                 </ul>
             </div>
             <div className='RightMain-bottom'>

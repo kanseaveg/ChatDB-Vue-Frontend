@@ -28,7 +28,7 @@ const getParentKey = (key, tree) => {
     }
     return parentKey;
 };
-export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAndRefresh, setAddFirstChat, current, name, setName, setCurrent, setDeleteNumber, list, setList, setAddText, addFirstChat, setDataSourceId, setRefresh }) {
+export default function LeftSidebar({ setLock, dbDisabled, uploadAndRefresh, setUploadAndRefresh, setAddFirstChat, current, name, setName, setCurrent, setDeleteNumber, list, setList, setAddText, addFirstChat, setDataSourceId, setRefresh }) {
     const [chat, setChat] = useState([])
     const navigate = useNavigate();
     const [heightChange, setHeightChange] = useState(0)
@@ -38,7 +38,6 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
     const [dbValue, setDbValue] = useState();
     const token = localStorage.getItem('token')
     const userId = localStorage.getItem('userId')
-
     const line = useRef()
     const [defaultData, setDefaultData] = useState([]);
     const [dataList, setDataList] = useState([]);
@@ -47,7 +46,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
     const [canSendCode, setCanSendCode] = useState([true, 30])
     const [firstTreeName, setFirstTreeName] = useState('')
     const [deleteFlag, setDeleteFlag] = useState(false)
-    //选择
+    //选择会话
     const handleSelete = (i) => {
         let lis = document.querySelectorAll('.LeftSidebar-chats-Li')
         for (let i = 0; i < lis.length; i++) {
@@ -58,36 +57,82 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
             li.className += ' LeftSidebar-chats-seletedLi'
         }
     }
-    //命名
+    //右侧命名会话
     useEffect(() => {
         if (name && name.value) {
-            let newChats = copyArr(chat)
-            newChats[current].name = name.value || ''
-            if (name.chatId) {
-                newChats[current].chatId = name.chatId
-            }
-            if (name.db) {
-                newChats[current].db = name.db
-            }
-            setName('')
-            setChat(newChats)
+            let current = parseInt(localStorage.getItem('current'))
+            axios({
+                headers: {
+                    'Content-Type': 'application/json',
+                    "Authorization": token
+                },
+                method: 'POST',
+                url: `${URL}/api/chat/updateinfo`,
+                data: {
+                    userId, chatId: name.chatId || chat[current].chatId, title: name.value || chat[current].name, dbName: chat[current].db.db
+                }
+            }).then(res => {
+                if (res.data.code === 200) {
+                    let newChats = copyArr(chat)
+                    newChats[current].name = name.value || ''
+                    if (name.chatId) {
+                        newChats[current].chatId = name.chatId
+                    }
+                    if (name.db) {
+                        newChats[current].db = name.db
+                    }
+                    setName('')
+                    setChat(newChats)
+                } else {
+                    message.success(res.data.data || res.data.msg)
+                }
+            }).catch(e => { })
+
         }
     }, [name])
     //历史记录
     useEffect(() => {
         init()
-        let chat = JSON.parse(localStorage.getItem('chat'))
-        if (chat && chat.length !== 0) {
-            setChat(chat)
-            setTheme(localStorage.getItem('theme'))
-            let db = chat[parseInt(localStorage.getItem('current'))].db
-            setDbValue(db.title)
-            getTableData(db.db)
-            setFirstTreeName(db.title)
-            setDataSourceId(db.db)
-            localStorage.setItem('db', JSON.stringify(db))
-        }
-        //获取个人信息
+        // let chat = JSON.parse(localStorage.getItem('chat'))
+        // if (chat && chat.length !== 0) {
+        //     setChat(chat)
+
+        // }
+        axios({
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": token
+            },
+            method: 'GET',
+            url: `${URL}/api/chat/listinfo?userId=${localStorage.getItem('userId')}`,
+        }).then(res => {
+            if (res.data.code === 200) {
+                let data = res.data.data
+                let initChat = []
+                data.map((v) => {
+                    initChat.unshift({ chatId: v.chatId, name: v.title, db: { db: v.dbName, title: v.dbName && v.dbName.includes('$') ? v.dbName.split('$')[1] : v.dbName } })
+                })
+                setChat(initChat)
+                setTheme(localStorage.getItem('theme'))
+                if (initChat.length > 0) {
+                    let db = initChat[0].db
+                    setDbValue(db.title)
+                    getTableData(db.db)
+                    setDataSourceId(db.db)
+                    localStorage.setItem('db', JSON.stringify(db))
+                    setList(initChat.length - 1)
+                    setCurrent(0)
+                }
+                setLock(false)
+            } else {
+                message.warning(res.data.msg)
+            }
+        }).catch(e => {
+            message.warning('please login again', 1);
+            navigate('/login')
+        })
+    }, [])
+    const getUserInfo = () => {
         axios({
             headers: {
                 'Content-Type': 'application/json',
@@ -109,7 +154,8 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
             message.warning('please login again', 1);
             navigate('/login')
         })
-    }, [])
+    }
+    //存localstorage
     useEffect(() => {
         localStorage.setItem('chat', JSON.stringify(chat))
         localStorage.setItem('theme', theme)
@@ -120,12 +166,25 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
         setIsModalOpen1(true);
     };
     const handleOk1 = () => {
-        let newChat = []
-        setChat(newChat)
-        setCurrent(-1)
-        setList(-1)
-        setRefresh(true)
-        setIsModalOpen1(false);
+        axios({
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": token
+            },
+            method: 'GET',
+            url: `${URL}/api/chat/clearinfo?userId=${userId}`,
+        }).then(res => {
+            if (res.data.code === 200) {
+                let newChat = []
+                setChat(newChat)
+                setCurrent(-1)
+                setList(-1)
+                setRefresh(true)
+                setIsModalOpen1(false);
+            } else {
+                message.warning(res.data.msg)
+            }
+        }).catch(e => { })
     };
     const handleCancel1 = () => {
         setIsModalOpen1(false);
@@ -157,15 +216,10 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
             },
             url: `${URL}/api/userinfo/update`,
         }).then(res => {
-            if (res.data.code === 200) {
+            if (res.data.code != 200) {
                 message.success(res.data.data || res.data.msg)
-            } else {
-                message.warning(res.data.msg)
             }
-        }).catch(e => {
-
-            message.warning('Error'); navigate('/login')
-        })
+        }).catch(e => { })
     }
     const Chinese = { title: '个人信息', username: '用户名', email: '邮箱*', phone: '手机号码', language: '语言', save: '保存', chinese: '简体中文', english: '英文', choose: '选择语言', password: '密码' }
     const English = { title: 'User Information', username: 'Username', email: 'Email*', phone: 'Phone-number', language: 'Language', save: 'Save', chinese: 'Chinese', english: 'English', choose: 'choose language', password: 'Password' }
@@ -265,8 +319,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
         }).then(res => {
         }).catch(e => { })
         navigate('/login')
-        localStorage.removeItem('userId');
-        localStorage.removeItem('token');
+        localStorage.clear()
     }
     //新增会话
     const addNewChat = (db) => {
@@ -274,15 +327,34 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
         if (chat.length <= 19) {
             let chats = copyArr(chat)
             const chatId = uuidv4();
-            chats.push({ name: 'New chat', chatId, db })
-            setChat(chats)
-            setList(list + 1)
-            setCurrent(chats.length - 1)
+            axios({
+                headers: {
+                    'Content-Type': 'application/json',
+                    "Authorization": token
+                },
+                method: 'POST',
+                url: `${URL}/api/chat/saveinfo`,
+                data: {
+                    userId, chatId, title: 'New chat', dbName: db.db
+                }
+            }).then(res => {
+                if (res.data.code === 200) {
+                    chats.unshift({ name: 'New chat', chatId, db })
+                    setChat(chats)
+                    setList(list + 1)
+                    setCurrent(0)
+                } else {
+                    message.warning(res.data.data || res.data.msg)
+                }
+
+            }).catch(e => { })
+
         } else {
             message.warning('会话个数受到限制')
         }
 
     }
+    //current改变切换会话和db
     useEffect(() => {
         if (current >= 0 || deleteFlag) {
             setDeleteFlag(false)
@@ -297,16 +369,6 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
             })
         }
     }, [current, deleteFlag])
-    //确认名字
-    // const handleConfirmName = (e) => {
-    //     if (e.keyCode === 13) {
-    //         setHide(true)
-    //         let chats = copyArr(chat)
-    //         chats.push('new Chat')
-    //         setChat(chats)
-    //         e.target.value = ''
-    //     }
-    // }
     //修改名字
     const changeReapir = (i) => {
         let repairs = copyArr(repair)
@@ -320,34 +382,68 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
             setRepair(repairs)
             let chats = copyArr(chat)
             chats[i].name = node ? node.target.value : e.target.value
-            setChat(chats)
+            axios({
+                headers: {
+                    'Content-Type': 'application/json',
+                    "Authorization": token
+                },
+                method: 'POST',
+                url: `${URL}/api/chat/updateinfo`,
+                data: {
+                    userId, chatId: chats[i].chatId, title: chats[i].name, dbName: chats[i].db.db
+                }
+            }).then(res => {
+                if (res.data.code === 200) {
+                    setChat(chats)
+                } else {
+                    message.warning(res.data.data || res.data.msg)
+                }
+
+            }).catch(e => { })
         }
     }
     //删除会话
     const deleteChat = (j) => {
         let chats = []
         let i = 0;
-        for (i; i < chat.length; i++) {
-            if (i !== j) {
-                chats.push(chat[i])
+        axios({
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": token
+            },
+            method: 'POST',
+            url: `${URL}/api/chat/deleteinfo`,
+            data: {
+                userId, chatId: chat[j].chatId
             }
-        }
-        if (j <= current) {
-            if (current - 1 === -1 && list !== 0) {
-                setCurrent(0)
-                setDeleteFlag(true)
+        }).then(res => {
+            if (res.data.code === 200) {
+                for (i; i < chat.length; i++) {
+                    if (i !== j) {
+                        chats.push(chat[i])
+                    }
+                }
+                if (j <= current) {
+                    if (current - 1 === -1 && list !== 0) {
+                        setCurrent(0)
+                        setDeleteFlag(true)
+                    } else {
+                        setCurrent(current - 1)
+                    }
+                }
+                setChat(chats)
+                setDeleteNumber(j)
+                setList(list - 1)
             } else {
-                setCurrent(current - 1)
+                message.warning(res.data.msg)
             }
-        }
-        setChat(chats)
-        setDeleteNumber(j)
-        setList(list - 1)
+        }).catch(e => { })
     }
-    //根据数据库获取行泪资料
+    //选择db，判断是否切换
     const handleSelect = (value, node, extra) => {
         if (node.db !== JSON.parse(localStorage.getItem('db')).db) {
             setDataSourceId(node.db)
+            setDbValue(node.title)
             getTableData(node.db)
             addNewChat(node)
             localStorage.setItem('db', JSON.stringify(node))
@@ -415,7 +511,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                     })
                 })
                 setTreeData(treeData)
-                if (!parseInt(localStorage.getItem('current')) || parseInt(localStorage.getItem('current')) === -1) {
+                if ((!parseInt(localStorage.getItem('current')) && parseInt(localStorage.getItem('current')) !== 0) || parseInt(localStorage.getItem('current')) === -1) {
                     localStorage.setItem('db', JSON.stringify(treeData[0]))
                     getTableData(res.data.data[0])
                     setFirstTreeName(treeData[0].title)
@@ -439,7 +535,6 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
     useEffect(() => {
         if (uploadAndRefresh) {
             getDBTreeData(1)
-
             setUploadAndRefresh(false)
         }
     }, [uploadAndRefresh])
@@ -482,6 +577,8 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
         }
         //获取dbtree
         getDBTreeData()
+        //获取用户信息
+        getUserInfo()
 
     }
 
@@ -543,18 +640,36 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
     //增加第一个会话
     useEffect(() => {
         if (addFirstChat && addFirstChat.value) {
-            // setHide(true)
-            setList(list + 1)
-            let chats = copyArr(chat)
-            chats.push({ name: addFirstChat.value, chatId: addFirstChat.chatId, db: addFirstChat.db })
-            setChat(chats)
-            setCurrent(chats.length - 1)
-            setAddFirstChat('')
+            axios({
+                headers: {
+                    'Content-Type': 'application/json',
+                    "Authorization": token
+                },
+                method: 'POST',
+                url: `${URL}/api/chat/saveinfo`,
+                data: {
+                    userId, chatId: addFirstChat.chatId, title: addFirstChat.value, dbName: addFirstChat.db.db
+                }
+            }).then(res => {
+                if (res.data.code === 200) {
+                    setList(list + 1)
+                    let chats = copyArr(chat)
+                    chats.push({ name: addFirstChat.value, chatId: addFirstChat.chatId, db: addFirstChat.db })
+                    setChat(chats)
+                    setCurrent(chats.length - 1)
+                    setAddFirstChat('')
+                } else {
+                    message.warning(res.data.data || res.data.msg)
+                }
+
+            }).catch(e => { })
+
         }
     }, [addFirstChat])
 
     return (
         <div className='LeftSidebar'>
+            {dbDisabled ? <div onClick={() => { message.warning('please wait for the response', 1) }} style={{ position: 'absolute', zIndex: "1", left: 0, top: 0, width: '100%', height: "100vh", background: "rgba(0,0,0,.1)" }}></div> : ''}
             <Modal title="清空所有对话" open={isModalOpen1} onOk={handleOk1} onCancel={handleCancel1}>
                 <p>是否清空所有对话？</p>
             </Modal>
@@ -671,9 +786,7 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                         return (<li className='LeftSidebar-chats-Li' key={i}><CommentOutlined />&nbsp;&nbsp;&nbsp;&nbsp;{repair[i] ? <input type="text" onBlur={(e) => handleRepair({ keyCode: 13 }, i, e)} onKeyDown={(e) => handleRepair(e, i)} style={{ margin: '0' }} className='newChatInput' /> : <div onClick={() => setCurrent(i)} className='LeftSidebar-chats-name'> {v.name}</div>}&nbsp;&nbsp;&nbsp;&nbsp;<EditOutlined onClick={() => changeReapir(i)} />&nbsp;&nbsp;&nbsp;&nbsp;<DeleteOutlined onClick={() => deleteChat(i)} /></li>)
                     }) : ''}
                 </ul>
-                {/* <div className={hide ? 'hidden' : 'newChatInputDiv'}><input onKeyDown={handleConfirmName} type="text" className='newChatInput' placeholder='title of chat' /></div> */}
                 {chat.length === 0 ? '' : <div onClick={showModal1} className='LeftSidebar-top-deteleAll'><DeleteOutlined />&nbsp;&nbsp; Clear conversations</div>}
-                {/* <div className='LeftSidebar-introduction'>Welcome you to use chatDb,Now you can have a try to add new chat. </div> */}
             </div>
             <div ref={line} className='LeftSidebar-line'></div>
             <div className='LeftSidebar-bottom' style={{ height: `calc(58vh - 75px - ${heightChange}px)` }}>
@@ -714,7 +827,6 @@ export default function LeftSidebar({ dbDisabled, uploadAndRefresh, setUploadAnd
                             treeData={treeData2}
                         />
                     </div>
-                    {/* <div className='LeftSidebar-introduction'>You can choose db to get some correspondingly message</div> */}
                 </div>
                 <div className='LeftSidebar-bottom-userInfo'>
                     <img className='LeftSidebar-bottom-head' src={userHead} alt="" />
