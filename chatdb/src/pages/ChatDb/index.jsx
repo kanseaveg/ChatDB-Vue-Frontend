@@ -15,7 +15,7 @@ export default function ChatDb() {
     const [uploadAndRefresh, setUploadAndRefresh] = useState(false)
     const [dbDisabled, setDbDisabled] = useState(false)
     const [lock, setLock] = useState(true)
-
+    const [changeModel, setChangeModel] = useState({ type: -1, add: false })
     // useEffect(() => {
     //     let list = parseInt(localStorage.getItem('list'))
     //     let current = parseInt(localStorage.getItem('current'))
@@ -33,8 +33,8 @@ export default function ChatDb() {
     }, [current, list])
     return (
         <div className='ChatDb'>
-            <LeftSidebar setLock={setLock} dbDisabled={dbDisabled} uploadAndRefresh={uploadAndRefresh} setUploadAndRefresh={setUploadAndRefresh} name={name} setName={setName} setRefresh={setRefresh} setDataSourceId={setDataSourceId} addFirstChat={addFirstChat} setAddFirstChat={setAddFirstChat} setAddText={setAddText} list={list} setList={setList} setCurrent={setCurrent} current={current} setDeleteNumber={setDeleteNumber}></LeftSidebar>
-            <RightMain lock={lock} setLock={setLock} setAddText={setAddText} setDbDisabled={setDbDisabled} setUploadAndRefresh={setUploadAndRefresh} setName={setName} setDeleteNumber={setDeleteNumber} setRefresh={setRefresh} refresh={refresh} dataSourceId={dataSourceId} setAddFirstChat={setAddFirstChat} setCurrent={setCurrent} addText={addText} list={list} current={current} deleteNumber={deleteNumber}></RightMain>
+            <LeftSidebar changeModel={changeModel} setChangeModel={setChangeModel} setLock={setLock} dbDisabled={dbDisabled} uploadAndRefresh={uploadAndRefresh} setUploadAndRefresh={setUploadAndRefresh} name={name} setName={setName} setRefresh={setRefresh} setDataSourceId={setDataSourceId} addFirstChat={addFirstChat} setAddFirstChat={setAddFirstChat} setAddText={setAddText} list={list} setList={setList} setCurrent={setCurrent} current={current} setDeleteNumber={setDeleteNumber}></LeftSidebar>
+            <RightMain changeModel={changeModel} setChangeModel={setChangeModel} lock={lock} setLock={setLock} setAddText={setAddText} setDbDisabled={setDbDisabled} setUploadAndRefresh={setUploadAndRefresh} setName={setName} setDeleteNumber={setDeleteNumber} setRefresh={setRefresh} refresh={refresh} dataSourceId={dataSourceId} setAddFirstChat={setAddFirstChat} setCurrent={setCurrent} addText={addText} list={list} current={current} deleteNumber={deleteNumber}></RightMain>
         </div>
     )
 }

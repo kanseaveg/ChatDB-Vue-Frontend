@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react'
 import './index.scss'
 import temp from '../../logo.svg'
-import { LikeOutlined, DislikeOutlined, CopyOutlined, UploadOutlined, PauseCircleOutlined, FileOutlined, SendOutlined, DeleteOutlined, DoubleRightOutlined, RedoOutlined, SmallDashOutlined } from '@ant-design/icons';
+import { DownloadOutlined, LikeOutlined, DislikeOutlined, CopyOutlined, UploadOutlined, PauseCircleOutlined, FileOutlined, SendOutlined, DeleteOutlined, DoubleRightOutlined, RedoOutlined, SmallDashOutlined } from '@ant-design/icons';
 import axios from 'axios'
 import { copyArr, Myreplace } from '../../utils/func'
 import { message, Upload } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { Space, Table, Tag, Modal, Tooltip, Button, Spin } from 'antd';
+import { Table, Tag, Modal, Tooltip, Button, Spin, Popconfirm, Select } from 'antd';
 import head1 from '../../assests/images/head1.png'
 import head2 from '../../assests/images/head2.png'
 import { v4 as uuidv4 } from "uuid"
@@ -15,7 +15,8 @@ import { docco, github, monokai, tomorrow } from "react-syntax-highlighter/dist/
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import URL from '../../env.js'
 import Introduce from '../Introduce'
-export default function RightMain({ lock, setLock, setDbDisabled, setUploadAndRefresh, setName, current, setDeleteNumber, deleteNumber, list, addText, setAddText, setCurrent, setAddFirstChat, dataSourceId, setRefresh, refresh }) {
+import html2canvas from 'html2canvas';
+export default function RightMain({ changeModel, setChangeModel, lock, setLock, setDbDisabled, setUploadAndRefresh, setName, current, setDeleteNumber, deleteNumber, list, addText, setAddText, setCurrent, setAddFirstChat, dataSourceId, setRefresh, refresh }) {
     const [chats, setChats] = useState([])
     const navigate = useNavigate();
     const [myCurrent, setMyCurrent] = useState(0)
@@ -35,7 +36,7 @@ export default function RightMain({ lock, setLock, setDbDisabled, setUploadAndRe
             userId
         },
         showUploadList: false,
-        accept: '.xlsx,.xls,.csv',
+        accept: '.xlsx,.xls,.csv,.sql',
         onChange(info, event) {
             setLoading(true)
             if (info.file.status !== 'uploading') {
@@ -129,18 +130,17 @@ export default function RightMain({ lock, setLock, setDbDisabled, setUploadAndRe
         setShowStopBtn(false)
     }
     //提供反馈
-    const [isModalOpen1, setIsModalOpen1] = useState(false);
+    const [isModalOpen1, setIsModalOpen1] = useState({ flag: false });
     const FeedbackSql = useRef()
     const Feedback = useRef()
-    const showModal1 = () => {
-        setIsModalOpen1(true);
+    const showModal1 = (i) => {
+        setIsModalOpen1({ flag: true, i: i });
     };
-    const feedback = (goldenSql, feedbackDescription, likeFlag) => {
+    const feedback = (i, goldenSql, feedbackDescription, likeFlag) => {
         const chatId = JSON.parse(localStorage.getItem('chat'))[current].chatId
         const db = JSON.parse(localStorage.getItem('chat'))[current].db.db
-        let length = JSON.parse(localStorage.getItem('chats'))[current].length
-        const question = JSON.parse(localStorage.getItem('chats'))[current][length - 2].content
-        const currentSql = JSON.parse(localStorage.getItem('chats'))[current][length - 1].content
+        const question = JSON.parse(localStorage.getItem('chats'))[current][i - 1].content
+        const currentSql = JSON.parse(localStorage.getItem('chats'))[current][i].content
         axios({
             headers: {
                 'Content-Type': 'application/json',
@@ -155,7 +155,7 @@ export default function RightMain({ lock, setLock, setDbDisabled, setUploadAndRe
             if (res.data.code === 200) {
                 setIsModalOpen1(false);
                 let data = copyArr(chats)
-                data[current][data[current].length - 1].feedback = { flag: likeFlag }
+                data[current][i].feedback = { flag: likeFlag }
                 setChats(data)
                 if (Feedback.current && FeedbackSql.current) {
                     Feedback.current.value = ''
@@ -167,13 +167,13 @@ export default function RightMain({ lock, setLock, setDbDisabled, setUploadAndRe
             }
         }).catch(e => { })
     }
-    const handleOk1 = () => {
+    const handleOk1 = (i) => {
         const goldenSql = FeedbackSql.current.value || ''
         const feedbackDescription = Feedback.current.value || ''
-        feedback(goldenSql, feedbackDescription, false)
+        feedback(i, goldenSql, feedbackDescription, false)
     };
     const handleCancel1 = () => {
-        setIsModalOpen1(false);
+        setIsModalOpen1({ flag: false });
     };
     //清空对话
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -262,7 +262,8 @@ export default function RightMain({ lock, setLock, setDbDisabled, setUploadAndRe
         newChats[current][i] = { who: 'ai', finish: false }
         setChats(newChats)
         let value = encodeURIComponent(newChats[current][i - 1].content)
-        fetch(`${URL}/api/chat/query?question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&re=1`, {
+        let modelType = parseInt(localStorage.getItem('model')) || 2
+        fetch(`${URL}/api/chat/query?modelType=${modelType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&re=1`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -368,9 +369,9 @@ export default function RightMain({ lock, setLock, setDbDisabled, setUploadAndRe
                 peopleInput.current.value = ''
                 let newChats = copyArr(chats)
                 newChats[newChats.length - 1].push({ who: 'ai' })
-
                 setChats(newChats)
-                fetch(`${URL}/api/chat/query?question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}`, {
+                let modelType = parseInt(localStorage.getItem('model')) || 2
+                fetch(`${URL}/api/chat/query?modelType=${modelType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -460,7 +461,8 @@ export default function RightMain({ lock, setLock, setDbDisabled, setUploadAndRe
                 let newChats1 = copyArr(newChats)
                 newChats1[current].push({ who: 'ai' })
                 setChats(newChats1)
-                fetch(`${URL}/api/chat/query?question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}`, {
+                let modelType = parseInt(localStorage.getItem('model')) || 2
+                fetch(`${URL}/api/chat/query?modelType=${modelType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -614,7 +616,7 @@ export default function RightMain({ lock, setLock, setDbDisabled, setUploadAndRe
                 });
             }
         }, 1)
-    }, [chats])
+    }, [chats.length, chats[current]?.length])
     //监听左侧删除会话
     useEffect(() => {
         if (deleteNumber >= 0) {
@@ -645,6 +647,33 @@ export default function RightMain({ lock, setLock, setDbDisabled, setUploadAndRe
         setCopied(true);
         setTimeout(() => setCopied(false), 1000);
     };
+    //导出聊天记录
+    const exportHistory = () => {
+        if (main.current) {
+            html2canvas(main.current.children[0]).then(canvas => {
+                // 创建一个链接，并将 Canvas 转换为 Blob 对象
+                const link = document.createElement('a');
+                link.download = 'screenshot.png';
+                canvas.toBlob(blob => {
+                    // 创建一个 Blob URL，并将其作为链接的 href 属性
+                    const url = window.URL.createObjectURL(blob);
+                    link.href = url;
+                    // 模拟点击链接，导出 PNG 文件
+                    link.click();
+                    // 释放 Blob URL
+                    window.URL.revokeObjectURL(url);
+                }, 'image/png');
+            });
+        }
+
+    }
+    //切换语言模型
+    const modelChange = (value) => {
+        if (value !== changeModel.type) {
+            localStorage.setItem('model', value)
+            setChangeModel({ type: value, add: true })
+        }
+    }
     return (
         <div className='RightMain '>
             {loading ? <div style={{ position: 'absolute', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: "1", width: '100%', height: "100%", background: 'rgba(255,255,255,.8)' }}><Spin size="large">
@@ -656,16 +685,39 @@ export default function RightMain({ lock, setLock, setDbDisabled, setUploadAndRe
             </Modal>
             <Modal
                 footer={[
-                    <Button key="submit" type="primary" onClick={handleOk1}>
+                    <Button key="submit" type="primary" onClick={() => handleOk1(isModalOpen1.i)}>
                         Submit feedback
                     </Button>,
                 ]}
                 title={<div style={{ display: 'flex', alignItems: 'center', fontWeight: 400 }}><div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgb(254, 226, 226)', width: '40px', height: '40px', borderRadius: '20px' }}>
                     <DislikeOutlined style={{ color: 'rgba(255,0,0,.5)', fontSize: '23px', }} /></div> &nbsp;&nbsp; Provide additional feedback</div>}
-                open={isModalOpen1} onOk={handleOk1} onCancel={handleCancel1}>
+                open={isModalOpen1.flag} onCancel={handleCancel1}>
                 <input ref={FeedbackSql} maxLength='255' placeholder='Enter an appropriate golden SQL statement that you think is suitable.' className='RightMain-feedbacksql' style={{ width: '100%' }} type="text" name="" id="" />
                 <textarea ref={Feedback} maxLength='255' placeholder='Please give us the reason why you choose it as your golden SQL.' className='RightMain-feedback' style={{ width: '100%' }} type="text" name="" id="" />
             </Modal>
+            <div className='RightTopModel'>
+                <Select
+                    defaultValue={0}
+                    style={{
+                        width: 320,
+                    }}
+                    value={!changeModel || !changeModel.type || changeModel.type === -1 ? 2 : changeModel.type}
+                    bordered={false}
+                    showArrow={false}
+                    onChange={modelChange}
+                    options={[
+                        {
+                            value: 1,
+                            label: <div style={{ textAlign: 'center' }}>单轮对话模型</div>,
+                        },
+                        {
+                            value: 2,
+                            label: <div style={{ textAlign: 'center' }}>多轮对话模型</div>,
+                        },
+
+                    ]}
+                />
+            </div>
             <div ref={main} className='RightMain-main '>
                 <ul>
                     {chats[myCurrent] ? chats[myCurrent].map((v, i) => {
@@ -681,9 +733,12 @@ export default function RightMain({ lock, setLock, setDbDisabled, setUploadAndRe
                                 <SyntaxHighlighter language='sql' style={docco}>
                                     {v.content}
                                 </SyntaxHighlighter>
-                                {i === chats[myCurrent].length - 1 && v.finish ? <div className='RightMain-aichat-content-tool'><Tooltip placement="rightTop" title={<div >执行SQL</div>}><DoubleRightOutlined onClick={() => execute(i, v.content, 1, 10)} /></Tooltip><Tooltip placement="rightTop" title='重新生成SQL'><RedoOutlined onClick={() => reProduct(i)} /></Tooltip>
-                                    {v.feedback ? v.feedback.flag ? <LikeOutlined className='feedbackSelete' /> : <DislikeOutlined className='feedbackSelete' />
-                                        : <><LikeOutlined onClick={() => feedback('', '', true)} /><DislikeOutlined onClick={showModal1} /></>} </div> : ''}</div>
+                                {v.finish ?
+                                    <div className='RightMain-aichat-content-tool'>
+                                        <Tooltip placement="rightTop" title={<div >执行SQL</div>}><DoubleRightOutlined onClick={() => execute(i, v.content, 1, 10)} /></Tooltip>
+                                        {i === chats[myCurrent].length - 1 ? <Tooltip placement="rightTop" title='重新生成SQL'><RedoOutlined onClick={() => reProduct(i)} /></Tooltip> : ''}
+                                        {v.feedback ? v.feedback.flag ? <LikeOutlined className='feedbackSelete' /> : <DislikeOutlined className='feedbackSelete' />
+                                            : <><LikeOutlined onClick={() => feedback(i, '', '', true)} /><DislikeOutlined onClick={() => showModal1(i)} /></>} </div> : ''}</div>
                             {v.table && v.table[0] ? <><Table pagination={{ total: v.table[2] }} onChange={(pagination) => execute(i, v.content, pagination.current, pagination.pageSize)}
                                 columns={v.table[0].map((v, i) => {
                                     v.render = (v) => (
@@ -715,9 +770,17 @@ export default function RightMain({ lock, setLock, setDbDisabled, setUploadAndRe
                     <div className='RightMain-bottom-stopBtn'><Button onClick={stopResponding} className='RightMain-bottom-stopButton' style={{ background: 'rgb(242, 201, 125)!important' }}><PauseCircleOutlined style={{ color: 'white' }} />  Stop Responding</Button></div>
                     : ''}
                 <DeleteOutlined onClick={showModal} className='RightMain-bottom-delete' />
-                <Upload {...props}>
-                    <Button className='RightMain-bottom-upload' icon={<UploadOutlined />}></Button>
-                </Upload>
+                <Tooltip placement="top" title='上传数据库'>
+                    <Upload {...props}>
+                        <Button className='RightMain-bottom-upload' icon={<UploadOutlined />}></Button>
+                    </Upload></Tooltip>
+                <Popconfirm
+                    title="导出聊天记录"
+                    description="您确定要导出聊天记录吗?"
+                    onConfirm={exportHistory}
+                    okText="Yes"
+                    cancelText="No"
+                ><DownloadOutlined className='RightMain-bottom-downlaod' /></Popconfirm>
                 <div className='input'><input placeholder='Ask anything about your Database!' disabled={showStopBtn} onKeyDown={handleKeyDown} ref={peopleInput} type="text" /><SendOutlined onClick={addPeoplechat} style={{ marginLeft: "-40px" }} /></div></div>
         </div>
     )

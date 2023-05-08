@@ -28,7 +28,7 @@ const getParentKey = (key, tree) => {
     }
     return parentKey;
 };
-export default function LeftSidebar({ setLock, dbDisabled, uploadAndRefresh, setUploadAndRefresh, setAddFirstChat, current, name, setName, setCurrent, setDeleteNumber, list, setList, setAddText, addFirstChat, setDataSourceId, setRefresh }) {
+export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDisabled, uploadAndRefresh, setUploadAndRefresh, setAddFirstChat, current, name, setName, setCurrent, setDeleteNumber, list, setList, setAddText, addFirstChat, setDataSourceId, setRefresh }) {
     const [chat, setChat] = useState([])
     const navigate = useNavigate();
     const [heightChange, setHeightChange] = useState(0)
@@ -48,6 +48,10 @@ export default function LeftSidebar({ setLock, dbDisabled, uploadAndRefresh, set
     const [deleteFlag, setDeleteFlag] = useState(false)
     //选择会话
     const handleSelete = (i) => {
+        console.log(chat[i].modelType, chat, i);
+        localStorage.setItem('model', chat[i].modelType)
+        let add = changeModel.add
+        setChangeModel({ type: chat[i].modelType, add })
         let lis = document.querySelectorAll('.LeftSidebar-chats-Li')
         for (let i = 0; i < lis.length; i++) {
             lis[i].className = 'LeftSidebar-chats-Li'
@@ -110,7 +114,7 @@ export default function LeftSidebar({ setLock, dbDisabled, uploadAndRefresh, set
                 let data = res.data.data
                 let initChat = []
                 data.map((v) => {
-                    initChat.unshift({ chatId: v.chatId, name: v.title, db: { db: v.dbName, title: v.dbName && v.dbName.includes('$') ? v.dbName.split('$')[1] : v.dbName } })
+                    initChat.unshift({ chatId: v.chatId, modelType: v.modelType, name: v.title, db: { db: v.dbName, title: v.dbName && v.dbName.includes('$') ? v.dbName.split('$')[1] : v.dbName } })
                 })
                 setChat(initChat)
                 setTheme(localStorage.getItem('theme'))
@@ -199,7 +203,7 @@ export default function LeftSidebar({ setLock, dbDisabled, uploadAndRefresh, set
     const handleCancel2 = () => {
         setIsModalOpen2(false);
 
-    };
+    }
     const onFinishUserInfo = ({ phone, username, email, password, emailCode }) => {
         axios({
             headers: {
@@ -322,7 +326,7 @@ export default function LeftSidebar({ setLock, dbDisabled, uploadAndRefresh, set
         localStorage.clear()
     }
     //新增会话
-    const addNewChat = (db) => {
+    const addNewChat = (db, modelType = parseInt(localStorage.getItem('model'))) => {
         // setHide(false)
         if (chat.length <= 19) {
             let chats = copyArr(chat)
@@ -335,11 +339,11 @@ export default function LeftSidebar({ setLock, dbDisabled, uploadAndRefresh, set
                 method: 'POST',
                 url: `${URL}/api/chat/saveinfo`,
                 data: {
-                    userId, chatId, title: 'New chat', dbName: db.db
+                    userId, chatId, title: 'New chat', dbName: db.db, modelType: modelType || 2
                 }
             }).then(res => {
                 if (res.data.code === 200) {
-                    chats.unshift({ name: 'New chat', chatId, db })
+                    chats.unshift({ name: 'New chat', chatId, db, modelType })
                     setChat(chats)
                     setList(list + 1)
                     setCurrent(0)
@@ -538,7 +542,7 @@ export default function LeftSidebar({ setLock, dbDisabled, uploadAndRefresh, set
             setUploadAndRefresh(false)
         }
     }, [uploadAndRefresh])
-    //中间线
+    //中间线 获取db 设置model
     const init = () => {
         //监听鼠标拖动
         if (line) {
@@ -579,7 +583,6 @@ export default function LeftSidebar({ setLock, dbDisabled, uploadAndRefresh, set
         getDBTreeData()
         //获取用户信息
         getUserInfo()
-
     }
 
 
@@ -666,7 +669,15 @@ export default function LeftSidebar({ setLock, dbDisabled, uploadAndRefresh, set
 
         }
     }, [addFirstChat])
-
+    //切换模型增加会话
+    useEffect(() => {
+        if (changeModel.type !== -1 && changeModel.add) {
+            let db = JSON.parse(localStorage.getItem('db'))
+            addNewChat(db, changeModel.type)
+            let type = changeModel.type
+            setChangeModel({ type: type, add: false })
+        }
+    }, [changeModel.add])
     return (
         <div className='LeftSidebar'>
             {dbDisabled ? <div onClick={() => { message.warning('please wait for the response', 1) }} style={{ position: 'absolute', zIndex: "1", left: 0, top: 0, width: '100%', height: "100vh", background: "rgba(0,0,0,.1)" }}></div> : ''}
