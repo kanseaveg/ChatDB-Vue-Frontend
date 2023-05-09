@@ -85,6 +85,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                     if (name.db) {
                         newChats[current].db = name.db
                     }
+                    newChats[current].save = true
                     newChats[current].modelType = modelType || 2
                     setName('')
                     setChat(newChats)
@@ -388,38 +389,58 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
     const deleteChat = (j) => {
         let chats = []
         let i = 0;
-        axios({
-            headers: {
-                'Content-Type': 'application/json',
-                "Authorization": token
-            },
-            method: 'POST',
-            url: `${URL}/api/chat/deleteinfo`,
-            data: {
-                userId, chatId: chat[j].chatId
-            }
-        }).then(res => {
-            if (res.data.code === 200) {
-                for (i; i < chat.length; i++) {
-                    if (i !== j) {
-                        chats.push(chat[i])
-                    }
+        if (chat[j].save) {
+            axios({
+                headers: {
+                    'Content-Type': 'application/json',
+                    "Authorization": token
+                },
+                method: 'POST',
+                url: `${URL}/api/chat/deleteinfo`,
+                data: {
+                    userId, chatId: chat[j].chatId
                 }
-                if (j <= current) {
-                    if (current - 1 === -1 && list !== 0) {
-                        setCurrent(0)
-                        setDeleteFlag(true)
-                    } else {
-                        setCurrent(current - 1)
+            }).then(res => {
+                if (res.data.code === 200) {
+                    for (i; i < chat.length; i++) {
+                        if (i !== j) {
+                            chats.push(chat[i])
+                        }
                     }
+                    if (j <= current) {
+                        if (current - 1 === -1 && list !== 0) {
+                            setCurrent(0)
+                            setDeleteFlag(true)
+                        } else {
+                            setCurrent(current - 1)
+                        }
+                    }
+                    setChat(chats)
+                    setDeleteNumber(j)
+                    setList(list - 1)
+                } else {
+                    message.warning(res.data.msg)
                 }
-                setChat(chats)
-                setDeleteNumber(j)
-                setList(list - 1)
-            } else {
-                message.warning(res.data.msg)
+            }).catch(e => { })
+        } else {
+            for (i; i < chat.length; i++) {
+                if (i !== j) {
+                    chats.push(chat[i])
+                }
             }
-        }).catch(e => { })
+            if (j <= current) {
+                if (current - 1 === -1 && list !== 0) {
+                    setCurrent(0)
+                    setDeleteFlag(true)
+                } else {
+                    setCurrent(current - 1)
+                }
+            }
+            setChat(chats)
+            setDeleteNumber(j)
+            setList(list - 1)
+        }
+
     }
     //选择db，判断是否切换
     const handleSelect = (value, node, extra) => {
@@ -638,7 +659,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                 if (res.data.code === 200) {
                     setList(list + 1)
                     let chats = copyArr(chat)
-                    chats.push({ modelType: modelType || 2, name: addFirstChat.value, chatId: addFirstChat.chatId, db: addFirstChat.db })
+                    chats.push({ modelType: modelType || 2, name: addFirstChat.value, chatId: addFirstChat.chatId, db: addFirstChat.db, save: true })
                     setChat(chats)
                     setCurrent(chats.length - 1)
                     setAddFirstChat('')

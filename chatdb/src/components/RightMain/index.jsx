@@ -670,9 +670,6 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
             setChangeModel({ type: value, add: true })
         }
     }
-    useEffect(() => {
-        console.log(changeModel);
-    }, [changeModel])
     const [save, setSave] = useState(false)
     useEffect(() => {
         let chat = JSON.parse(localStorage.getItem('chat'))
