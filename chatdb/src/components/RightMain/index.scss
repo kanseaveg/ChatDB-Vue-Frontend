@@ -81,6 +81,17 @@
     font-family: normal;
 }
 
+.ant-select-item-option-selected {
+    background-color: var(--primary-color) !important;
+}
+
+.ant-select-item-option-selected::after {
+    content: '✓';
+    position: absolute;
+    top: 5px;
+    right: 20px;
+}
+
 .RightMain {
     position: relative;
     width: calc(98vw - 250px);
@@ -90,26 +101,48 @@
     color: rgba(36, 36, 36, );
     transition: all .3s;
 
-    .RightTopModel {
-        width: calc(98vw - 250px);
-        height: 30px;
-        z-index: 5;
-        position: fixed;
-        display: flex;
-        top: 1vh;
-        background: var(--primary-color1);
-        justify-content: center;
-        align-items: center;
+    .ant-select-selection-item {
+        padding-top: 25px !important;
+
+
+    }
+
+    .ant-select-selection-item::before {
+        position: absolute;
+        top: 0;
+        left: 0;
+        content: 'Model'
     }
 
 
-    .RightMain-main {
-        padding: 20px 2vw;
 
+    .ant-select-selector {
+        height: 60px !important;
+    }
+
+    .RightTopModel {
+        width: calc(98vw - 250px);
+        // height: 40px;
+        z-index: 5;
+        margin-top: 0px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: var(--third-color2);
+    }
+
+    .modelDisabled {
+        background: var(--primary1-color);
+    }
+
+    .RightMain-main {
+        padding: 5px 2vw;
         width: 100%;
         height: calc(98vh - 75px);
         overflow: auto;
         background: var(--primary-color);
+
+
 
         .RightMain-chatli {
             width: 100%;
@@ -250,6 +283,7 @@
         bottom: 0;
         width: 100%;
         height: 75px;
+        z-index: 5;
 
         .RightMain-bottom-stopBtn {
             position: absolute;
@@ -305,7 +339,7 @@
                 height: 60px;
                 border-radius: 5px;
                 min-width: 800px;
-                width: calc(98vw - 400px);
+                width: calc(98vw - 500px);
                 font-size: 20px;
                 transition: all .3s;
                 padding-left: 20px;

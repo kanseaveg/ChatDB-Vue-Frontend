@@ -48,7 +48,6 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
     const [deleteFlag, setDeleteFlag] = useState(false)
     //选择会话
     const handleSelete = (i) => {
-        console.log(chat[i].modelType, chat, i);
         localStorage.setItem('model', chat[i].modelType)
         let add = changeModel.add
         setChangeModel({ type: chat[i].modelType, add })
@@ -65,15 +64,16 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
     useEffect(() => {
         if (name && name.value) {
             let current = parseInt(localStorage.getItem('current'))
+            let modelType = parseInt(localStorage.getItem('model')) || 2
             axios({
                 headers: {
                     'Content-Type': 'application/json',
                     "Authorization": token
                 },
                 method: 'POST',
-                url: `${URL}/api/chat/updateinfo`,
+                url: `${URL}/api/chat/${chat[current].save ? 'updateinfo' : 'saveinfo'}`,
                 data: {
-                    userId, chatId: name.chatId || chat[current].chatId, title: name.value || chat[current].name, dbName: chat[current].db.db
+                    modelType, userId, chatId: name.chatId || chat[current].chatId, title: name.value || chat[current].name, dbName: chat[current].db.db
                 }
             }).then(res => {
                 if (res.data.code === 200) {
@@ -85,6 +85,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                     if (name.db) {
                         newChats[current].db = name.db
                     }
+                    newChats[current].modelType = modelType || 2
                     setName('')
                     setChat(newChats)
                 } else {
@@ -97,11 +98,6 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
     //历史记录
     useEffect(() => {
         init()
-        // let chat = JSON.parse(localStorage.getItem('chat'))
-        // if (chat && chat.length !== 0) {
-        //     setChat(chat)
-
-        // }
         axios({
             headers: {
                 'Content-Type': 'application/json',
@@ -114,7 +110,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                 let data = res.data.data
                 let initChat = []
                 data.map((v) => {
-                    initChat.unshift({ chatId: v.chatId, modelType: v.modelType, name: v.title, db: { db: v.dbName, title: v.dbName && v.dbName.includes('$') ? v.dbName.split('$')[1] : v.dbName } })
+                    initChat.unshift({ chatId: v.chatId, modelType: v.modelType, save: true, name: v.title, db: { db: v.dbName, title: v.dbName && v.dbName.includes('$') ? v.dbName.split('$')[1] : v.dbName, } })
                 })
                 setChat(initChat)
                 setTheme(localStorage.getItem('theme'))
@@ -326,33 +322,15 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
         localStorage.clear()
     }
     //新增会话
-    const addNewChat = (db, modelType = parseInt(localStorage.getItem('model'))) => {
+    const addNewChat = (db) => {
         // setHide(false)
         if (chat.length <= 19) {
             let chats = copyArr(chat)
             const chatId = uuidv4();
-            axios({
-                headers: {
-                    'Content-Type': 'application/json',
-                    "Authorization": token
-                },
-                method: 'POST',
-                url: `${URL}/api/chat/saveinfo`,
-                data: {
-                    userId, chatId, title: 'New chat', dbName: db.db, modelType: modelType || 2
-                }
-            }).then(res => {
-                if (res.data.code === 200) {
-                    chats.unshift({ name: 'New chat', chatId, db, modelType })
-                    setChat(chats)
-                    setList(list + 1)
-                    setCurrent(0)
-                } else {
-                    message.warning(res.data.data || res.data.msg)
-                }
-
-            }).catch(e => { })
-
+            chats.unshift({ name: 'New chat', chatId, db })
+            setChat(chats)
+            setList(list + 1)
+            setCurrent(0)
         } else {
             message.warning('会话个数受到限制')
         }
@@ -583,6 +561,8 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
         getDBTreeData()
         //获取用户信息
         getUserInfo()
+        //设置model
+        localStorage.setItem('model', 2)
     }
 
 
@@ -643,6 +623,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
     //增加第一个会话
     useEffect(() => {
         if (addFirstChat && addFirstChat.value) {
+            let modelType = parseInt(localStorage.getItem('model'))
             axios({
                 headers: {
                     'Content-Type': 'application/json',
@@ -651,13 +632,13 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                 method: 'POST',
                 url: `${URL}/api/chat/saveinfo`,
                 data: {
-                    userId, chatId: addFirstChat.chatId, title: addFirstChat.value, dbName: addFirstChat.db.db
+                    modelType: modelType || 2, userId, chatId: addFirstChat.chatId, title: addFirstChat.value, dbName: addFirstChat.db.db
                 }
             }).then(res => {
                 if (res.data.code === 200) {
                     setList(list + 1)
                     let chats = copyArr(chat)
-                    chats.push({ name: addFirstChat.value, chatId: addFirstChat.chatId, db: addFirstChat.db })
+                    chats.push({ modelType: modelType || 2, name: addFirstChat.value, chatId: addFirstChat.chatId, db: addFirstChat.db })
                     setChat(chats)
                     setCurrent(chats.length - 1)
                     setAddFirstChat('')
@@ -669,15 +650,6 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
 
         }
     }, [addFirstChat])
-    //切换模型增加会话
-    useEffect(() => {
-        if (changeModel.type !== -1 && changeModel.add) {
-            let db = JSON.parse(localStorage.getItem('db'))
-            addNewChat(db, changeModel.type)
-            let type = changeModel.type
-            setChangeModel({ type: type, add: false })
-        }
-    }, [changeModel.add])
     return (
         <div className='LeftSidebar'>
             {dbDisabled ? <div onClick={() => { message.warning('please wait for the response', 1) }} style={{ position: 'absolute', zIndex: "1", left: 0, top: 0, width: '100%', height: "100vh", background: "rgba(0,0,0,.1)" }}></div> : ''}

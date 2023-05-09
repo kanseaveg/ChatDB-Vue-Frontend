@@ -69,10 +69,6 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
     }, [showStopBtn])
     //历史记录local
     useEffect(() => {
-        // let Chats = JSON.parse(localStorage.getItem('chats'))
-        // if (Chats && Chats.length !== 0) {
-        //     setChats(Chats)
-        // }
         let chat = JSON.parse(localStorage.getItem('chat'))
         if (!lock) {
             if (chat && chat.length > 0) {
@@ -263,7 +259,7 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
         setChats(newChats)
         let value = encodeURIComponent(newChats[current][i - 1].content)
         let modelType = parseInt(localStorage.getItem('model')) || 2
-        fetch(`${URL}/api/chat/query?modelType=${modelType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&re=1`, {
+        fetch(`${URL}/api/chat/query?type=${modelType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&re=1`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -371,7 +367,7 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                 newChats[newChats.length - 1].push({ who: 'ai' })
                 setChats(newChats)
                 let modelType = parseInt(localStorage.getItem('model')) || 2
-                fetch(`${URL}/api/chat/query?modelType=${modelType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}`, {
+                fetch(`${URL}/api/chat/query?type=${modelType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -462,7 +458,7 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                 newChats1[current].push({ who: 'ai' })
                 setChats(newChats1)
                 let modelType = parseInt(localStorage.getItem('model')) || 2
-                fetch(`${URL}/api/chat/query?modelType=${modelType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}`, {
+                fetch(`${URL}/api/chat/query?type=${modelType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -674,11 +670,46 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
             setChangeModel({ type: value, add: true })
         }
     }
+    useEffect(() => {
+        console.log(changeModel);
+    }, [changeModel])
+    const [save, setSave] = useState(false)
+    useEffect(() => {
+        let chat = JSON.parse(localStorage.getItem('chat'))
+        if (chat && chat[current]) {
+            setSave(chat[current].save ? true : false)
+        } else {
+            setSave(false)
+        }
+    }, [localStorage.getItem('current'), localStorage.getItem('chat')])
     return (
         <div className='RightMain '>
-            {loading ? <div style={{ position: 'absolute', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: "1", width: '100%', height: "100%", background: 'rgba(255,255,255,.8)' }}><Spin size="large">
+            {loading ? <div style={{ position: 'absolute', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: "100", width: '100%', height: "100%", background: 'rgba(255,255,255,.8)' }}><Spin size="large">
                 <div className="content" />
             </Spin></div> : ''}
+            <div className={(chats[myCurrent] && chats[myCurrent].length !== 0) || save ? 'RightTopModel modelDisabled' : 'RightTopModel'} >
+                {(chats[myCurrent] && chats[myCurrent].length !== 0) || save ?
+                    parseInt(localStorage.getItem('model')) === 1 ? '单轮对话模型' : '多轮对话模型'
+                    : <Select
+                        defaultValue={0}
+                        style={{
+                            width: 250,
+                        }}
+                        value={!changeModel || !changeModel.type || changeModel.type === -1 ? 2 : changeModel.type}
+                        onChange={modelChange}
+                        options={[
+                            {
+                                value: 2,
+                                label: <div >Default(多轮对话模型)</div>,
+                            },
+                            {
+                                value: 1,
+                                label: <div >单轮对话模型</div>,
+                            },
+                        ]}
+                    />}
+
+            </div>
             {myCurrent === -1 || (chats[myCurrent] && chats[myCurrent].length) === 0 ? <Introduce myCurrent={myCurrent} setAddText={setAddText} /> : ''}
             <Modal title="清空对话" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
                 <p>是否清空对话？</p>
@@ -695,30 +726,9 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                 <input ref={FeedbackSql} maxLength='255' placeholder='Enter an appropriate golden SQL statement that you think is suitable.' className='RightMain-feedbacksql' style={{ width: '100%' }} type="text" name="" id="" />
                 <textarea ref={Feedback} maxLength='255' placeholder='Please give us the reason why you choose it as your golden SQL.' className='RightMain-feedback' style={{ width: '100%' }} type="text" name="" id="" />
             </Modal>
-            <div className='RightTopModel'>
-                <Select
-                    defaultValue={0}
-                    style={{
-                        width: 320,
-                    }}
-                    value={!changeModel || !changeModel.type || changeModel.type === -1 ? 2 : changeModel.type}
-                    bordered={false}
-                    showArrow={false}
-                    onChange={modelChange}
-                    options={[
-                        {
-                            value: 1,
-                            label: <div style={{ textAlign: 'center' }}>单轮对话模型</div>,
-                        },
-                        {
-                            value: 2,
-                            label: <div style={{ textAlign: 'center' }}>多轮对话模型</div>,
-                        },
 
-                    ]}
-                />
-            </div>
             <div ref={main} className='RightMain-main '>
+
                 <ul>
                     {chats[myCurrent] ? chats[myCurrent].map((v, i) => {
                         return (v.who === 'ai' ? <li key={i} className='RightMain-chatli RightMain-aichat'><img className='RightMain-aichat-head' src={head2} alt="" /><div className='RightMain-aichat-content'>
