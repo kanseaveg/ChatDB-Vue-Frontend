@@ -699,10 +699,10 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                                 value: 2,
                                 label: <div >Default(多轮对话模型)</div>,
                             },
-                            {
-                                value: 1,
-                                label: <div >单轮对话模型</div>,
-                            },
+                            // {
+                            //     value: 1,
+                            //     label: <div >单轮对话模型</div>,
+                            // },
                         ]}
                     />}
 
