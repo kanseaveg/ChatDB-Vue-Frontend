@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react'
-import { LinkOutlined, DoubleRightOutlined, SolutionOutlined, CommentOutlined, EditOutlined, DeleteOutlined, TableOutlined, SettingOutlined, LogoutOutlined, BulbOutlined } from '@ant-design/icons';
+import { LinkOutlined, DoubleRightOutlined, SolutionOutlined, CommentOutlined, RollbackOutlined, EditOutlined, DeleteOutlined, TableOutlined, SettingOutlined, LogoutOutlined, BulbOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import userHead from '../../assests/images/head1.png'
 import { TreeSelect, Input, Tree, message, Modal, Form, Button, Select, Radio } from 'antd';
@@ -49,15 +49,32 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
     const [dbType, setDbType] = useState(1);
     const [links, setLinks] = useState([])
     const [isChooseLink, setIsChooseLink] = useState(false)
-    //监听dbtype变化获取db
+    //监听dbtype变化获取db type=3是远程库第一次刷新
     const dbTypeChange = (e, type) => {
         let dbType = e.target ? e.target.value : e
         setDbType(dbType);
         if (dbType === 3) {
             localStorage.setItem('dbType', dbType)
-            getLinks()
+            let flag = false
+            if (chat[current] && chat[current].save && type !== 1) {//type===1为选择会话
+                addNewChat()
+                flag = true
+            }
+            if (type !== 3) {
+                getLinks().then(data => {
+                    if (!chat[current].save || flag) {
+                        setIsChooseLink(false)
+                    } else {//选择了其它已保存的远程数据源的会话
+                        setIsChooseLink(true)
+                        let linkData = data.filter(v => v.connectId === chat[current].connectId);
+                        handleChooseLink(linkData[0], chat[current].db.db)
+                    }
+                })
+            }
+
         } else {
             localStorage.setItem('dbType', dbType)
+            localStorage.removeItem('connectId')
             if (type === 1) {
                 getDBTreeData(3)
             } else if (type === 2) {
@@ -70,25 +87,82 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
     };
     //获取远程数据源
     const getLinks = () => {
+        return new Promise((resolve, reject) => {
+            axios({
+                headers: {
+                    'Content-Type': 'application/json',
+                    "Authorization": token
+                },
+                method: 'GET',
+                url: `${URL}/api/db/connect/getConnections?userId=${userId}`,
+            })
+                .then(response => {
+                    if (response.data.code === 200) {
+                        let data = response.data.data;
+                        setLinks(data);
+                        resolve(data); // 将数据传递给 Promise 的解析函数
+                    } else {
+                        message.success(response.data.data || response.data.msg);
+                        reject(response.data.data || response.data.msg); // 将错误信息传递给 Promise 的拒绝函数
+                    }
+                })
+                .catch(error => {
+                    reject(error); // 将错误信息传递给 Promise 的拒绝函数
+                });
+        });
+    };
+    //删除远程数据源
+    const deleteLink = (connectId) => {
         axios({
             headers: {
                 'Content-Type': 'application/json',
                 "Authorization": token
             },
-            method: 'GET',
-            url: `${URL}/api/db/connect/getConnections?userId=${userId}`,
+            method: 'DELETE',
+            url: `${URL}/api/db/connect/delete?userId=${userId}&connectId=${connectId}`,
         }).then(res => {
             if (res.data.code === 200) {
-                console.log(res);
-                let data = res.data.data
-                setLinks(data)
+                getLinks()
             } else {
                 message.success(res.data.data || res.data.msg)
             }
-        }).catch(e => { })
+        }).catch(e => { console.log(e); })
+
+    }
+    //选择远程数据源
+    const handleChooseLink = (linkdata, initDB) => {
+        setIsChooseLink(true)
+        localStorage.setItem('connectId', linkdata.connectId)
+        let db = linkdata.dblist.split(',')
+        let treeData = []
+        db.map((v, i) => {
+            treeData.push({
+                title: v,
+                value: v + i + Math.random() * 1000,
+                db: v
+            })
+        })
+        let first = initDB ? initDB : db[0]
+        setDbValue(first)
+        setTreeData(treeData)
+        getTableData(first)
+        localStorage.setItem('db', JSON.stringify({ db: first, title: first }))
+        setDataSourceId(first)
+        setFirstTreeName(first)
+
+    }
+    //重新选择数据源
+    const handleBack = () => {
+        setIsChooseLink(false)
+        if (chat[current].save) {
+            addNewChat()
+        }
     }
     //选择会话
     const handleSelete = (i) => {
+        if (chat[i].dbType === 3) {
+            setIsChooseLink(true)
+        }
         localStorage.setItem('model', chat[i].modelType)
         let add = changeModel.add
         setChangeModel({ type: chat[i].modelType, add })
@@ -108,6 +182,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
             let modelType = parseInt(localStorage.getItem('model')) || 2
             let dbType = parseInt(localStorage.getItem('dbType'))
             let db = JSON.parse(localStorage.getItem("db"))
+            let connectId = chat[current].connectId || localStorage.getItem('connectId')
             axios({
                 headers: {
                     'Content-Type': 'application/json',
@@ -116,7 +191,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                 method: 'POST',
                 url: `${URL}/api/chat/${chat[current].save ? 'updateinfo' : 'saveinfo'}`,
                 data: {
-                    dbType, modelType, userId, chatId: name.chatId || chat[current].chatId, title: name.value || chat[current].name, dbName: db.db
+                    connectId: connectId, dbType, modelType, userId, chatId: name.chatId || chat[current].chatId, title: name.value || chat[current].name, dbName: db.db
                 }
             }).then(res => {
                 if (res.data.code === 200) {
@@ -129,6 +204,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                     newChats[current].save = true
                     newChats[current].modelType = modelType || 2
                     newChats[current].dbType = dbType || 1
+                    newChats[current].connectId = connectId
                     setName('')
                     setChat(newChats)
                 } else {
@@ -153,7 +229,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                 let data = res.data.data
                 let initChat = []
                 data.map((v) => {
-                    initChat.unshift({ dbType: v.dbType, chatId: v.chatId, modelType: v.modelType, save: true, name: v.title, db: { db: v.dbName, title: v.dbName && v.dbName.includes('$') ? v.dbName.split('$')[1] : v.dbName, } })
+                    initChat.unshift({ connectId: v.connectId, dbType: v.dbType, chatId: v.chatId, modelType: v.modelType, save: true, name: v.title, db: { db: v.dbName, title: v.dbName && v.dbName.includes('$') ? v.dbName.split('$')[1] : v.dbName, } })
                 })
                 setChat(initChat)
                 setTheme(localStorage.getItem('theme'))
@@ -162,12 +238,21 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                     let db = initChat[0].db
                     localStorage.setItem('db', JSON.stringify(db))
                     setDbValue(db.title)
-                    getTableData(db.db)
                     setDataSourceId(db.db)
-
-                    dbTypeChange(initChat[0].dbType, 2)
                     setList(initChat.length - 1)
                     setCurrent(0)
+                    if (initChat[0].dbType === 3) {
+                        dbTypeChange(initChat[0].dbType, 3)
+                        setIsChooseLink(true)
+                        getLinks().then(data => {
+                            let linkData = data.filter(v => v.connectId === initChat[0].connectId);
+                            handleChooseLink(linkData[0], db.db)
+
+                        })
+                    } else {
+                        dbTypeChange(initChat[0].dbType, 2)
+                        getTableData(db.db)
+                    }
                 } else {
                     //获取dbtree
                     getDBTreeData()
@@ -235,7 +320,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                 message.warning(res.data.data || res.data.msg)
                 navigate('/login')
             }
-        }).catch(e => { })
+        }).catch(e => { message.warning(e.response?.data?.data); navigate('/login') })
     };
     const handleCancel1 = () => {
         setIsModalOpen1(false);
@@ -382,7 +467,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
         localStorage.clear()
     }
     //新增会话
-    const addNewChat = (db) => {
+    const addNewChat = () => {
         // setHide(false)
         if (chat.length <= 19) {
             let chats = copyArr(chat)
@@ -402,14 +487,23 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
             setDeleteFlag(false)
             handleSelete(current)
             if (chat[current].dbType === dbType || !chat[current].dbType) {
-                treeData.map((v, i) => {
-                    if (chat[current].db && chat[current].db.db === v.db) {
-                        setDbValue(v.title)
-                        getTableData(v.db)
-                        setDataSourceId(v.db)
-                        localStorage.setItem('db', JSON.stringify(chat[current].db))
-                    }
-                })
+                if (dbType !== 3) {
+                    treeData.map((v, i) => {
+                        if (chat[current].db && chat[current].db.db === v.db) {
+                            setDbValue(v.title)
+                            getTableData(v.db)
+                            setDataSourceId(v.db)
+                            localStorage.setItem('db', JSON.stringify(chat[current].db))
+                        }
+                    })
+                } else {
+                    let db = chat[current].db
+                    getLinks().then(data => {
+                        let linkData = data.filter(v => v.connectId === chat[current].connectId);
+                        handleChooseLink(linkData[0], db.db)
+                    })
+                }
+
             } else {
                 dbTypeChange(chat[current].dbType, 1)
             }
@@ -513,7 +607,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
             setDbValue(node.title)
             getTableData(node.db)
             if (chat[current] && chat[current].save) {
-                addNewChat(node)
+                addNewChat()
             }
             localStorage.setItem('db', JSON.stringify(node))
         }
@@ -525,13 +619,17 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
     //获取每个数据库的行列
     const getTableData = (dbname) => {
         let DBType = parseInt(localStorage.getItem('dbType'))
+        let connectId
+        if (DBType === 3) {
+            connectId = localStorage.getItem('connectId')
+        }
         axios({
             headers: {
                 'Content-Type': 'application/json',
                 "Authorization": token
             },
             method: 'GET',
-            url: `${URL}/api/db/schema?userId=${userId}&dbname=${dbname}&DBType=${DBType}`,
+            url: `${URL}/api/db/schema?userId=${userId}&dbname=${dbname}&DBType=${DBType}&connectId=${connectId}`,
         }).then(res => {
             if (res.data.code === 200) {
                 let data = res.data.data
@@ -590,7 +688,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                     }
                     setFirstTreeName(treeData[0].title)
                     if (chat[current] && chat[current].save) {
-                        addNewChat(treeData[0])
+                        addNewChat()
                     }
                 }
                 if (which === 3) {
@@ -616,7 +714,9 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
     //上传后刷新数据库
     useEffect(() => {
         if (uploadAndRefresh) {
-            getDBTreeData(2)
+            if (parseInt(localStorage.getItem('dbType')) === 2) {
+                getDBTreeData(2)
+            }
             setUploadAndRefresh(false)
         }
     }, [uploadAndRefresh])
@@ -727,6 +827,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
         if (addFirstChat && addFirstChat.value) {
             let modelType = parseInt(localStorage.getItem('model'))
             let dbType = parseInt(localStorage.getItem('dbType'))
+            let connectId = dbType === 3 ? localStorage.getItem('connectId') : ''
             axios({
                 headers: {
                     'Content-Type': 'application/json',
@@ -735,13 +836,13 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                 method: 'POST',
                 url: `${URL}/api/chat/saveinfo`,
                 data: {
-                    modelType: modelType || 2, userId, chatId: addFirstChat.chatId, title: addFirstChat.value, dbName: addFirstChat.db.db, dbType
+                    connectId, modelType: modelType || 2, userId, chatId: addFirstChat.chatId, title: addFirstChat.value, dbName: addFirstChat.db.db, dbType
                 }
             }).then(res => {
                 if (res.data.code === 200) {
                     setList(list + 1)
                     let chats = copyArr(chat)
-                    chats.push({ dbType, modelType: modelType || 2, name: addFirstChat.value, chatId: addFirstChat.chatId, db: addFirstChat.db, save: true })
+                    chats.push({ connectId, dbType, modelType: modelType || 2, name: addFirstChat.value, chatId: addFirstChat.chatId, db: addFirstChat.db, save: true })
                     setChat(chats)
                     setCurrent(chats.length - 1)
                     setAddFirstChat('')
@@ -867,10 +968,10 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                 </Form>
             </Modal>
             <Modal title="Create Connection" footer={null} open={isModalOpen3} onCancel={handleCancel3}>
-                <RemoteDB handleCancel3={handleCancel3}></RemoteDB>
+                <RemoteDB getLinks={getLinks} handleCancel3={handleCancel3}></RemoteDB>
             </Modal>
             <div className='LeftSidebar-top' style={{ height: `calc(40vh + ${heightChange}px)` }}>
-                <div onClick={() => addNewChat(JSON.parse(localStorage.getItem('db')))} className='LeftSidebar-addNewChat'>+ &nbsp;&nbsp;New chat</div>
+                <div onClick={() => addNewChat()} className='LeftSidebar-addNewChat'>+ &nbsp;&nbsp;New chat</div>
                 <ul className='LeftSidebar-chats'>
                     {chat.length !== 0 ? chat.map((v, i) => {
                         return (<li className='LeftSidebar-chats-Li' key={i}><CommentOutlined />&nbsp;&nbsp;&nbsp;&nbsp;{repair[i] ? <input type="text" onBlur={(e) => handleRepair({ keyCode: 13 }, i, e)} onKeyDown={(e) => handleRepair(e, i)} style={{ margin: '0' }} className='newChatInput' /> : <div onClick={() => setCurrent(i)} className='LeftSidebar-chats-name'> {v.name}</div>}&nbsp;&nbsp;&nbsp;&nbsp;
@@ -890,9 +991,9 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                     {dbType === 3 && !isChooseLink ?
                         <ul className='LeftSidebar-bottom-link'>
                             {links?.map((v, i) => {
-                                return (<li key={i}><div><LinkOutlined /> {v.host}</div><DeleteOutlined /></li>)
+                                return (<li key={i} onClick={() => handleChooseLink(v)}><div><LinkOutlined /> {v.title || v.host}</div><DeleteOutlined onClick={() => deleteLink(v.connectId)} /></li>)
                             })}
-                            <li > + 添加远程数据源</li>
+                            <li onClick={showModal3} > + 添加远程数据源</li>
                         </ul>
                         : <> <TreeSelect className='LeftSidebar-bottom-TreeSelect'
                             showSearch
@@ -932,7 +1033,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                                     autoExpandParent={autoExpandParent}
                                     treeData={treeData2}
                                 />
-                            </div></>}
+                            </div>{dbType === 3 ? <div onClick={handleBack} className='LeftSidebar-bottom-back'><RollbackOutlined />&nbsp;&nbsp;Choose other link</div> : ''}</>}
 
                 </div>
                 <div className='LeftSidebar-bottom-userInfo'>

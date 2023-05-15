@@ -217,6 +217,21 @@ input::placeholder {
             }
         }
 
+        .LeftSidebar-bottom-back {
+            display: flex;
+            padding: 10px;
+            height: 30px;
+            align-items: center;
+            justify-content: center;
+            transition: all .3s;
+        }
+
+        .LeftSidebar-bottom-back:hover {
+            cursor: pointer;
+            background: var(--third-color1);
+            color: var(--primary-color);
+        }
+
         .LeftSidebar-bottom-top::-webkit-scrollbar {
             width: 0;
         }

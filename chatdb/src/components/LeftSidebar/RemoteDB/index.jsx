@@ -5,7 +5,7 @@ import axios from 'axios'
 import URL from '../../../env.js'
 
 const { Option } = Select;
-const RemoteDB = ({ handleCancel3 }) => {
+const RemoteDB = ({ handleCancel3, getLinks }) => {
     const [form] = Form.useForm();
     const token = localStorage.getItem('token')
     const userId = localStorage.getItem('userId')
@@ -30,6 +30,7 @@ const RemoteDB = ({ handleCancel3 }) => {
             if (res.data.code === 200) {
                 message.success(res.data.msg)
                 handleCancel3()
+                getLinks()
             } else {
                 message.warning(res.data.data || res.data.msg)
             }
@@ -110,6 +111,13 @@ const RemoteDB = ({ handleCancel3 }) => {
                         <Option value="mysql">MySQL</Option>
                     </Select>
                 </Form.Item>
+                <Form.Item label="Title" name='title' rules={[
+                    {
+                        required: true,
+                    },
+                ]}>
+                    <Input placeholder="Connection title" />
+                </Form.Item>
                 <Form.Item label="Host" name='host' rules={[
                     {
                         required: true,
@@ -170,8 +178,10 @@ const RemoteDB = ({ handleCancel3 }) => {
                         options={options}
                         suffixIcon={null}
                     >
+
                     </Select>
                 </Form.Item>
+
                 <Form.Item wrapperCol={{ offset: 20 }}>
                     <Button loading={loading1} type='primary' htmlType="submit">Save</Button>
                 </Form.Item>

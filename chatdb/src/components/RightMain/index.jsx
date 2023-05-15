@@ -137,6 +137,7 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
         const db = JSON.parse(localStorage.getItem('chat'))[current].db.db
         const question = JSON.parse(localStorage.getItem('chats'))[current][i - 1].content
         const currentSql = JSON.parse(localStorage.getItem('chats'))[current][i].content
+        const dbType = parseInt(localStorage.getItem('dbType'))
         axios({
             headers: {
                 'Content-Type': 'application/json',
@@ -144,7 +145,7 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
             },
             method: 'POST',
             data: {
-                userId, chatId, db, question, currentSql, goldenSql, feedbackDescription, likeFlag
+                userId, chatId, db, question, currentSql, goldenSql, feedbackDescription, likeFlag, dbType, connectId: dbType === 3 ? localStorage.getItem('connectId') : ''
             },
             url: `${URL}/api/chat/feedback`,
         }).then(res => {
@@ -260,7 +261,11 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
         let value = encodeURIComponent(newChats[current][i - 1].content)
         let modelType = parseInt(localStorage.getItem('model')) || 2
         let DBType = parseInt(localStorage.getItem('dbType')) || 1
-        fetch(`${URL}/api/chat/query?DBType=${DBType}&type=${modelType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&re=1`, {
+        let connectId
+        if (DBType === 3) {
+            connectId = localStorage.getItem('connectId')
+        }
+        fetch(`${URL}/api/chat/query?connectId=${connectId}&userId=${userId}&chatId=${chatId}&re=1&DBType=${DBType}&type=${modelType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${DBType === 3 ? userId + '%23' + dataSourceId : dataSourceId}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -426,8 +431,8 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                 setChats(newChats)
                 let modelType = parseInt(localStorage.getItem('model')) || 2
                 let DBType = parseInt(localStorage.getItem('dbType')) || 1
-
-                fetch(`${URL}/api/chat/query?type=${modelType}&DBType=${DBType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}`, {
+                let connectId = localStorage.getItem('connectId')
+                fetch(`${URL}/api/chat/query?connectId=${connectId}&type=${modelType}&userId=${userId}&chatId=${chatId}&DBType=${DBType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${DBType === 3 ? userId + '%23' + dataSourceId : dataSourceId}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -519,8 +524,8 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                 setChats(newChats1)
                 let modelType = parseInt(localStorage.getItem('model')) || 2
                 let DBType = parseInt(localStorage.getItem('dbType')) || 1
-
-                fetch(`${URL}/api/chat/query?DBType=${DBType}&type=${modelType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}`, {
+                let connectId = localStorage.getItem('connectId')
+                fetch(`${URL}/api/chat/query?connectId=${connectId}&DBType=${DBType}&userId=${userId}&chatId=${chatId}&type=${modelType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${DBType === 3 ? userId + '%23' + dataSourceId : dataSourceId}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -614,11 +619,16 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
     //监听input框回车
     const handleKeyDown = (e) => {
         if (e.keyCode === 13) {
-            addPeoplechat()
+            if (parseInt(localStorage.getItem('dbType')) === 3 && !localStorage.getItem('connectId')) { message.warning('请先选择远程数据源') } else { addPeoplechat() }
         }
     }
     //下载文件
     const DownloadFile = (query, filetype) => {
+        let dbType = parseInt(localStorage.getItem('dbType'))
+        let connectId
+        if (dbType === 3) {
+            connectId = localStorage.getItem('connectId')
+        }
         axios({
             headers: {
                 'Content-Type': 'application/json',
@@ -627,7 +637,7 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
             method: 'POST',
             data: {
                 dbname: dataSourceId,
-                query, filetype, userId
+                query, filetype, userId, connectId
             },
             responseType: 'arraybuffer',
             url: `${URL}/api/db/export`,
@@ -851,7 +861,7 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                     okText="Yes"
                     cancelText="No"
                 ><DownloadOutlined className='RightMain-bottom-downlaod' /></Popconfirm>
-                <div className='input'><input placeholder='Ask anything about your Database!' disabled={showStopBtn} onKeyDown={handleKeyDown} ref={peopleInput} type="text" /><SendOutlined onClick={addPeoplechat} style={{ marginLeft: "-40px" }} /></div></div>
+                <div className='input'><input placeholder='Ask anything about your Database!' disabled={showStopBtn} onKeyDown={handleKeyDown} ref={peopleInput} type="text" /><SendOutlined onClick={() => { if (parseInt(localStorage.getItem('dbType')) === 3 && !localStorage.getItem('connectId')) { message.warning('请先选择远程数据源') } else { addPeoplechat() } }} style={{ marginLeft: "-40px" }} /></div></div>
         </div>
     )
 }
