@@ -1,0 +1,15 @@
+.remoteDB {
+    .ant-form-item {
+        margin-bottom: 10px !important;
+    }
+
+    input::placeholder {
+        font-weight: 400;
+        color: var(--third-color2) !important;
+        font-family: normal;
+    }
+}
+
+.anticon-check {
+    display: none !important;
+}

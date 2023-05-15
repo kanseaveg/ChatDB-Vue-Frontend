@@ -229,7 +229,8 @@
                             color: var(--secondary-color);
                         }
 
-                        svg: {
+                        svg {
+                            margin: -10px 0px !important;
                             transition: all .3s;
                         }
 

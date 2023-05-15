@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react'
 import './index.scss'
 import temp from '../../logo.svg'
-import { DownloadOutlined, LikeOutlined, DislikeOutlined, CopyOutlined, UploadOutlined, PauseCircleOutlined, FileOutlined, SendOutlined, DeleteOutlined, DoubleRightOutlined, RedoOutlined, SmallDashOutlined } from '@ant-design/icons';
+import { DownloadOutlined, LikeOutlined, DislikeOutlined, CopyOutlined, UploadOutlined, EditOutlined, PauseCircleOutlined, FileOutlined, SendOutlined, DeleteOutlined, DoubleRightOutlined, RedoOutlined, SmallDashOutlined } from '@ant-design/icons';
 import axios from 'axios'
 import { copyArr, Myreplace } from '../../utils/func'
 import { message, Upload } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { Table, Tag, Modal, Tooltip, Button, Spin, Popconfirm, Select } from 'antd';
+import { Table, Tag, Modal, Tooltip, Button, Spin, Popconfirm, Select, Input } from 'antd';
 import head1 from '../../assests/images/head1.png'
 import head2 from '../../assests/images/head2.png'
 import { v4 as uuidv4 } from "uuid"
@@ -259,7 +259,8 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
         setChats(newChats)
         let value = encodeURIComponent(newChats[current][i - 1].content)
         let modelType = parseInt(localStorage.getItem('model')) || 2
-        fetch(`${URL}/api/chat/query?type=${modelType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&re=1`, {
+        let DBType = parseInt(localStorage.getItem('dbType')) || 1
+        fetch(`${URL}/api/chat/query?DBType=${DBType}&type=${modelType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}&re=1`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -326,6 +327,63 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
             }
             );
     }
+    //编辑SQL
+    const edit = (i) => {
+        let value = chats[current][i].content
+        let sql = ''
+        Modal.confirm({
+            title: 'Edit SQL',
+            closable: true,
+            content: (
+                <div>
+                    <Input.TextArea style={{ width: '90%' }} onChange={(e) => { sql = e.target.value }} defaultValue={value} />
+                </div>
+            ),
+            onOk() {
+                if (!sql) {
+
+                } else {
+                    if (/^SELECT\s/i.test(sql)) {
+                        // SQL 语句符合 SELECT 语句的格式，可以执行
+                        let chatId = JSON.parse(localStorage.getItem('chat'))[current].chatId
+                        axios({
+                            headers: {
+                                'Content-Type': 'application/json',
+                                "Authorization": token
+                            },
+                            method: 'POST',
+                            data: {
+                                message: {
+                                    messageType: 'TEXT',
+                                    userType: 'DB',
+                                    message: sql
+                                },
+                                chatId,
+                                userId,
+                            },
+                            url: `${URL}/api/chat/updatehistory`,
+                        }).then(res => {
+                            if (res.data.code === 200) {
+                                message.success(res.data.msg)
+                                let newChats = copyArr(chats)
+                                newChats[current][i].content = sql
+                                setChats(newChats)
+                            } else {
+                                message.warning(res.data.data || res.data.msg)
+                            }
+                        }).catch((e) => {
+                            console.log(e);
+                            message.warning(e.response?.data?.data || e.response?.data?.msg)
+                        })
+                    } else {
+                        // SQL 语句不符合 SELECT 语句的格式，不允许执行
+                        message.warning('please check your sql')
+                    }
+                }
+
+            },
+        });
+    }
     //清空一个
     const RefreshOne = () => {
         let newChats = copyArr(chats)
@@ -367,7 +425,9 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                 newChats[newChats.length - 1].push({ who: 'ai' })
                 setChats(newChats)
                 let modelType = parseInt(localStorage.getItem('model')) || 2
-                fetch(`${URL}/api/chat/query?type=${modelType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}`, {
+                let DBType = parseInt(localStorage.getItem('dbType')) || 1
+
+                fetch(`${URL}/api/chat/query?type=${modelType}&DBType=${DBType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -458,7 +518,9 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                 newChats1[current].push({ who: 'ai' })
                 setChats(newChats1)
                 let modelType = parseInt(localStorage.getItem('model')) || 2
-                fetch(`${URL}/api/chat/query?type=${modelType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}`, {
+                let DBType = parseInt(localStorage.getItem('dbType')) || 1
+
+                fetch(`${URL}/api/chat/query?DBType=${DBType}&type=${modelType}&question=${encodeURIComponent(value).replace(/%25/g, '%2525')}&db=${dataSourceId}&userId=${userId}&chatId=${chatId}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -671,6 +733,7 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
         }
     }
     const [save, setSave] = useState(false)
+    //获取当前会话保存信息
     useEffect(() => {
         let chat = JSON.parse(localStorage.getItem('chat'))
         if (chat && chat[current]) {
@@ -743,7 +806,7 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                                 {v.finish ?
                                     <div className='RightMain-aichat-content-tool'>
                                         <Tooltip placement="rightTop" title={<div >执行SQL</div>}><DoubleRightOutlined onClick={() => execute(i, v.content, 1, 10)} /></Tooltip>
-                                        {i === chats[myCurrent].length - 1 ? <Tooltip placement="rightTop" title='重新生成SQL'><RedoOutlined onClick={() => reProduct(i)} /></Tooltip> : ''}
+                                        {i === chats[myCurrent].length - 1 ? <><Tooltip placement="rightTop" title='编辑SQL'><EditOutlined onClick={() => edit(i)} /></Tooltip> <Tooltip placement="rightTop" title='重新生成SQL'><RedoOutlined onClick={() => reProduct(i)} /></Tooltip></> : ''}
                                         {v.feedback ? v.feedback.flag ? <LikeOutlined className='feedbackSelete' /> : <DislikeOutlined className='feedbackSelete' />
                                             : <><LikeOutlined onClick={() => feedback(i, '', '', true)} /><DislikeOutlined onClick={() => showModal1(i)} /></>} </div> : ''}</div>
                             {v.table && v.table[0] ? <><Table pagination={{ total: v.table[2] }} onChange={(pagination) => execute(i, v.content, pagination.current, pagination.pageSize)}

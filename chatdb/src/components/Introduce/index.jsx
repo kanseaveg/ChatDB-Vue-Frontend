@@ -7,18 +7,45 @@ export default function Introduce({ setAddText }) {
     { title: 'Capabilities', icon: <ThunderboltOutlined className='Introduce-main-topIcon' />, message: ['You can talk everything with DB', 'Allow user to provide data to query', 'Trained to decline wrong sql queries'] },
     { title: 'Limitations', icon: <WarningOutlined className='Introduce-main-topIcon' />, message: ["May occasionally generate some incorrect SQL query statement", "May occasionally query no enough data", "Limited knowledge of public db and db content"] }])
 
+    // useEffect(() => {
+    //     let chat = JSON.parse(localStorage.getItem('chat'))
+    //     let current = parseInt(localStorage.getItem('current'))
+    //     let db = JSON.parse(localStorage.getItem('db'))
+    //     if (data && data.length) {
+    //         // let title
+    //         // if (current === -1) {
+    //         //     title = db ? db.title : 'nba'
+    //         // }
+    //         // else {
+    //         //     title = chat[current].db.title
+    //         // }
+    //         let title = db ? db.title : 'nba'
+    //         let Nowdata = copyArr(data)
+    //         switch (title) {
+    //             case 'nba':
+    //                 Nowdata[0].message = ['"向我展示nba里面所有球队的信息"', '"勒布朗詹姆斯打什么位置?"', '"湖人"队有哪些球员出生晚于1980年且出生于美国?']
+    //                 break;
+    //             case 'finance':
+    //                 Nowdata[0].message = ['"向我展示finance里面所有的金融数据"', '"请列出贷款金额大于10000且信用评级为A的金融客户信息"', '"年收入在110000美元以上的人，有多少贷款过？"',]
+    //                 break;
+    //             default:
+    //                 Nowdata[0].message = null
+    //                 break;
+    //         }
+    //         setData(Nowdata)
+    //     }
+    // }, [localStorage.getItem('db'), localStorage.getItem('current'), localStorage.getItem('chat')])
     useEffect(() => {
-        let chat = JSON.parse(localStorage.getItem('chat'))
-        let current = parseInt(localStorage.getItem('current'))
         let db = JSON.parse(localStorage.getItem('db'))
-        if (data && data.length && chat && chat[current]) {
-            let title
-            if (current === -1) {
-                title = db ? db.title : 'nba'
-            }
-            else {
-                title = chat[current].db.title
-            }
+        if (data && data.length) {
+            // let title
+            // if (current === -1) {
+            //     title = db ? db.title : 'nba'
+            // }
+            // else {
+            //     title = chat[current].db.title
+            // }
+            let title = db ? db.title : 'nba'
             let Nowdata = copyArr(data)
             switch (title) {
                 case 'nba':
@@ -33,8 +60,7 @@ export default function Introduce({ setAddText }) {
             }
             setData(Nowdata)
         }
-    }, [localStorage.getItem('db'), localStorage.getItem('current'), localStorage.getItem('chat')])
-
+    }, [localStorage.getItem('db')])
     return (
         <div className='Introduce'>
             <p className='Introduce-title'>Chat2DB</p>

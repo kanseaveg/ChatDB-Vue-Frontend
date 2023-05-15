@@ -178,7 +178,7 @@ input::placeholder {
     .LeftSidebar-bottom {
         overflow: auto;
         height: 58vh;
-        padding-left: 10px;
+        padding-left: 1px;
 
         .anticon-double-right {
             display: flex;
@@ -197,6 +197,24 @@ input::placeholder {
 
         .LeftSidebar-bottom-top {
             overflow: auto;
+        }
+
+        .LeftSidebar-bottom-link {
+
+            li {
+                height: 30px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin: 5px;
+                padding: 0px 10px;
+                transition: all .3s;
+            }
+
+            li:hover {
+                cursor: pointer;
+                background-color: var(--third-color1);
+            }
         }
 
         .LeftSidebar-bottom-top::-webkit-scrollbar {

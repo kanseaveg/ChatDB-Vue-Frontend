@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react'
-import { DoubleRightOutlined, SolutionOutlined, CommentOutlined, EditOutlined, DeleteOutlined, TableOutlined, SettingOutlined, LogoutOutlined, BulbOutlined } from '@ant-design/icons';
+import { LinkOutlined, DoubleRightOutlined, SolutionOutlined, CommentOutlined, EditOutlined, DeleteOutlined, TableOutlined, SettingOutlined, LogoutOutlined, BulbOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import userHead from '../../assests/images/head1.png'
-import { TreeSelect, Input, Tree, message, Modal, Form, Button, Select } from 'antd';
+import { TreeSelect, Input, Tree, message, Modal, Form, Button, Select, Radio } from 'antd';
 import { v4 as uuidv4 } from "uuid"
 import axios from 'axios'
 import './index.scss'
 import { copyArr } from '../../utils/func'
 import URL from '../../env.js'
-
+import RemoteDB from './RemoteDB'
 const { Search } = Input;
 const { DirectoryTree } = Tree;
 const { Option } = Select;
@@ -46,6 +46,47 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
     const [canSendCode, setCanSendCode] = useState([true, 30])
     const [firstTreeName, setFirstTreeName] = useState('')
     const [deleteFlag, setDeleteFlag] = useState(false)
+    const [dbType, setDbType] = useState(1);
+    const [links, setLinks] = useState([])
+    const [isChooseLink, setIsChooseLink] = useState(false)
+    //监听dbtype变化获取db
+    const dbTypeChange = (e, type) => {
+        let dbType = e.target ? e.target.value : e
+        setDbType(dbType);
+        if (dbType === 3) {
+            localStorage.setItem('dbType', dbType)
+            getLinks()
+        } else {
+            localStorage.setItem('dbType', dbType)
+            if (type === 1) {
+                getDBTreeData(3)
+            } else if (type === 2) {
+                getDBTreeData(4)
+            } else {
+                getDBTreeData(1)
+
+            }
+        }
+    };
+    //获取远程数据源
+    const getLinks = () => {
+        axios({
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": token
+            },
+            method: 'GET',
+            url: `${URL}/api/db/connect/getConnections?userId=${userId}`,
+        }).then(res => {
+            if (res.data.code === 200) {
+                console.log(res);
+                let data = res.data.data
+                setLinks(data)
+            } else {
+                message.success(res.data.data || res.data.msg)
+            }
+        }).catch(e => { })
+    }
     //选择会话
     const handleSelete = (i) => {
         localStorage.setItem('model', chat[i].modelType)
@@ -65,6 +106,8 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
         if (name && name.value) {
             let current = parseInt(localStorage.getItem('current'))
             let modelType = parseInt(localStorage.getItem('model')) || 2
+            let dbType = parseInt(localStorage.getItem('dbType'))
+            let db = JSON.parse(localStorage.getItem("db"))
             axios({
                 headers: {
                     'Content-Type': 'application/json',
@@ -73,7 +116,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                 method: 'POST',
                 url: `${URL}/api/chat/${chat[current].save ? 'updateinfo' : 'saveinfo'}`,
                 data: {
-                    modelType, userId, chatId: name.chatId || chat[current].chatId, title: name.value || chat[current].name, dbName: chat[current].db.db
+                    dbType, modelType, userId, chatId: name.chatId || chat[current].chatId, title: name.value || chat[current].name, dbName: db.db
                 }
             }).then(res => {
                 if (res.data.code === 200) {
@@ -82,11 +125,10 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                     if (name.chatId) {
                         newChats[current].chatId = name.chatId
                     }
-                    if (name.db) {
-                        newChats[current].db = name.db
-                    }
+                    newChats[current].db = name.db
                     newChats[current].save = true
                     newChats[current].modelType = modelType || 2
+                    newChats[current].dbType = dbType || 1
                     setName('')
                     setChat(newChats)
                 } else {
@@ -111,24 +153,31 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                 let data = res.data.data
                 let initChat = []
                 data.map((v) => {
-                    initChat.unshift({ chatId: v.chatId, modelType: v.modelType, save: true, name: v.title, db: { db: v.dbName, title: v.dbName && v.dbName.includes('$') ? v.dbName.split('$')[1] : v.dbName, } })
+                    initChat.unshift({ dbType: v.dbType, chatId: v.chatId, modelType: v.modelType, save: true, name: v.title, db: { db: v.dbName, title: v.dbName && v.dbName.includes('$') ? v.dbName.split('$')[1] : v.dbName, } })
                 })
                 setChat(initChat)
                 setTheme(localStorage.getItem('theme'))
                 if (initChat.length > 0) {
+                    localStorage.setItem('dbType', initChat[0].dbType)
                     let db = initChat[0].db
+                    localStorage.setItem('db', JSON.stringify(db))
                     setDbValue(db.title)
                     getTableData(db.db)
                     setDataSourceId(db.db)
-                    localStorage.setItem('db', JSON.stringify(db))
+
+                    dbTypeChange(initChat[0].dbType, 2)
                     setList(initChat.length - 1)
                     setCurrent(0)
+                } else {
+                    //获取dbtree
+                    getDBTreeData()
                 }
                 setLock(false)
             } else {
                 message.warning(res.data.msg)
             }
         }).catch(e => {
+            console.log(e);
             message.warning('please login again', 1);
             navigate('/login')
         })
@@ -183,7 +232,8 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                 setRefresh(true)
                 setIsModalOpen1(false);
             } else {
-                message.warning(res.data.msg)
+                message.warning(res.data.data || res.data.msg)
+                navigate('/login')
             }
         }).catch(e => { })
     };
@@ -284,6 +334,15 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
             setResetPassword(false)
         }
     }
+    //Model3 远程库连接
+    const [isModalOpen3, setIsModalOpen3] = useState(false);
+    const showModal3 = () => {
+        setIsModalOpen3(true);
+    };
+    const handleCancel3 = () => {
+        setIsModalOpen3(false);
+
+    }
     //修改主题颜色
     const changeTheme = () => {
         const root = document.documentElement;
@@ -328,7 +387,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
         if (chat.length <= 19) {
             let chats = copyArr(chat)
             const chatId = uuidv4();
-            chats.unshift({ name: 'New chat', chatId, db })
+            chats.unshift({ name: 'New chat', chatId })
             setChat(chats)
             setList(list + 1)
             setCurrent(0)
@@ -342,14 +401,19 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
         if (current >= 0 || deleteFlag) {
             setDeleteFlag(false)
             handleSelete(current)
-            treeData.map((v, i) => {
-                if (chat[current].db && chat[current].db.db === v.db) {
-                    setDbValue(v.title)
-                    getTableData(v.db)
-                    setDataSourceId(v.db)
-                    localStorage.setItem('db', JSON.stringify(chat[current].db))
-                }
-            })
+            if (chat[current].dbType === dbType || !chat[current].dbType) {
+                treeData.map((v, i) => {
+                    if (chat[current].db && chat[current].db.db === v.db) {
+                        setDbValue(v.title)
+                        getTableData(v.db)
+                        setDataSourceId(v.db)
+                        localStorage.setItem('db', JSON.stringify(chat[current].db))
+                    }
+                })
+            } else {
+                dbTypeChange(chat[current].dbType, 1)
+            }
+
         }
     }, [current, deleteFlag])
     //修改名字
@@ -448,7 +512,9 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
             setDataSourceId(node.db)
             setDbValue(node.title)
             getTableData(node.db)
-            addNewChat(node)
+            if (chat[current] && chat[current].save) {
+                addNewChat(node)
+            }
             localStorage.setItem('db', JSON.stringify(node))
         }
     }
@@ -458,13 +524,14 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
     }
     //获取每个数据库的行列
     const getTableData = (dbname) => {
+        let DBType = parseInt(localStorage.getItem('dbType'))
         axios({
             headers: {
                 'Content-Type': 'application/json',
                 "Authorization": token
             },
             method: 'GET',
-            url: `${URL}/api/db/schema?userId=${userId}&dbname=${dbname}`,
+            url: `${URL}/api/db/schema?userId=${userId}&dbname=${dbname}&DBType=${DBType}`,
         }).then(res => {
             if (res.data.code === 200) {
                 let data = res.data.data
@@ -487,22 +554,22 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                 message.warning(res.data.msg)
             }
         }).catch(e => {
-
             message.warning('please login again!', 1)
             navigate('/login')
                 ;
         })
 
     }
-    //获取数据库数据
+    //获取数据库数据 which: 1:手动切换dbtype 2:上传数据库 3:选择不同dbType的会话 4:获取历史记录后第一次
     const getDBTreeData = (which) => {
+        let DBType = parseInt(localStorage.getItem('dbType'))
         axios({
             headers: {
                 'Content-Type': 'application/json',
                 "Authorization": token
             },
             method: 'GET',
-            url: `${URL}/api/db/list?userId=${userId}`,
+            url: `${URL}/api/db/list?userId=${userId}&DBType=${DBType}`,
         }).then(res => {
             let treeData = []
             if (res.data.code === 200) {
@@ -514,20 +581,32 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                     })
                 })
                 setTreeData(treeData)
-                if ((!parseInt(localStorage.getItem('current')) && parseInt(localStorage.getItem('current')) !== 0) || parseInt(localStorage.getItem('current')) === -1) {
-                    localStorage.setItem('db', JSON.stringify(treeData[0]))
-                    getTableData(res.data.data[0])
+                if ((!parseInt(localStorage.getItem('current')) && parseInt(localStorage.getItem('current')) !== 0) || parseInt(localStorage.getItem('current')) === -1 || which === 1) {
+                    if (which !== 4) {
+                        localStorage.setItem('db', JSON.stringify(treeData[0]))
+                        setDbValue(treeData[0].title)
+                        getTableData(res.data.data[0])
+                        setDataSourceId(treeData[0].db)
+                    }
                     setFirstTreeName(treeData[0].title)
-                    setDataSourceId(treeData[0].db)
+                    if (chat[current] && chat[current].save) {
+                        addNewChat(treeData[0])
+                    }
                 }
-                if (which === 1) {
+                if (which === 3) {
+                    treeData.map((v, i) => {
+                        if (chat[current].db && chat[current].db.db === v.db) {
+                            setDbValue(v.title)
+                            getTableData(v.db)
+                            setDataSourceId(v.db)
+                            localStorage.setItem('db', JSON.stringify(chat[current].db))
+                        }
+                    })
                 }
             } else {
                 message.warning(res.data.msg)
             }
-
         }).catch(e => {
-
             message.warning('please login again!', 1);
             navigate('/login')
         })
@@ -537,7 +616,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
     //上传后刷新数据库
     useEffect(() => {
         if (uploadAndRefresh) {
-            getDBTreeData(1)
+            getDBTreeData(2)
             setUploadAndRefresh(false)
         }
     }, [uploadAndRefresh])
@@ -578,12 +657,14 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                 }
             }
         }
-        //获取dbtree
-        getDBTreeData()
+
         //获取用户信息
         getUserInfo()
         //设置model
         localStorage.setItem('model', 2)
+        //设置dbType
+        localStorage.setItem('dbType', 1)
+
     }
 
 
@@ -645,6 +726,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
     useEffect(() => {
         if (addFirstChat && addFirstChat.value) {
             let modelType = parseInt(localStorage.getItem('model'))
+            let dbType = parseInt(localStorage.getItem('dbType'))
             axios({
                 headers: {
                     'Content-Type': 'application/json',
@@ -653,13 +735,13 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                 method: 'POST',
                 url: `${URL}/api/chat/saveinfo`,
                 data: {
-                    modelType: modelType || 2, userId, chatId: addFirstChat.chatId, title: addFirstChat.value, dbName: addFirstChat.db.db
+                    modelType: modelType || 2, userId, chatId: addFirstChat.chatId, title: addFirstChat.value, dbName: addFirstChat.db.db, dbType
                 }
             }).then(res => {
                 if (res.data.code === 200) {
                     setList(list + 1)
                     let chats = copyArr(chat)
-                    chats.push({ modelType: modelType || 2, name: addFirstChat.value, chatId: addFirstChat.chatId, db: addFirstChat.db, save: true })
+                    chats.push({ dbType, modelType: modelType || 2, name: addFirstChat.value, chatId: addFirstChat.chatId, db: addFirstChat.db, save: true })
                     setChat(chats)
                     setCurrent(chats.length - 1)
                     setAddFirstChat('')
@@ -671,9 +753,10 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
 
         }
     }, [addFirstChat])
+
     return (
         <div className='LeftSidebar'>
-            {dbDisabled ? <div onClick={() => { message.warning('please wait for the response', 1) }} style={{ position: 'absolute', zIndex: "1", left: 0, top: 0, width: '100%', height: "100vh", background: "rgba(0,0,0,.1)" }}></div> : ''}
+            {dbDisabled ? <div onClick={() => { message.warning('please wait for the response', 1) }} style={{ position: 'absolute', zIndex: "10", left: 0, top: 0, width: '100%', height: "100vh", background: "rgba(0,0,0,.1)" }}></div> : ''}
             <Modal title="清空所有对话" open={isModalOpen1} onOk={handleOk1} onCancel={handleCancel1}>
                 <p>是否清空所有对话？</p>
             </Modal>
@@ -783,11 +866,15 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                     </Form.Item>
                 </Form>
             </Modal>
+            <Modal title="Create Connection" footer={null} open={isModalOpen3} onCancel={handleCancel3}>
+                <RemoteDB handleCancel3={handleCancel3}></RemoteDB>
+            </Modal>
             <div className='LeftSidebar-top' style={{ height: `calc(40vh + ${heightChange}px)` }}>
                 <div onClick={() => addNewChat(JSON.parse(localStorage.getItem('db')))} className='LeftSidebar-addNewChat'>+ &nbsp;&nbsp;New chat</div>
                 <ul className='LeftSidebar-chats'>
                     {chat.length !== 0 ? chat.map((v, i) => {
-                        return (<li className='LeftSidebar-chats-Li' key={i}><CommentOutlined />&nbsp;&nbsp;&nbsp;&nbsp;{repair[i] ? <input type="text" onBlur={(e) => handleRepair({ keyCode: 13 }, i, e)} onKeyDown={(e) => handleRepair(e, i)} style={{ margin: '0' }} className='newChatInput' /> : <div onClick={() => setCurrent(i)} className='LeftSidebar-chats-name'> {v.name}</div>}&nbsp;&nbsp;&nbsp;&nbsp;<EditOutlined onClick={() => changeReapir(i)} />&nbsp;&nbsp;&nbsp;&nbsp;<DeleteOutlined onClick={() => deleteChat(i)} /></li>)
+                        return (<li className='LeftSidebar-chats-Li' key={i}><CommentOutlined />&nbsp;&nbsp;&nbsp;&nbsp;{repair[i] ? <input type="text" onBlur={(e) => handleRepair({ keyCode: 13 }, i, e)} onKeyDown={(e) => handleRepair(e, i)} style={{ margin: '0' }} className='newChatInput' /> : <div onClick={() => setCurrent(i)} className='LeftSidebar-chats-name'> {v.name}</div>}&nbsp;&nbsp;&nbsp;&nbsp;
+                            {v.save ? <EditOutlined onClick={() => changeReapir(i)} /> : ''}&nbsp;&nbsp;&nbsp;&nbsp;<DeleteOutlined onClick={() => deleteChat(i)} /></li>)
                     }) : ''}
                 </ul>
                 {chat.length === 0 ? '' : <div onClick={showModal1} className='LeftSidebar-top-deteleAll'><DeleteOutlined />&nbsp;&nbsp; Clear conversations</div>}
@@ -795,42 +882,58 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
             <div ref={line} className='LeftSidebar-line'></div>
             <div className='LeftSidebar-bottom' style={{ height: `calc(58vh - 75px - ${heightChange}px)` }}>
                 <div className='LeftSidebar-bottom-top'>
-                    <TreeSelect className='LeftSidebar-bottom-TreeSelect'
-                        showSearch
-                        size='middle'
-                        style={{
-                            width: '98%',
-                            color: 'white!important'
-                        }}
-                        value={dbValue}
-                        dropdownStyle={{
-                            maxHeight: 400,
-                            overflow: 'auto',
-                        }}
-                        disabled={dbDisabled}
-                        placeholder={firstTreeName}
-                        onSelect={(value, node, extra) => handleSelect(value, node, extra)}
-                        treeData={treeData}
-                    />
-                    <div >
-                        <Search
+                    <Radio.Group value={dbType} onChange={dbTypeChange} size='middle'>
+                        <Radio.Button value={1}>公共库</Radio.Button>
+                        <Radio.Button value={2}>用户库</Radio.Button>
+                        <Radio.Button value={3}>远程数据源</Radio.Button>
+                    </Radio.Group>
+                    {dbType === 3 && !isChooseLink ?
+                        <ul className='LeftSidebar-bottom-link'>
+                            {links?.map((v, i) => {
+                                return (<li key={i}><div><LinkOutlined /> {v.host}</div><DeleteOutlined /></li>)
+                            })}
+                            <li > + 添加远程数据源</li>
+                        </ul>
+                        : <> <TreeSelect className='LeftSidebar-bottom-TreeSelect'
+                            showSearch
+                            size='middle'
                             style={{
-                                marginTop: '10px',
                                 width: '98%',
-                                marginBottom: 8,
+                                color: 'white!important',
+                                marginLeft: 3
+
                             }}
-                            placeholder="Search"
-                            onChange={onChange}
+                            value={dbValue}
+                            dropdownStyle={{
+                                maxHeight: 400,
+                                overflow: 'auto',
+                            }}
+                            placeholder={firstTreeName}
+                            onSelect={(value, node, extra) => handleSelect(value, node, extra)}
+                            treeData={treeData}
                         />
-                        <DirectoryTree
-                            onExpand={onExpand}
-                            switcherIcon={<TableOutlined />}
-                            showIcon={false}
-                            expandedKeys={expandedKeys}
-                            autoExpandParent={autoExpandParent}
-                            treeData={treeData2}
-                        />
-                    </div>
+                            <div >
+                                <Search
+                                    style={{
+                                        marginTop: '10px',
+                                        width: '98%',
+                                        marginBottom: 8,
+                                        marginLeft: 3
+                                    }}
+                                    placeholder="Search"
+                                    onChange={onChange}
+
+                                />
+                                <DirectoryTree
+                                    onExpand={onExpand}
+                                    switcherIcon={<TableOutlined />}
+                                    showIcon={false}
+                                    expandedKeys={expandedKeys}
+                                    autoExpandParent={autoExpandParent}
+                                    treeData={treeData2}
+                                />
+                            </div></>}
+
                 </div>
                 <div className='LeftSidebar-bottom-userInfo'>
                     <img className='LeftSidebar-bottom-head' src={userHead} alt="" />
