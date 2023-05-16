@@ -208,7 +208,6 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
     }, [refresh])
     //执行SQL
     const execute = (i, sql, page, pageSize) => {
-        sql = 'SELECT' + sql.split('SELECT')[1];
         axios({
             headers: {
                 'Content-Type': 'application/json',
