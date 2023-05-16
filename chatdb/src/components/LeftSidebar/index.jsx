@@ -237,11 +237,8 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                 let userInfo = [username, email, phone]
                 setUserInfo(userInfo)
             } else {
-                message.warning(res.data.msg)
+                message.warning(res.data.data || res.data.msg)
             }
-        }).catch(e => {
-            message.warning('please login again', 1);
-            navigate('/login')
         })
     }
     //存localstorage
@@ -272,9 +269,8 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                 setIsModalOpen1(false);
             } else {
                 message.warning(res.data.data || res.data.msg)
-                navigate('/login')
             }
-        }).catch(e => { message.warning(e.response?.data?.data); navigate('/login') })
+        })
     };
     const handleCancel1 = () => {
         setIsModalOpen1(false);
@@ -603,12 +599,8 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                 setDefaultData(defaultData)
                 setDataList(dataList)
             } else {
-                message.warning(res.data.msg)
+                message.warning(res.data.data || res.data.msg)
             }
-        }).catch(e => {
-            message.warning('please login again!', 1)
-            navigate('/login')
-                ;
         })
 
     }
@@ -656,11 +648,8 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                     })
                 }
             } else {
-                message.warning(res.data.msg)
+                message.warning(res.data.data || res.data.msg)
             }
-        }).catch(e => {
-            message.warning('please login again!', 1);
-            navigate('/login')
         })
 
 
@@ -762,12 +751,8 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                 }
                 setLock(false)
             } else {
-                message.warning(res.data.msg)
+                message.warning(res.data.data || res.data.msg)
             }
-        }).catch(e => {
-            console.log(e);
-            message.warning('please login again', 1);
-            navigate('/login')
         })
 
     }

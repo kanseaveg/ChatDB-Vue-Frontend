@@ -11,7 +11,7 @@ import head1 from '../../assests/images/head1.png'
 import head2 from '../../assests/images/head2.png'
 import { v4 as uuidv4 } from "uuid"
 import SyntaxHighlighter from "react-syntax-highlighter";
-import { docco, github, monokai, tomorrow } from "react-syntax-highlighter/dist/esm/styles/hljs";
+import { docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import URL from '../../env.js'
 import Introduce from '../Introduce'
@@ -241,11 +241,7 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                 newChats3[current][i].table = [columns, data, res.data.data.totalCount]
                 setChats(newChats3)
             } else {
-                message.warning(res.data.msg)
-            }
-        }).catch((e) => {
-            message.warning(e.response.data.data || e.response.data.msg); if (e.response.data.data === 'token wrong or expire, please login again') {
-                navigate('/login')
+                message.warning(res.data.data || res.data.msg)
             }
         })
     }
@@ -324,12 +320,6 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                     });
                 }
             })
-            .catch(e => {
-                message.warning('please login again!', 1)
-                navigate('/login')
-                    ;
-            }
-            );
     }
     //编辑SQL
     const edit = (i) => {
@@ -498,14 +488,6 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                         }
 
                     })
-                    .catch(error => {
-                        if (error.name === 'AbortError') {
-                        } else {
-                            message.warning('please login again!', 1)
-                            navigate('/login')
-                                ;
-                        }
-                    })
             } else {
                 const chatId = JSON.parse(localStorage.getItem('chat'))[current].chatId
                 let newChats = copyArr(chats)
@@ -588,13 +570,6 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                         }
 
                     })
-                    .catch(error => {
-                        if (error.name === 'AbortError') {
-                        } else {
-                            message.warning('please login again!', 1)
-                            navigate('/login')
-                        }
-                    });
             }
         }
     }
