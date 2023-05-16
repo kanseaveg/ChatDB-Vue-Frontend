@@ -1,4 +1,4 @@
-import { Button, Form, Input, Select, message } from 'antd';
+import { Button, Form, Input, Select, message, Steps } from 'antd';
 import { useState } from 'react';
 import './index.scss'
 import axios from 'axios'
@@ -11,7 +11,7 @@ const RemoteDB = ({ handleCancel3, getLinks }) => {
     const userId = localStorage.getItem('userId')
     const [loading, setLoading] = useState(false)
     const [loading1, setLoading1] = useState(false)
-
+    const [step, setStep] = useState(0)
     const [options, setOptions] = useState()
     const onFinish = (values) => {
         setLoading1(true)
@@ -28,6 +28,7 @@ const RemoteDB = ({ handleCancel3, getLinks }) => {
         }).then(res => {
             setLoading1(false)
             if (res.data.code === 200) {
+                setStep(0)
                 message.success(res.data.msg)
                 handleCancel3()
                 getLinks()
@@ -58,7 +59,7 @@ const RemoteDB = ({ handleCancel3, getLinks }) => {
                 }
             }).then(res => {
                 setLoading(false)
-                console.log(res);
+                setStep(1)
                 if (res.data.code === 200) {
                     message.success(res.data.msg)
                     let data = res.data.data.databaseNames
@@ -81,13 +82,17 @@ const RemoteDB = ({ handleCancel3, getLinks }) => {
         }
     }
     return (
-        <Form.Provider
-            onFormFinish={(name) => {
-                if (name === 'remoteDB') {
-                    console.log();
-                }
-            }}
-        >
+        <><Steps
+            current={step}
+            items={[
+                {
+                    title: 'Test link',
+                },
+                {
+                    title: 'Select db',
+                },
+            ]}
+        />
             <Form
                 className='remoteDB'
                 form={form}
@@ -96,6 +101,7 @@ const RemoteDB = ({ handleCancel3, getLinks }) => {
                 onFinish={onFinish}
             >
                 <Form.Item
+                    className={step === 1 ? 'hidden' : ''}
                     name="databaseType"
                     label="Database type"
                     rules={[
@@ -111,14 +117,17 @@ const RemoteDB = ({ handleCancel3, getLinks }) => {
                         <Option value="mysql">MySQL</Option>
                     </Select>
                 </Form.Item>
-                <Form.Item label="Title" name='title' rules={[
-                    {
-                        required: true,
-                    },
-                ]}>
+                <Form.Item
+                    className={step === 1 ? 'hidden' : ''}
+
+                    label="Title" name='title' rules={[
+                        {
+                            required: true,
+                        },
+                    ]}>
                     <Input placeholder="Connection title" />
                 </Form.Item>
-                <Form.Item label="Host" name='host' rules={[
+                <Form.Item className={step === 1 ? 'hidden' : ''} label="Host" name='host' rules={[
                     {
                         required: true,
                     },
@@ -126,6 +135,7 @@ const RemoteDB = ({ handleCancel3, getLinks }) => {
                     <Input placeholder="Connection host" />
                 </Form.Item>
                 <Form.Item
+                    className={step === 1 ? 'hidden' : ''}
                     name='port'
                     label="Port"
                     rules={[
@@ -137,6 +147,7 @@ const RemoteDB = ({ handleCancel3, getLinks }) => {
                     <Input placeholder="Connection port" />
                 </Form.Item>
                 <Form.Item
+                    className={step === 1 ? 'hidden' : ''}
                     name='username'
                     label="Username"
                     rules={[
@@ -148,6 +159,7 @@ const RemoteDB = ({ handleCancel3, getLinks }) => {
                     <Input placeholder="Connection username" />
                 </Form.Item>
                 <Form.Item
+                    className={step === 1 ? 'hidden' : ''}
                     name='password'
                     label="Password"
                     rules={[
@@ -158,10 +170,11 @@ const RemoteDB = ({ handleCancel3, getLinks }) => {
                 >
                     <Input placeholder="Connection password" />
                 </Form.Item>
-                <Form.Item>
+                <Form.Item className={step === 1 ? 'hidden' : ''} wrapperCol={{ offset: 10 }}>
                     <Button loading={loading} type="primary" onClick={test}>getDBlists</Button>
                 </Form.Item>
                 <Form.Item
+                    className={step === 0 ? 'hidden' : ''}
                     name="selectedDB"
                     label="Select DB"
                     rules={[
@@ -184,11 +197,13 @@ const RemoteDB = ({ handleCancel3, getLinks }) => {
                     </Select>
                 </Form.Item>
 
-                <Form.Item wrapperCol={{ offset: 20 }}>
+                <Form.Item className={step === 0 ? 'hidden' : ''} wrapperCol={{ offset: 16 }}>
+                    <Button onClick={() => setStep(0)} style={{ marginRight: '10px' }} >Return</Button>
                     <Button loading={loading1} type='primary' htmlType="submit">Save</Button>
                 </Form.Item>
+
             </Form>
-        </Form.Provider>
+        </>
     );
 };
 export default RemoteDB;
