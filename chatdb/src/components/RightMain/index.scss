@@ -218,11 +218,15 @@
 
                     // padding: 0 100px;
                     .RightMain-aichat-content-tool {
+                        display: flex;
                         position: absolute;
-                        width: 2px;
-                        right: -10px;
+                        width: 18px;
+                        height: 150px;
+                        right: -26px;
                         color: var(--third-color1);
-                        top: -10px;
+                        top: -2px;
+                        flex-direction: column;
+                        justify-content: space-around;
 
                         .feedbackSelete {
                             pointer-events: none;

@@ -159,7 +159,7 @@ const RemoteDB = ({ handleCancel3, getLinks }) => {
                     <Input placeholder="Connection password" />
                 </Form.Item>
                 <Form.Item>
-                    <Button loading={loading} type="primary" onClick={test}>test</Button>
+                    <Button loading={loading} type="primary" onClick={test}>getDBlists</Button>
                 </Form.Item>
                 <Form.Item
                     name="selectedDB"
@@ -167,6 +167,8 @@ const RemoteDB = ({ handleCancel3, getLinks }) => {
                     rules={[
                         {
                             required: true,
+                            message: "'selectedDB' is required,please getDBlists first",
+
                         },
                     ]}
                 >

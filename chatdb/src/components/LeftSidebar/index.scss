@@ -180,6 +180,11 @@ input::placeholder {
         height: 58vh;
         padding-left: 1px;
 
+        :where(.css-dev-only-do-not-override-1me4733).ant-radio-button-wrapper {
+            background: var(--primary-color) !important;
+            color: var(--third-color) !important;
+        }
+
         .anticon-double-right {
             display: flex;
             align-items: center !important;
