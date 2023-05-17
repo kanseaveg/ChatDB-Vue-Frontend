@@ -18,11 +18,13 @@ import { CopyToClipboard } from "react-copy-to-clipboard";
 // import 'codemirror/mode/sql/sql';
 import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-sql';
+import 'ace-builds/src-noconflict/theme-tomorrow';
 import 'ace-builds/src-noconflict/theme-monokai';
+
 import URL from '../../env.js'
 import Introduce from '../Introduce'
 import html2canvas from 'html2canvas';
-export default function RightMain({ changeModel, setChangeModel, lock, setLock, setDbDisabled, setUploadAndRefresh, setName, current, setDeleteNumber, deleteNumber, list, addText, setAddText, setCurrent, setAddFirstChat, dataSourceId, setRefresh, refresh }) {
+export default function RightMain({ colorTheme, changeModel, setChangeModel, lock, setLock, setDbDisabled, setUploadAndRefresh, setName, current, setDeleteNumber, deleteNumber, list, addText, setAddText, setCurrent, setAddFirstChat, dataSourceId, setRefresh, refresh }) {
     const [chats, setChats] = useState([])
     const navigate = useNavigate();
     const [myCurrent, setMyCurrent] = useState(0)
@@ -33,6 +35,7 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
     const [loading, setLoading] = useState(false)
     const [readOnly, setReadOnly] = useState(true)
     const editorRef = useRef(null);
+    const [theme, setTheme] = useState('light')
     //上传文件
     const props = {
         name: 'file',
@@ -238,9 +241,8 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                     let data = []
                     res.data.data.columns.map((v, i) => {
                         columns.push({
-                            title: v, dataIndex: v, key: v, fixed: i === 0 ? true : false, ellipsis: true,
-
-                            width: i === 0 ? 200 : 150
+                            title: v, dataIndex: v, key: v, ellipsis: true,
+                            width: 150
                         })
                     })
                     res.data.data.rows.map((v, i) => {
@@ -745,10 +747,19 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
             }
         } else if (i === 2) {//取消
             let newChats = copyArr(chats)
+            adjustEditorHeight(newChats[current][newChats[current].length - 1].content);
             setChats(newChats)
         }
 
     }
+    //监听主题变换
+    useEffect(() => {
+        if (colorTheme === 'dark') {
+            setTheme('monokai')
+        } else {
+            setTheme('tomorrow')
+        }
+    }, [colorTheme])
     return (
         <div className='RightMain '>
             {loading ? <div style={{ position: 'absolute', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: "100", width: '100%', height: "100%", background: 'rgba(255,255,255,.8)' }}><Spin size="large">
@@ -808,13 +819,13 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                                 </div><AceEditor
                                         value={v.content}
                                         mode="sql"
-                                        theme="monokai"
+                                        theme={theme}
                                         onChange={handleEditorChange}
-                                        height={`${v.content ? v.content.split('\n').length * 40 : 40}px`} // 动态设置高度
-                                        width={`${v.content ? v.content.split('\n')[0].length * 13 : 100}px`}
+                                        height={`${v.content ? v.content.split('\n').length * 30 : 40}px`} // 动态设置高度
                                         fontSize="16px"
                                         readOnly={!(!readOnly && i === chats[myCurrent].length - 1)}
                                         ref={editorRef}
+                                        style={{ minWidth: `${v.content.split('\n')[0].length * 13 < 640 ? v.content.split('\n')[0].length * 13 : 640}px` }}
                                     /> </> : ''}
 
                                 {v.finish ?

@@ -28,7 +28,7 @@ const getParentKey = (key, tree) => {
     }
     return parentKey;
 };
-export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDisabled, uploadAndRefresh, setUploadAndRefresh, setAddFirstChat, current, name, setName, setCurrent, setDeleteNumber, list, setList, setAddText, addFirstChat, setDataSourceId, setRefresh }) {
+export default function LeftSidebar({ setColorTheme, setChangeModel, changeModel, setLock, dbDisabled, uploadAndRefresh, setUploadAndRefresh, setAddFirstChat, current, name, setName, setCurrent, setDeleteNumber, list, setList, setAddText, addFirstChat, setDataSourceId, setRefresh }) {
     const [chat, setChat] = useState([])
     const navigate = useNavigate();
     const [heightChange, setHeightChange] = useState(0)
@@ -248,6 +248,7 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
     useEffect(() => {
         localStorage.setItem('chat', JSON.stringify(chat))
         localStorage.setItem('theme', theme)
+        setColorTheme(theme)
     }, [chat, theme])
     //Model1 删除全部
     const [isModalOpen1, setIsModalOpen1] = useState(false);
