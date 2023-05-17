@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import './index.scss'
 import temp from '../../logo.svg'
-import { DownloadOutlined, LikeOutlined, DislikeOutlined, CopyOutlined, UploadOutlined, EditOutlined, PauseCircleOutlined, FileOutlined, SendOutlined, DeleteOutlined, DoubleRightOutlined, RedoOutlined, SmallDashOutlined } from '@ant-design/icons';
+import { DownloadOutlined, LikeOutlined, DislikeOutlined, CopyOutlined, UploadOutlined, EditOutlined, PauseCircleOutlined, FileOutlined, SendOutlined, CloseOutlined, DeleteOutlined, DoubleRightOutlined, RedoOutlined, SmallDashOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import axios from 'axios'
 import { copyArr, Myreplace } from '../../utils/func'
 import { message, Upload } from 'antd';
@@ -10,9 +10,15 @@ import { Table, Tag, Modal, Tooltip, Button, Spin, Popconfirm, Select, Input } f
 import head1 from '../../assests/images/head1.png'
 import head2 from '../../assests/images/head2.png'
 import { v4 as uuidv4 } from "uuid"
-import SyntaxHighlighter from "react-syntax-highlighter";
-import { docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
+// import SyntaxHighlighter from "react-syntax-highlighter";
+// import { docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { CopyToClipboard } from "react-copy-to-clipboard";
+// import { Controlled as CodeMirror } from 'react-codemirror2';
+// import 'codemirror/lib/codemirror.css';
+// import 'codemirror/mode/sql/sql';
+import AceEditor from 'react-ace';
+import 'ace-builds/src-noconflict/mode-sql';
+import 'ace-builds/src-noconflict/theme-monokai';
 import URL from '../../env.js'
 import Introduce from '../Introduce'
 import html2canvas from 'html2canvas';
@@ -25,6 +31,8 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
     const token = localStorage.getItem('token')
     const userId = localStorage.getItem('userId')
     const [loading, setLoading] = useState(false)
+    const [readOnly, setReadOnly] = useState(true)
+    const editorRef = useRef(null);
     //上传文件
     const props = {
         name: 'file',
@@ -219,34 +227,41 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                 query: sql,
                 userId,
                 page,
-                pageSize
+                pageSize,
+                connectId: parseInt(localStorage.getItem('dbType')) === 3 ? localStorage.getItem('connectId') : ''
             },
             url: `${URL}/api/db/query`,
         }).then(res => {
-            if (res.data.code === 200) {
-                let columns = []
-                let data = []
-                res.data.data.columns.map((v, i) => {
-                    columns.push({
-                        title: v, dataIndex: v, key: v, fixed: i === 0 ? true : false, ellipsis: true,
+            if (res.data) {
+                if (res.data.code === 200) {
+                    let columns = []
+                    let data = []
+                    res.data.data.columns.map((v, i) => {
+                        columns.push({
+                            title: v, dataIndex: v, key: v, fixed: i === 0 ? true : false, ellipsis: true,
 
-                        width: i === 0 ? 200 : 150
+                            width: i === 0 ? 200 : 150
+                        })
                     })
-                })
-                res.data.data.rows.map((v, i) => {
-                    v.key = i
-                })
-                data = res.data.data.rows
-                let newChats3 = copyArr(chats)
-                newChats3[current][i].table = [columns, data, res.data.data.totalCount]
-                setChats(newChats3)
+                    res.data.data.rows.map((v, i) => {
+                        v.key = i
+                    })
+                    data = res.data.data.rows
+                    let newChats3 = copyArr(chats)
+                    newChats3[current][i].table = [columns, data, res.data.data.totalCount]
+                    setChats(newChats3)
+                } else {
+                    message.warning(res.data.data || res.data.msg)
+                }
             } else {
-                message.warning(res.data.data || res.data.msg)
+                message.warning(res.response.data.data || res.response.data.msg);
             }
+
         })
     }
     //重新生成SQL
     const reProduct = (i) => {
+        setReadOnly(true)
         setShowStopBtn(true)
         sessionStorage.setItem('show', 'reshow')
         const chatId = JSON.parse(localStorage.getItem('chat'))[current].chatId
@@ -321,63 +336,7 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                 }
             })
     }
-    //编辑SQL
-    const edit = (i) => {
-        let value = chats[current][i].content
-        let sql = ''
-        Modal.confirm({
-            title: 'Edit SQL',
-            closable: true,
-            content: (
-                <div>
-                    <Input.TextArea style={{ width: '90%' }} onChange={(e) => { sql = e.target.value }} defaultValue={value} />
-                </div>
-            ),
-            onOk() {
-                if (!sql) {
 
-                } else {
-                    if (/^SELECT\s/i.test(sql)) {
-                        // SQL 语句符合 SELECT 语句的格式，可以执行
-                        let chatId = JSON.parse(localStorage.getItem('chat'))[current].chatId
-                        axios({
-                            headers: {
-                                'Content-Type': 'application/json',
-                                "Authorization": token
-                            },
-                            method: 'POST',
-                            data: {
-                                message: {
-                                    messageType: 'TEXT',
-                                    userType: 'DB',
-                                    message: sql
-                                },
-                                chatId,
-                                userId,
-                            },
-                            url: `${URL}/api/chat/updatehistory`,
-                        }).then(res => {
-                            if (res.data.code === 200) {
-                                message.success(res.data.msg)
-                                let newChats = copyArr(chats)
-                                newChats[current][i].content = sql
-                                setChats(newChats)
-                            } else {
-                                message.warning(res.data.data || res.data.msg)
-                            }
-                        }).catch((e) => {
-                            console.log(e);
-                            message.warning(e.response?.data?.data || e.response?.data?.msg)
-                        })
-                    } else {
-                        // SQL 语句不符合 SELECT 语句的格式，不允许执行
-                        message.warning('please check your sql')
-                    }
-                }
-
-            },
-        });
-    }
     //清空一个
     const RefreshOne = () => {
         let newChats = copyArr(chats)
@@ -687,7 +646,7 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
     const [copied, setCopied] = useState(false);
     const handleCopy = () => {
         setCopied(true);
-        setTimeout(() => setCopied(false), 1000);
+        setTimeout(() => setCopied(false), 500);
     };
     //导出聊天记录
     const exportHistory = () => {
@@ -726,6 +685,70 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
             setSave(false)
         }
     }, [localStorage.getItem('current'), localStorage.getItem('chat')])
+    //编辑SQL
+    const handleEditorChange = (value) => {
+        adjustEditorHeight(value);
+    };
+    const adjustEditorHeight = (value) => {
+        const editor = document.querySelector('.ace_editor');
+        if (editor) {
+            const lineHeight = editor.querySelector('.ace_line').offsetHeight;
+            const lines = value.split('\n').length;
+            const newHeight = lineHeight * lines;
+            editor.style.height = `${newHeight}px`;
+        }
+    };
+    //确认或拒绝sql编辑
+    const submitEdit = (i) => {
+        setReadOnly(true)
+        if (i === 1) {//确认
+            const sql = editorRef.current.editor.getValue()
+            if (/^SELECT\s/i.test(sql)) {
+                // SQL 语句符合 SELECT 语句的格式，可以执行
+                let chatId = JSON.parse(localStorage.getItem('chat'))[current].chatId
+                axios({
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "Authorization": token
+                    },
+                    method: 'POST',
+                    data: {
+                        message: {
+                            messageType: 'TEXT',
+                            userType: 'DB',
+                            message: sql
+                        },
+                        chatId,
+                        userId,
+                    },
+                    url: `${URL}/api/chat/updatehistory`,
+                }).then(res => {
+                    if (res.data.code === 200) {
+                        message.success(res.data.msg)
+                        let newChats = copyArr(chats)
+                        newChats[current][newChats[current].length - 1].content = sql
+                        setChats(newChats)
+                    } else {
+                        message.warning(res.data.data || res.data.msg)
+                        let newChats = copyArr(chats)
+                        setChats(newChats)
+                    }
+                }).catch((e) => {
+                    console.log(e);
+                    let newChats = copyArr(chats)
+                    setChats(newChats)
+                    message.warning(e.response?.data?.data || e.response?.data?.msg)
+                })
+            } else {
+                // SQL 语句不符合 SELECT 语句的格式，不允许执行
+                message.warning('please check your sql')
+            }
+        } else if (i === 2) {//取消
+            let newChats = copyArr(chats)
+            setChats(newChats)
+        }
+
+    }
     return (
         <div className='RightMain '>
             {loading ? <div style={{ position: 'absolute', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: "100", width: '100%', height: "100%", background: 'rgba(255,255,255,.8)' }}><Spin size="large">
@@ -777,20 +800,31 @@ export default function RightMain({ changeModel, setChangeModel, lock, setLock, 
                     {chats[myCurrent] ? chats[myCurrent].map((v, i) => {
                         return (v.who === 'ai' ? <li key={i} className='RightMain-chatli RightMain-aichat'><img className='RightMain-aichat-head' src={head2} alt="" /><div className='RightMain-aichat-content'>
                             <div className='RightMain-aichat-content-content'>
-                                {/* coy ,funky,okaidia,solarizedlight */}
-                                {v.content ? <div className='RightMain-aichat-content-typeCopy' style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                {v.content ? <> <div className='RightMain-aichat-content-typeCopy' style={{ display: 'flex', justifyContent: 'space-between' }}>
                                     sql
                                     <CopyToClipboard text={v.content} onCopy={handleCopy}>
                                         <button className='copyBtn'><CopyOutlined /> {copied ? "Copied!" : "Copy"}</button>
                                     </CopyToClipboard>
-                                </div> : ''}
-                                <SyntaxHighlighter language='sql' style={docco}>
-                                    {v.content}
-                                </SyntaxHighlighter>
+                                </div><AceEditor
+                                        value={v.content}
+                                        mode="sql"
+                                        theme="monokai"
+                                        onChange={handleEditorChange}
+                                        height={`${v.content ? v.content.split('\n').length * 40 : 40}px`} // 动态设置高度
+                                        width={`${v.content ? v.content.split('\n')[0].length * 13 : 100}px`}
+                                        fontSize="16px"
+                                        readOnly={!(!readOnly && i === chats[myCurrent].length - 1)}
+                                        ref={editorRef}
+                                    /> </> : ''}
+
                                 {v.finish ?
                                     <div className='RightMain-aichat-content-tool'>
                                         <Tooltip placement="rightTop" title={<div >执行SQL</div>}><DoubleRightOutlined onClick={() => execute(i, v.content, 1, 10)} /></Tooltip>
-                                        {i === chats[myCurrent].length - 1 ? <><Tooltip placement="rightTop" title='编辑SQL'><EditOutlined onClick={() => edit(i)} /></Tooltip> <Tooltip placement="rightTop" title='重新生成SQL'><RedoOutlined onClick={() => reProduct(i)} /></Tooltip></> : ''}
+                                        {i === chats[myCurrent].length - 1 ? <>
+                                            {readOnly ?
+                                                <Tooltip placement="rightTop" title='编辑SQL'><EditOutlined onClick={() => setReadOnly(false)} /></Tooltip> :
+                                                <><Tooltip placement="rightTop" title='确认'><CheckCircleOutlined onClick={() => submitEdit(1)} /></Tooltip >
+                                                    <Tooltip placement="rightTop" title='取消'><CloseOutlined onClick={() => submitEdit(2)} /></Tooltip ></>} <Tooltip placement="rightTop" title='重新生成SQL'><RedoOutlined onClick={() => reProduct(i)} /></Tooltip></> : ''}
                                         {v.feedback ? v.feedback.flag ? <LikeOutlined className='feedbackSelete' /> : <DislikeOutlined className='feedbackSelete' />
                                             : <><LikeOutlined onClick={() => feedback(i, '', '', true)} /><DislikeOutlined onClick={() => showModal1(i)} /></>} </div> : ''}</div>
                             {v.table && v.table[0] ? <><Table pagination={{ total: v.table[2] }} onChange={(pagination) => execute(i, v.content, pagination.current, pagination.pageSize)}

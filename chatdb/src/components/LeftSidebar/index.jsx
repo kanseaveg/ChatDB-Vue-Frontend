@@ -66,8 +66,11 @@ export default function LeftSidebar({ setChangeModel, changeModel, setLock, dbDi
                         setIsChooseLink(false)
                     } else {//选择了其它已保存的远程数据源的会话
                         setIsChooseLink(true)
+                        console.log(data, chat[current].connectId);
                         let linkData = data.filter(v => v.connectId === chat[current].connectId);
-                        handleChooseLink(linkData[0], chat[current].db.db)
+                        if (linkData[0]) {
+                            handleChooseLink(linkData[0], chat[current].db.db)
+                        }
                     }
                 })
             }

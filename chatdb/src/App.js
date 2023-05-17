@@ -17,7 +17,7 @@ function App() {
   axios.interceptors.response.use(
     (response) => {
       const originalRequest = response.config;
-      if (response.data.code === 401 && !originalRequest._retry&&response.data.msg==='Authorization failure') {
+      if (response.data?.code === 401 && !originalRequest._retry&&response.data.msg==='Authorization failure') {
         if (isRefreshingToken) {
           // 将当前请求添加到队列中
           return new Promise((resolve, reject) => {
@@ -68,13 +68,13 @@ function App() {
             isRefreshingToken = false;
           });
       }
-      if(response.data.code === 401&&response.data.msg==='Unauthorized'){
+      if(response.data?.code === 401&&response.data?.msg==='Unauthorized'){
         navigate('/login')
       }
       return response;
     },
-    (error) => {
-      return error;
+    (error)=>{
+      return(error)
     }
   );
   return (

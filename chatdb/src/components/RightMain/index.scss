@@ -172,6 +172,14 @@
                 overflow-wrap: wrap;
                 word-break: break-all;
 
+                .ace_editor {
+                    border-radius: 0 0 5px 5px;
+                    min-height: 50px;
+                    min-width: 120px;
+                    max-width: 100% !important;
+                }
+
+
                 .ant-table {
                     overflow: auto;
 
@@ -199,6 +207,7 @@
                         border-radius: 10px 10px 0 0;
                         padding-left: 20px;
                         align-items: center;
+                        height: 35px;
 
                         .copyBtn {
                             margin-top: 3px;
@@ -207,14 +216,14 @@
                         }
                     }
 
-                    pre {
-                        margin: 0 !important;
-                        padding-left: 20px !important;
-                        padding-right: 20px !important;
-                        border-radius: 0 0 10px 10px;
-                        background: var(--primary-color1) !important;
-                        color: var(--third-color2) !important;
-                    }
+                    // pre {
+                    //     margin: 0 !important;
+                    //     padding-left: 20px !important;
+                    //     padding-right: 20px !important;
+                    //     border-radius: 0 0 10px 10px;
+                    //     background: var(--primary-color1) !important;
+                    //     color: var(--third-color2) !important;
+                    // }
 
                     // padding: 0 100px;
                     .RightMain-aichat-content-tool {
