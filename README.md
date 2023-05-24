@@ -2,6 +2,18 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Install Dependencies
+
+You need to execute this command to install dependencies before starting:
+```
+# normal use
+npm install 
+
+# when version confilct
+npm install --legacy-peer-deps
+```
+
+
 ## Available Scripts
 
 In the project directory, you can run:
