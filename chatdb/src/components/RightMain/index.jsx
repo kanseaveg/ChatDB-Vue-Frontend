@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import './index.scss'
 import {AudioOutlined ,AudioMutedOutlined ,RocketOutlined,MessageOutlined,SoundOutlined, DownloadOutlined, LikeOutlined, DislikeOutlined, CopyOutlined, UploadOutlined, EditOutlined, PauseCircleOutlined, FileOutlined, SendOutlined, CloseOutlined, DeleteOutlined, DoubleRightOutlined, RedoOutlined, SmallDashOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import axios from 'axios'
-import { copyArr, Myreplace } from '../../utils/func'
+import { copyArr, Myreplace,getWebSocketUrl,toBase64 } from '../../utils/func'
 import { message, Upload } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { Table, Tag, Modal, Tooltip, Button, Spin, Popconfirm, Select } from 'antd';
@@ -18,6 +18,12 @@ import URL from '../../env.js'
 import Introduce from '../Introduce'
 import html2canvas from 'html2canvas';
 import Recorder from 'js-audio-recorder'
+const recorder = new window.RecorderManager(process.env.PUBLIC_URL);
+let iatWS;
+let resultText = "";
+let resultTextTemp = "";
+var APPID = "065317c5";
+
 export default function RightMain({ colorTheme, changeModel, setChangeModel, lock, setLock, setDbDisabled, setUploadAndRefresh, setName, current, setDeleteNumber, deleteNumber, list, addText, setAddText, setCurrent, setAddFirstChat, dataSourceId, setRefresh, refresh }) {
     const navigate = useNavigate();
     const main = useRef()
@@ -29,7 +35,7 @@ export default function RightMain({ colorTheme, changeModel, setChangeModel, loc
     const peopleInput = useRef()
     //输入框语音输入还是文字输入
     const [recording, setRecording] = useState(false); // 录音中
-    const recorder = useRef();
+    // const recorder = useRef();
     //用户信息
     const token = localStorage.getItem('token')
     const userId = localStorage.getItem('userId')
@@ -79,49 +85,178 @@ export default function RightMain({ colorTheme, changeModel, setChangeModel, loc
         recording? stopRecord():startRecord()
         setRecording(!recording)
     }
-    const startRecord = async() => { // 语音输入开始
+    //流式识别 处理结果
+    function renderResult(resultData) {
+        // 识别结束
+        let jsonData = JSON.parse(resultData);
+        if (jsonData.data && jsonData.data.result) {
+          let data = jsonData.data.result;
+          let str = "";
+          let ws = data.ws;
+          for (let i = 0; i < ws.length; i++) {
+            str = str + ws[i].cw[0].w;
+          }
+          // 开启wpgs会有此字段(前提：在控制台开通动态修正功能)
+          // 取值为 "apd"时表示该片结果是追加到前面的最终结果；取值为"rpl" 时表示替换前面的部分结果，替换范围为rg字段
+          if (data.pgs) {
+            if (data.pgs === "apd") {
+              // 将resultTextTemp同步给resultText
+              resultText = resultTextTemp;
+            }
+            // 将结果存储在resultTextTemp中
+            resultTextTemp = resultText + str;
+          } else {
+            resultText = resultText + str;
+          }
+          peopleInput.current.value =
+            resultTextTemp || resultText || "";
+        }
+        if (jsonData.code === 0 && jsonData.data.status === 2) {
+            resultTextTemp=''
+            resultText=''
+            stopRecord()
+          iatWS.close();
+        }
+        if (jsonData.code !== 0) {
+            resultTextTemp=''
+            resultText=''
+            stopRecord()
+          iatWS.close();
+          console.error(jsonData);
+        }
+      }
+      //流式识别 连接创建
+      function connectWebSocket() {
+        const websocketUrl = getWebSocketUrl();
+          iatWS = new WebSocket(websocketUrl);
+        iatWS.onopen = (e) => {
+            console.log('开始录音')
+        setLoading(false)
         setRecording(true);
-        recorder.current = new Recorder({
-            sampleBits: 16, // 采样位数，支持 8 或 16，默认是16
-            sampleRate: 16000, // 采样率，支持 11025、16000、22050、24000、44100、48000，根据浏览器默认值，我的chrome是48000
-            numChannels: 1
-        })
-        recorder.current.start().then(
-            () => {
-              // 开始录音
-              console.log('开始录音了=========')
+          // 开始录音
+          recorder.start({
+            sampleRate: 16000,
+            frameSize: 1280,
+          });
+          var params = {
+            common: {
+              app_id: APPID,
             },
-            (error) => {
-              // 出错了
-              console.log(error)
-            }
-          )
+            business: {
+              language: "zh_cn",
+              domain: "iat",
+              accent: "mandarin",
+              vad_eos: 5000,
+              dwa: "wpgs",
+            },
+            data: {
+              status: 0,
+              format: "audio/L16;rate=16000",
+              encoding: "raw",
+            },
+          };
+          iatWS.send(JSON.stringify(params));
+        };
+        iatWS.onmessage = (e) => {
+          renderResult(e.data);
+        };
+        iatWS.onerror = (e) => {
+          console.error(e);
+          recorder.stop();
+        };
+        iatWS.onclose = (e) => {
+          recorder.stop();
+        };
+      }
+    //监听麦克风
+      recorder.onFrameRecorded = ({ isLastFrame, frameBuffer }) => {
+        if (iatWS.readyState === iatWS.OPEN) {
+          iatWS.send(
+            JSON.stringify({
+              data: {
+                status: isLastFrame ? 2 : 1,
+                format: "audio/L16;rate=16000",
+                encoding: "raw",
+                audio: toBase64(frameBuffer),
+              },
+            })
+          );
+          if (isLastFrame) {
+            stopRecord()
+          }
+        }
+      };
+      //开始监听
+    const startRecord = () => { // 语音输入开始
+        setLoading(true)
+        connectWebSocket()
+        // recorder.current = new Recorder({
+        //     sampleBits: 16, // 采样位数，支持 8 或 16，默认是16
+        //     sampleRate: 16000, // 采样率，支持 11025、16000、22050、24000、44100、48000，根据浏览器默认值，我的chrome是48000
+        //     numChannels: 1
+        // })
+        // recorder.current.start().then(
+        //     () => {
+        //       // 开始录音
+        //       console.log('开始录音了=========')
+        //     },
+        //     (error) => {
+        //       // 出错了
+        //       console.log(error)
+        //     }
+        //   )
     }
-
-    const stopRecord = async() => { // 语音输入结束
+ //停止监听
+    const stopRecord = () => { // 语音输入结束
         setRecording(false);
-        recorder.current?.stop()
-        let wavBlob = recorder.current.getWAVBlob()
-        const file = new File([wavBlob], 'test.wav', { type: 'audio/wav' });
-        const formData = new FormData();
-        formData.append('file', file);
-        axios({
-            headers: {
-                'Content-Type': 'multipart/form-data',
-                "Authorization": token
-            },
-            method: 'POST',
-            data:formData,
-            url: `${URL}/api/speech/recognizeFile`,
-        }).then(res => {
-            if(res.data.code===200){
-                peopleInput.current.value = res.data.data
-            }else{
-                message.warning(res.data.data||res.data.msg)
-            }
-        })
+        // recorder.current?.stop()
+        recorder.stop()
+        // let wavBlob = recorder.current.getWAVBlob()
+        // const file = new File([wavBlob], 'test.wav', { type: 'audio/wav' });
+        // const formData = new FormData();
+        // formData.append('file', file);
+        // axios({
+        //     headers: {
+        //         'Content-Type': 'multipart/form-data',
+        //         "Authorization": token
+        //     },
+        //     method: 'POST',
+        //     data:formData,
+        //     url: `${URL}/api/speech/recognizeFile`,
+        // }).then(res => {
+        //     if(res.data.code===200){
+        //         peopleInput.current.value = res.data.data
+        //     }else{
+        //         message.warning(res.data.data||res.data.msg)
+        //     }
+        // })
     }
-
+    //音频文件识别props
+    const Vprops = {
+        name: 'file',
+        action: `${URL}/api/speech/recognizeFile`,
+        headers: {
+            Authorization: token
+        },
+        showUploadList: false,
+        accept: '.wav,.pcm',
+        onChange(info, event) {
+            setLoading(true)
+            if (info.file.status !== 'uploading') {
+            }
+            if (info.file.status === 'done') {
+                setLoading(false)
+                if (info.file.response.code === 200) {
+                    peopleInput.current.value+=info.file.response.data
+                } else {
+                    message.warning(info.file.response.msg)
+                }
+            } else if (info.file.status === 'error') {
+                setLoading(false)
+                message.error(`${info.file.name} file upload failed.`);
+            }
+        },
+    }
     //回答时不得转换数据库
     useEffect(() => {
         if (showStopBtn) {
@@ -938,7 +1073,11 @@ export default function RightMain({ colorTheme, changeModel, setChangeModel, loc
                 ><DownloadOutlined className='RightMain-bottom-downlaod' /></Popconfirm>
                 {/* input */}
                     <div className='WordInput'>
+                    <Upload {...Vprops} className='uploadWav'>
+                        上传录音
+                    </Upload>
         <div className="switch" style={{color:`${!recording ?'green':'red'}`}} onClick={handleSwitch}>
+            
             {
                 !recording ?<><AudioOutlined  className='icon'/> &nbsp;开始录音</>  :<><AudioMutedOutlined  className='icon'/>&nbsp;结束录音</> 
             }       
