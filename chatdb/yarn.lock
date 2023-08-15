@@ -3820,6 +3820,11 @@
     "shebang-command" "^2.0.0"
     "which" "^2.0.1"
 
+"crypto-js@^4.1.1":
+  "integrity" "sha512-o2JlM7ydqd3Qk9CA0L4NL6mTzU2sdx96a+oOfPu8Mkl/PK51vSyoi8/rQ8NknZtk44vq15lmhAj9CIAGwgeWKw=="
+  "resolved" "https://registry.npmmirror.com/crypto-js/-/crypto-js-4.1.1.tgz"
+  "version" "4.1.1"
+
 "crypto-random-string@^2.0.0":
   "integrity" "sha512-v1plID3y9r/lPhviJ1wrXpLeyUIGAZ2SHNYTEapm7/8A9nLPoyvVp3RK/EPFqn5kEznyWgYZNsRtYYIWbuG8KA=="
   "resolved" "https://registry.npmmirror.com/crypto-random-string/-/crypto-random-string-2.0.0.tgz"
@@ -6565,6 +6570,11 @@
     "import-local" "^3.0.2"
     "jest-cli" "^27.5.1"
 
+"js-audio-recorder@^1.0.7":
+  "integrity" "sha512-JiDODCElVHGrFyjGYwYyNi7zCbKk9va9C77w+zCPMmi4C6ix7zsX2h3ddHugmo4dOTOTCym9++b/wVW9nC0IaA=="
+  "resolved" "https://registry.npmmirror.com/js-audio-recorder/-/js-audio-recorder-1.0.7.tgz"
+  "version" "1.0.7"
+
 "js-cookie@^3.0.1":
   "integrity" "sha512-+0rgsUXZu4ncpPxRL+lNEptWMOWl9etvPHc/koSRp6MPwpRYAhmk0dUG00J4bxVV3r9uUzfo24wW0knS07SKSw=="
   "resolved" "https://registry.npmmirror.com/js-cookie/-/js-cookie-3.0.1.tgz"
@@ -8738,7 +8748,7 @@
   dependencies:
     "@remix-run/router" "1.3.3"
 
-"react-scripts@5.0.1":
+"react-scripts@^5.0.1":
   "integrity" "sha512-8VAmEm/ZAwQzJ+GOMLbBsTdDKOpuZh7RPs0UymvBR2vRk4iZWCskjbFnxqjrzoIvlNNRZ3QJFx6/qDSi6zSnaQ=="
   "resolved" "https://registry.npmmirror.com/react-scripts/-/react-scripts-5.0.1.tgz"
   "version" "5.0.1"

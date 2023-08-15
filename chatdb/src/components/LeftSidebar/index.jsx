@@ -139,13 +139,13 @@ export default function LeftSidebar({ setColorTheme, setChangeModel, changeModel
         localStorage.setItem('connectId', linkdata.connectId)
         let db = linkdata.dblist.split(',')
         let treeData = []
-        db.map((v, i) => {
+        db.map((v, i) => 
             treeData.push({
                 title: v,
                 value: v + i + Math.random() * 1000,
                 db: v
             })
-        })
+        )
         let first = initDB ? initDB : db[0]
         setDbValue(first)
         setTreeData(treeData)
@@ -670,6 +670,7 @@ export default function LeftSidebar({ setColorTheme, setChangeModel, changeModel
     //中间线 获取db 设置model
     const init = () => {
         //监听鼠标拖动
+      
         if (line) {
             // 鼠标被按下
             let getlineoffsetTop = document.querySelector('.LeftSidebar-line')
@@ -852,9 +853,11 @@ export default function LeftSidebar({ setColorTheme, setChangeModel, changeModel
     return (
         <div className='LeftSidebar'>
             {dbDisabled ? <div onClick={() => { message.warning('please wait for the response', 1) }} style={{ position: 'absolute', zIndex: "10", left: 0, top: 0, width: '100%', height: "100vh", background: "rgba(0,0,0,.1)" }}></div> : ''}
+            {/* 清空所有对话 */}
             <Modal title="清空所有对话" open={isModalOpen1} onOk={handleOk1} onCancel={handleCancel1}>
                 <p>是否清空所有对话？</p>
             </Modal>
+            {/* userInfo Modal*/}
             <Modal footer={null} title={<div className='model2-userInfo'><SolutionOutlined />&nbsp; {language.title}</div>} open={isModalOpen2} onCancel={handleCancel2}>
                 <Form
                     name="basic"
@@ -961,9 +964,11 @@ export default function LeftSidebar({ setColorTheme, setChangeModel, changeModel
                     </Form.Item>
                 </Form>
             </Modal>
+            {/* Create Connection */}
             <Modal title="Create Connection" footer={null} open={isModalOpen3} onCancel={handleCancel3}>
                 <RemoteDB getLinks={getLinks} handleCancel3={handleCancel3}></RemoteDB>
             </Modal>
+            {/* LeftSidebar-top */}
             <div className='LeftSidebar-top' style={{ height: `calc(40vh + ${heightChange}px)` }}>
                 <div onClick={() => addNewChat()} className='LeftSidebar-addNewChat'>+ &nbsp;&nbsp;New chat</div>
                 <ul className='LeftSidebar-chats'>
@@ -975,6 +980,7 @@ export default function LeftSidebar({ setColorTheme, setChangeModel, changeModel
                 {chat.length === 0 ? '' : <div onClick={showModal1} className='LeftSidebar-top-deteleAll'><DeleteOutlined />&nbsp;&nbsp; Clear conversations</div>}
             </div>
             <div ref={line} className='LeftSidebar-line'></div>
+            {/* LeftSidebar-bottom */}
             <div className='LeftSidebar-bottom' style={{ height: `calc(58vh - 75px - ${heightChange}px)` }}>
                 <div className='LeftSidebar-bottom-top'>
                     <Radio.Group value={dbType} onChange={dbTypeChange} size='middle'>
@@ -1030,6 +1036,7 @@ export default function LeftSidebar({ setColorTheme, setChangeModel, changeModel
                             </div>{dbType === 3 ? <div onClick={handleBack} className='LeftSidebar-bottom-back'><RollbackOutlined />&nbsp;&nbsp;Choose other link</div> : ''}</>}
 
                 </div>
+                {/* bottom setting */}
                 <div className='LeftSidebar-bottom-userInfo'>
                     <img className='LeftSidebar-bottom-head' src={userHead} alt="" />
                     <h1 className='LeftSidebar-bottom-name'>{userInfo[0]}</h1>

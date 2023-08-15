@@ -1,17 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react'
 import './index.scss'
-import { LockOutlined, UserOutlined, RedoOutlined } from '@ant-design/icons';
+import {  RedoOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios'
-import { Button, Checkbox, Form, Input, message, Modal, Select, } from 'antd';
-import code from '../../assests/images/code.png'
+import { Button,  Form, Input, message, Modal } from 'antd';
 import { copyArr, debounce } from '../../utils/func';
 import Logo from '../../assests/images/logo.png'
 import { v4 as uuidv4 } from "uuid"
-import Cookies from 'js-cookie'
 import URL from '../../env.js'
 
-const { Option } = Select;
 export default function Login() {
 
     const [open, setOpen] = useState(false);

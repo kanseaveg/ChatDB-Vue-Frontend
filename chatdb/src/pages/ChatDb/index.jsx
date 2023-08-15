@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import LeftSidebar from '../../components/LeftSidebar'
 import RightMain from '../../components/RightMain'
-import URL from '../../env.js'
 import './index.scss'
+import { useNavigate } from 'react-router-dom';
+
 export default function ChatDb() {
     const [current, setCurrent] = useState(-1)
     const [deleteNumber, setDeleteNumber] = useState(-1)
@@ -17,18 +18,14 @@ export default function ChatDb() {
     const [lock, setLock] = useState(true)
     const [changeModel, setChangeModel] = useState({ type: -1, add: false })
     const [colorTheme, setColorTheme] = useState('light')
-    // useEffect(() => {
-    //     let list = parseInt(localStorage.getItem('list'))
-    //     let current = parseInt(localStorage.getItem('current'))
-
-    //     if (!isNaN(list) && list !== null && list !== undefined && !isNaN(current) && current !== null && current !== undefined) {
-    //         setList(parseInt(list))
-    //         setCurrent(parseInt(current))
-    //     }
-    //     setFlag(true)
-    // }, [])
+    const token = localStorage.getItem('token')
+    const navigate = useNavigate();
+  
 
     useEffect(() => {
+        if(!token){
+            navigate('/login')
+        }
         localStorage.setItem('current', parseInt(current))
         localStorage.setItem('list', parseInt(list))
     }, [current, list])

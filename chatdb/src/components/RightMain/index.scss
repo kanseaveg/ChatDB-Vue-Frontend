@@ -336,34 +336,106 @@
             color: rgb(34, 203, 250);
         }
 
-        .input {
-            align-self: center;
+        // .input {
+        //     align-self: center;
 
-            input {
-                height: 60px;
-                border-radius: 5px;
-                min-width: 800px;
-                width: calc(98vw - 500px);
-                font-size: 20px;
-                transition: all .3s;
-                padding-left: 20px;
-                padding-right: 50px;
-                border: 1px solid rgba(0, 0, 0, .1);
-                box-shadow: 0px 0px 10px 10px rgba(255, 255, 255, .1);
-                transition: all .3s;
-                background: var(--primary-color);
-                color: var(--third-color);
-            }
+        //     input {
+        //         height: 60px;
+        //         border-radius: 5px;
+        //         min-width: 800px;
+        //         width: calc(98vw - 500px);
+        //         font-size: 20px;
+        //         transition: all .3s;
+        //         padding-left: 20px;
+        //         padding-right: 50px;
+        //         border: 1px solid rgba(0, 0, 0, .1);
+        //         box-shadow: 0px 0px 10px 10px rgba(255, 255, 255, .1);
+        //         transition: all .3s;
+        //         background: var(--primary-color);
+        //         color: var(--third-color);
+        //     }
 
-            input:hover {
-                border: 1px solid rgb(34, 203, 250);
+        //     input:hover {
+        //         border: 1px solid rgb(34, 203, 250);
+        //     }
+
+        //     input::placeholder {
+        //         color: gray !important;
+        //     }
+        // }
+        .WordInput {
+            min-width: 800px;
+            display: flex;
+            justify-content: space-between;
+            bottom: 15px;
+            width: 80%;
+            height: var(--WordInputHeight);
+            padding: 0 10px;
+            background: var(--primary-color);
+            border-radius: 20px;
+            box-shadow: 0px 0px 20px 5px rgba(255, 255, 255, 0.1);
+            box-sizing: border-box;
+            border: 1px solid rgba(0, 0, 0, .1);
+            .switch,
+            .send {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: var(--WordInputHeight);
+                width: var(--WordInputHeight);
+                border-radius: 50%;
+                .icon {
+                    font-size: 20px;
+                    cursor: pointer;
+                }
+                &:hover{
+                    cursor: pointer;
+                }
             }
+            .switch{
+                width: 120px;
+                
+            }
+            .input {
+                width: 89%;
+        
+                input {
+                    box-sizing: border-box;
+                    width: 100%;
+                    height: 100%;
+                    padding: 0 10px;
+                    outline: none;
+                    border: none;
+                    border-left: 1px solid rgba(0,0,0,.2);
+                    border-right: 1px solid rgba(0,0,0,.2);
+                    background: var(--primary-color);
+                    color: var(--third-color);
+                    line-height: 100%;
+                    font-size: 15px;
+                    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+                }
 
             input::placeholder {
                 color: gray !important;
             }
+            }
+        
+            .speech {
+                width: 89%;
+                font-weight: 600;
+                font-size: 15.5px;
+                color: rgb(0, 0, 0);
+                line-height: var(--WordInputHeight);
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.1s;
+        
+                &:hover {
+                    font-size: 16px;
+                    background-color: #eaeaea;
+                }
+            }
         }
-
 
     }
 }

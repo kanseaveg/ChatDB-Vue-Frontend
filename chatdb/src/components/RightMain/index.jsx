@@ -1,40 +1,44 @@
 import React, { useEffect, useState, useRef } from 'react'
 import './index.scss'
-import temp from '../../logo.svg'
-import { DownloadOutlined, LikeOutlined, DislikeOutlined, CopyOutlined, UploadOutlined, EditOutlined, PauseCircleOutlined, FileOutlined, SendOutlined, CloseOutlined, DeleteOutlined, DoubleRightOutlined, RedoOutlined, SmallDashOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import {AudioOutlined ,AudioMutedOutlined ,RocketOutlined,MessageOutlined,SoundOutlined, DownloadOutlined, LikeOutlined, DislikeOutlined, CopyOutlined, UploadOutlined, EditOutlined, PauseCircleOutlined, FileOutlined, SendOutlined, CloseOutlined, DeleteOutlined, DoubleRightOutlined, RedoOutlined, SmallDashOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import axios from 'axios'
 import { copyArr, Myreplace } from '../../utils/func'
 import { message, Upload } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { Table, Tag, Modal, Tooltip, Button, Spin, Popconfirm, Select, Input } from 'antd';
+import { Table, Tag, Modal, Tooltip, Button, Spin, Popconfirm, Select } from 'antd';
 import head1 from '../../assests/images/head1.png'
 import head2 from '../../assests/images/head2.png'
 import { v4 as uuidv4 } from "uuid"
-// import SyntaxHighlighter from "react-syntax-highlighter";
-// import { docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { CopyToClipboard } from "react-copy-to-clipboard";
-// import { Controlled as CodeMirror } from 'react-codemirror2';
-// import 'codemirror/lib/codemirror.css';
-// import 'codemirror/mode/sql/sql';
 import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-sql';
 import 'ace-builds/src-noconflict/theme-tomorrow';
 import 'ace-builds/src-noconflict/theme-monokai';
-
 import URL from '../../env.js'
 import Introduce from '../Introduce'
 import html2canvas from 'html2canvas';
+import Recorder from 'js-audio-recorder'
 export default function RightMain({ colorTheme, changeModel, setChangeModel, lock, setLock, setDbDisabled, setUploadAndRefresh, setName, current, setDeleteNumber, deleteNumber, list, addText, setAddText, setCurrent, setAddFirstChat, dataSourceId, setRefresh, refresh }) {
-    const [chats, setChats] = useState([])
     const navigate = useNavigate();
-    const [myCurrent, setMyCurrent] = useState(0)
-    const peopleInput = useRef()
     const main = useRef()
+    //会话
+    const [chats, setChats] = useState([])
+    //当前聊天
+    const [myCurrent, setMyCurrent] = useState(0)
+    //输入框
+    const peopleInput = useRef()
+    //输入框语音输入还是文字输入
+    const [recording, setRecording] = useState(false); // 录音中
+    const recorder = useRef();
+    //用户信息
     const token = localStorage.getItem('token')
     const userId = localStorage.getItem('userId')
+    //loading
     const [loading, setLoading] = useState(false)
+    //代码块是否可编辑
     const [readOnly, setReadOnly] = useState(true)
     const editorRef = useRef(null);
+    //主题
     const [theme, setTheme] = useState('light')
     //上传文件
     const props = {
@@ -70,6 +74,54 @@ export default function RightMain({ colorTheme, changeModel, setChangeModel, loc
     const controller = new AbortController();
     const signal = controller.signal;
     const [showStopBtn, setShowStopBtn] = useState(false)
+    //输入相关 语音文本切换
+     const handleSwitch = () => { // 文本语音切换
+        recording? stopRecord():startRecord()
+        setRecording(!recording)
+    }
+    const startRecord = async() => { // 语音输入开始
+        setRecording(true);
+        recorder.current = new Recorder({
+            sampleBits: 16, // 采样位数，支持 8 或 16，默认是16
+            sampleRate: 16000, // 采样率，支持 11025、16000、22050、24000、44100、48000，根据浏览器默认值，我的chrome是48000
+            numChannels: 1
+        })
+        recorder.current.start().then(
+            () => {
+              // 开始录音
+              console.log('开始录音了=========')
+            },
+            (error) => {
+              // 出错了
+              console.log(error)
+            }
+          )
+    }
+
+    const stopRecord = async() => { // 语音输入结束
+        setRecording(false);
+        recorder.current?.stop()
+        let wavBlob = recorder.current.getWAVBlob()
+        const file = new File([wavBlob], 'test.wav', { type: 'audio/wav' });
+        const formData = new FormData();
+        formData.append('file', file);
+        axios({
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                "Authorization": token
+            },
+            method: 'POST',
+            data:formData,
+            url: `${URL}/api/speech/recognizeFile`,
+        }).then(res => {
+            if(res.data.code===200){
+                peopleInput.current.value = res.data.data
+            }else{
+                message.warning(res.data.data||res.data.msg)
+            }
+        })
+    }
+
     //回答时不得转换数据库
     useEffect(() => {
         if (showStopBtn) {
@@ -762,9 +814,11 @@ export default function RightMain({ colorTheme, changeModel, setChangeModel, loc
     }, [colorTheme])
     return (
         <div className='RightMain '>
+            {/* loading */}
             {loading ? <div style={{ position: 'absolute', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: "100", width: '100%', height: "100%", background: 'rgba(255,255,255,.8)' }}><Spin size="large">
                 <div className="content" />
             </Spin></div> : ''}
+            {/* model */}
             <div className={(chats[myCurrent] && chats[myCurrent].length !== 0) || save ? 'RightTopModel modelDisabled' : 'RightTopModel'} >
                 {(chats[myCurrent] && chats[myCurrent].length !== 0) || save ?
                     parseInt(localStorage.getItem('model')) === 1 ? '单轮对话模型' : '多轮对话模型'
@@ -792,6 +846,7 @@ export default function RightMain({ colorTheme, changeModel, setChangeModel, loc
             <Modal title="清空对话" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
                 <p>是否清空对话？</p>
             </Modal>
+            {/* Submit feedback */}
             <Modal
                 footer={[
                     <Button key="submit" type="primary" onClick={() => handleOk1(isModalOpen1.i)}>
@@ -804,10 +859,10 @@ export default function RightMain({ colorTheme, changeModel, setChangeModel, loc
                 <input ref={FeedbackSql} maxLength='255' placeholder='Enter an appropriate golden SQL statement that you think is suitable.' className='RightMain-feedbacksql' style={{ width: '100%' }} type="text" name="" id="" />
                 <textarea ref={Feedback} maxLength='255' placeholder='Please give us the reason why you choose it as your golden SQL.' className='RightMain-feedback' style={{ width: '100%' }} type="text" name="" id="" />
             </Modal>
-
+                {/* main */}
             <div ref={main} className='RightMain-main '>
-
                 <ul>
+                    {/* content */}
                     {chats[myCurrent] ? chats[myCurrent].map((v, i) => {
                         return (v.who === 'ai' ? <li key={i} className='RightMain-chatli RightMain-aichat'><img className='RightMain-aichat-head' src={head2} alt="" /><div className='RightMain-aichat-content'>
                             <div className='RightMain-aichat-content-content'>
@@ -827,7 +882,7 @@ export default function RightMain({ colorTheme, changeModel, setChangeModel, loc
                                         ref={editorRef}
                                         style={{ minWidth: `${v.content.split('\n')[0].length * 13 < 640 ? v.content.split('\n')[0].length * 13 : 640}px` }}
                                     /> </> : ''}
-
+                        {/* tool  */}
                                 {v.finish ?
                                     <div className='RightMain-aichat-content-tool'>
                                         <Tooltip placement="rightTop" title={<div >执行SQL</div>}><DoubleRightOutlined onClick={() => execute(i, v.content, 1, 10)} /></Tooltip>
@@ -864,6 +919,7 @@ export default function RightMain({ colorTheme, changeModel, setChangeModel, loc
                     }) : ''}
                 </ul>
             </div>
+            {/* bottom */}
             <div className='RightMain-bottom'>
                 {showStopBtn ?
                     <div className='RightMain-bottom-stopBtn'><Button onClick={stopResponding} className='RightMain-bottom-stopButton' style={{ background: 'rgb(242, 201, 125)!important' }}><PauseCircleOutlined style={{ color: 'white' }} />  Stop Responding</Button></div>
@@ -880,7 +936,19 @@ export default function RightMain({ colorTheme, changeModel, setChangeModel, loc
                     okText="Yes"
                     cancelText="No"
                 ><DownloadOutlined className='RightMain-bottom-downlaod' /></Popconfirm>
-                <div className='input'><input placeholder='Ask anything about your Database!' disabled={showStopBtn} onKeyDown={handleKeyDown} ref={peopleInput} type="text" /><SendOutlined onClick={() => { if (parseInt(localStorage.getItem('dbType')) === 3 && !localStorage.getItem('connectId')) { message.warning('请先选择远程数据源') } else { addPeoplechat() } }} style={{ marginLeft: "-40px" }} /></div></div>
+                {/* input */}
+                    <div className='WordInput'>
+        <div className="switch" style={{color:`${!recording ?'green':'red'}`}} onClick={handleSwitch}>
+            {
+                !recording ?<><AudioOutlined  className='icon'/> &nbsp;开始录音</>  :<><AudioMutedOutlined  className='icon'/>&nbsp;结束录音</> 
+            }       
+        </div>
+        <div className="input"><input type="text" name="wordInput" id="wordInput"   placeholder='Ask anything about your Database!' disabled={showStopBtn} onKeyDown={handleKeyDown} ref={peopleInput} /></div> :
+        <div className="send">
+            <RocketOutlined className='icon'  onClick={() => { if (parseInt(localStorage.getItem('dbType')) === 3 && !localStorage.getItem('connectId')) { message.warning('请先选择远程数据源') } else { addPeoplechat() } }} />
+        </div>
+    </div>
+                    </div>
         </div>
     )
 }

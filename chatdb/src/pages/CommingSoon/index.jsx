@@ -5,7 +5,7 @@ import URL from '../../env.js'
 import axios from 'axios'
 import Wait from '../../assests/images/wait.gif'
 function ComingSoon() {
-    const [countdown, setCountdown] = useState({
+    const [, setCountdown] = useState({
         days: "",
         hours: "",
         minutes: "",
