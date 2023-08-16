@@ -378,10 +378,15 @@
             border: 1px solid rgba(0, 0, 0, .1);
             .uploadWav {
                 border-right: 1px solid rgba(0,0,0,.2);
-                width: 8cqi;
+                padding-top: 5px;
+                width: 50px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                .icon {
+                    font-size: 16px;
+                    cursor: pointer;
+                }
                 &:hover{
                     cursor: pointer;
                 }

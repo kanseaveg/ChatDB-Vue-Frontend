@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import './index.scss'
-import {AudioOutlined ,AudioMutedOutlined ,RocketOutlined,MessageOutlined,SoundOutlined, DownloadOutlined, LikeOutlined, DislikeOutlined, CopyOutlined, UploadOutlined, EditOutlined, PauseCircleOutlined, FileOutlined, SendOutlined, CloseOutlined, DeleteOutlined, DoubleRightOutlined, RedoOutlined, SmallDashOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import {FileFilled,AudioOutlined ,AudioMutedOutlined ,RocketOutlined,MessageOutlined,SoundOutlined, DownloadOutlined, LikeOutlined, DislikeOutlined, CopyOutlined, UploadOutlined, EditOutlined, PauseCircleOutlined, FileOutlined, SendOutlined, CloseOutlined, DeleteOutlined, DoubleRightOutlined, RedoOutlined, SmallDashOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import axios from 'axios'
 import { copyArr, Myreplace,getWebSocketUrl,toBase64 } from '../../utils/func'
 import { message, Upload } from 'antd';
@@ -406,6 +406,7 @@ export default function RightMain({ colorTheme, changeModel, setChangeModel, loc
     }, [refresh])
     //执行SQL
     const execute = (i, sql, page, pageSize) => {
+        let path = sql.includes('SELECT')?'query':'update'
         axios({
             headers: {
                 'Content-Type': 'application/json',
@@ -420,25 +421,30 @@ export default function RightMain({ colorTheme, changeModel, setChangeModel, loc
                 pageSize,
                 connectId: parseInt(localStorage.getItem('dbType')) === 3 ? localStorage.getItem('connectId') : ''
             },
-            url: `${URL}/api/db/query`,
+            url: `${URL}/api/db/${path}`,
         }).then(res => {
             if (res.data) {
                 if (res.data.code === 200) {
-                    let columns = []
-                    let data = []
-                    res.data.data.columns.map((v, i) => {
-                        columns.push({
-                            title: v, dataIndex: v, key: v, ellipsis: true,
-                            width: 150
+                    if(path==='update'){
+                        message.success(res.data.msg)
+                    }else{
+                        let columns = []
+                        let data = []
+                        res.data.data.columns.map((v, i) => {
+                            columns.push({
+                                title: v, dataIndex: v, key: v, ellipsis: true,
+                                width: 150
+                            })
                         })
-                    })
-                    res.data.data.rows.map((v, i) => {
-                        v.key = i
-                    })
-                    data = res.data.data.rows
-                    let newChats3 = copyArr(chats)
-                    newChats3[current][i].table = [columns, data, res.data.data.totalCount]
-                    setChats(newChats3)
+                        res.data.data.rows.map((v, i) => {
+                            v.key = i
+                        })
+                        data = res.data.data.rows
+                        let newChats3 = copyArr(chats)
+                        newChats3[current][i].table = [columns, data, res.data.data.totalCount]
+                        setChats(newChats3)
+                    }
+               
                 } else {
                     message.warning(res.data.data || res.data.msg)
                 }
@@ -874,7 +880,7 @@ export default function RightMain({ colorTheme, changeModel, setChangeModel, loc
             setSave(false)
         }
     }, [localStorage.getItem('current'), localStorage.getItem('chat')])
-    //编辑SQL
+    //编辑SQL 
     const handleEditorChange = (value) => {
         adjustEditorHeight(value);
     };
@@ -1074,7 +1080,7 @@ export default function RightMain({ colorTheme, changeModel, setChangeModel, loc
                 {/* input */}
                     <div className='WordInput'>
                     <Upload {...Vprops} className='uploadWav'>
-                        上传录音
+                    <svg t="1692122794074" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1487" width="25" height="25"><path d="M847.644444 1024H150.755556c-48.355556-5.688889-88.177778-42.666667-93.866667-93.866667V93.866667C62.577778 45.511111 102.4 5.688889 150.755556 0h512l278.755555 278.755556v651.377777c-5.688889 51.2-45.511111 88.177778-93.866667 93.866667z m0-745.244444h-139.377777c-25.6-2.844444-42.666667-22.755556-45.511111-45.511112V93.866667H196.266667c-25.6-2.844444-45.511111 17.066667-45.511111 42.666666v748.088889c5.688889 22.755556 22.755556 42.666667 45.511111 45.511111h605.866666c25.6-2.844444 45.511111-22.755556 45.511111-45.511111V278.755556z m-207.644444 560.355555c-65.422222 0-116.622222-51.2-116.622222-116.622222s51.2-116.622222 116.622222-116.622222c25.6 0 51.2 8.533333 71.111111 22.755555v-71.111111h-278.755555V739.555556c-11.377778 62.577778-71.111111 108.088889-136.533334 99.555555-62.577778-11.377778-108.088889-71.111111-96.711111-133.688889 11.377778-62.577778 71.111111-108.088889 133.688889-96.711111 19.911111 2.844444 36.977778 11.377778 51.2 22.755556v-162.133334c0-110.933333 25.6-139.377778 93.866667-139.377777h221.866666c19.911111 0 56.888889 8.533333 56.888889 45.511111v366.933333c-11.377778 51.2-62.577778 96.711111-116.622222 96.711111zM312.888889 651.377778c-39.822222 0-71.111111 31.288889-71.111111 71.111111s31.288889 71.111111 71.111111 71.111111 71.111111-31.288889 71.111111-71.111111-31.288889-71.111111-71.111111-71.111111z m395.377778-278.755556h-233.244445c-54.044444 0-45.511111 93.866667-45.511111 93.866667h278.755556v-93.866667z m-68.266667 278.755556c-39.822222 0-71.111111 31.288889-71.111111 71.111111s31.288889 71.111111 71.111111 71.111111 71.111111-31.288889 71.111111-71.111111c-2.844444-39.822222-34.133333-71.111111-71.111111-71.111111z" fill="#2c2c2c" p-id="1488"></path></svg>
                     </Upload>
         <div className="switch" style={{color:`${!recording ?'green':'red'}`}} onClick={handleSwitch}>
             
