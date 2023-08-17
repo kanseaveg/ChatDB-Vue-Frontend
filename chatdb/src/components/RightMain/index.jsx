@@ -898,7 +898,8 @@ export default function RightMain({ colorTheme, changeModel, setChangeModel, loc
         setReadOnly(true)
         if (i === 1) {//确认
             const sql = editorRef.current.editor.getValue()
-            if (/^SELECT\s/i.test(sql)) {
+            // /^SELECT\s/i.test(sql))
+            if (true) {
                 // SQL 语句符合 SELECT 语句的格式，可以执行
                 let chatId = JSON.parse(localStorage.getItem('chat'))[current].chatId
                 axios({
